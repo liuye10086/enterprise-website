@@ -14,7 +14,7 @@ const server=createApp({config,auth,mailer,root:path.join(projectRoot,'dist')});
 try {
   await pool.query('SELECT 1 FROM arviva_schema_migrations LIMIT 1');
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(config.port,config.host,resolve);});
-  console.log(`Arviva application: ${config.origin}/sy`);
+  console.log(`Arviva application: ${config.origin}/home`);
   console.log(`Mail mode: ${config.mailMode}${mailer.development?' (local files only; no emails sent)':''}`);
 } catch(error){console.error('Startup failed. Check .env and run npm run db:migrate. Error:',error.code||error.name);await pool.end();process.exitCode=1;}
 let stopping=false;

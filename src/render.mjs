@@ -5,7 +5,7 @@ import { renderAccessDialogs, medicineModules } from './access-view.mjs';
 import { PRODUCTS } from './access-state.js';
 
 const navigation = [
-  ['Home Page', '/sy'], ['About Us', '/gywm'], ['Super Intelligent Medicine', '/kyfw'],
+  ['Home Page', '/home'], ['About Us', '/gywm'], ['Super Intelligent Medicine', '/kyfw'],
   ['Innovative Drug Design', '/ythpt'], ['Investor Zone', '/tzzzq'],
   ['News information', '/xwzx'], ['Contact Us', '/lxwm'],
 ];
@@ -22,7 +22,7 @@ function header(active) {
   return `<a class="skip-link" href="#main-content">Skip to content</a>
   <header class="site-header wrap">
     <div class="navigation-row">
-      <a class="brand" href="/sy" aria-label="Arviva Therapeutics home">${img('33300796.jpg','Arviva Therapeutics','logo','eager')}</a>
+      <a class="brand" href="/home" aria-label="Arviva Therapeutics home">${img('33300796.jpg','Arviva Therapeutics','logo','eager')}</a>
       <nav id="primary-navigation" aria-label="Main navigation">${navigation.map(([label,href])=>`<a href="${href}"${active === href ? ' aria-current="page"' : ''}>${e(label)}</a>`).join('')}</nav>
       <div class="header-actions"><button class="login-trigger" type="button" data-login-open aria-haspopup="dialog" aria-controls="login-dialog"><span data-login-label>Log in</span> <span aria-hidden="true">↗</span></button><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="Open navigation"><span></span><span></span><span></span></button></div>
     </div>
@@ -49,7 +49,7 @@ function carousel() {
 }
 
 function contactDetails() {
-  return `<address class="contact-details"><div><span class="contact-icon" aria-hidden="true">⌖</span><div><strong>Address</strong><p>Irving Warehouse-207204<br>100 Circle Road, Ammann-C111<br>Stony Brook, NY 11790-3607</p></div></div><div><span class="contact-icon" aria-hidden="true">☎</span><div><strong>Phone</strong><a href="tel:6175153053">6175153053</a></div></div><div><span class="contact-icon" aria-hidden="true">✉</span><div><strong>Email</strong><a href="mailto:BD@arvivatherap.com">BD@arvivatherap.com</a></div></div><div><span class="contact-icon" aria-hidden="true">↗</span><div><strong>Website</strong><a href="/sy">arvivatherap.com</a></div></div></address>`;
+  return `<address class="contact-details"><div><span class="contact-icon" aria-hidden="true">⌖</span><div><strong>Address</strong><p>Irving Warehouse-207204<br>100 Circle Road, Ammann-C111<br>Stony Brook, NY 11790-3607</p></div></div><div><span class="contact-icon" aria-hidden="true">☎</span><div><strong>Phone</strong><a href="tel:6175153053">6175153053</a></div></div><div><span class="contact-icon" aria-hidden="true">✉</span><div><strong>Email</strong><a href="mailto:BD@arvivatherap.com">BD@arvivatherap.com</a></div></div><div><span class="contact-icon" aria-hidden="true">↗</span><div><strong>Website</strong><a href="/home">arvivatherap.com</a></div></div></address>`;
 }
 
 function contactForm(id) {
@@ -89,7 +89,7 @@ function investors(source) {
 }
 
 function placeholder(title) {
-  return `<section class="development-page"><p class="eyebrow">${title}</p><div class="development-symbol" aria-hidden="true">⋯</div><h2 lang="zh-CN">功能开发中</h2><a class="primary-button" href="/sy">Back to home <span aria-hidden="true">→</span></a></section>`;
+  return `<section class="development-page"><p class="eyebrow">${title}</p><div class="development-symbol" aria-hidden="true">⋯</div><h2 lang="zh-CN">功能开发中</h2><a class="primary-button" href="/home">Back to home <span aria-hidden="true">→</span></a></section>`;
 }
 
 function platformPlaceholder(product) {
@@ -102,7 +102,7 @@ export async function renderPages({articles,backupRoot}) {
   const order=['3099692','7224','7114','7062','7050'];
   const sorted = [...articles].sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
   const pages = new Map([
-    ['/sy',shell('Home Page','/sy',home(homeData,sorted))],
+    ['/home',shell('Home Page','/home',home(homeData,sorted))],
     ['/gywm',shell('About Us','/gywm',about(aboutData))],
     ['/kyfw',shell('Super Intelligent Medicine','/kyfw',medicineModules())],
     ['/ythpt',shell('Innovative Drug Design','/ythpt',placeholder('Innovative Drug Design'))],
@@ -115,7 +115,7 @@ export async function renderPages({articles,backupRoot}) {
   for (const article of sorted) {
     pages.set(article.href,shell(article.title,'/xwzx',`<article class="article-page"><a class="article-back" href="/xwzx">← News information</a><h2 class="article-title">${e(article.title)}</h2>${renderArticleBody(article)}<div class="article-end">${link('All news','/xwzx')}</div></article>`,article.excerpt));
   }
-  pages.set('/',pages.get('/sy'));
-  pages.set('/404.html',shell('Page not found','',`<section class="development-page"><p class="eyebrow">404</p><h2>Page not found</h2><a class="primary-button" href="/sy">Back to home →</a></section>`));
+  pages.set('/',pages.get('/home'));
+  pages.set('/404.html',shell('Page not found','',`<section class="development-page"><p class="eyebrow">404</p><h2>Page not found</h2><a class="primary-button" href="/home">Back to home →</a></section>`));
   return pages;
 }

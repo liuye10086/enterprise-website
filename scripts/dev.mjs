@@ -8,7 +8,7 @@ const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 await runBuild();
 const server = createStaticServer({root: path.join(projectRoot, 'dist')});
 await new Promise((resolve, reject) => { server.once('error', reject); server.listen(4173, '127.0.0.1', resolve); });
-console.log('本地预览：http://127.0.0.1:4173/sy');
+console.log('本地预览：http://127.0.0.1:4173/home');
 let building = false, dirty = false, timer, stopping = false;
 const buildController = new AbortController();
 async function rebuild() {

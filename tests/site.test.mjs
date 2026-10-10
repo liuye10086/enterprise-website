@@ -4,18 +4,26 @@ import { readFile, access } from 'node:fs/promises';
 import path from 'node:path';
 
 const root = path.resolve('dist');
-const routes = ['/sy','/gywm','/kyfw','/ythpt','/tzzzq','/xwzx','/lxwm','/research-platform','/prediction-platform'];
+const routes = ['/home','/gywm','/kyfw','/ythpt','/tzzzq','/xwzx','/lxwm','/research-platform','/prediction-platform'];
 const articleIds = ['3099692','7224','7114','7062','7050'];
 const pageFile = route => path.join(root, route.endsWith('.html') ? route : route + '/index.html');
 
 test('all site routes are independently generated with navigation', async () => {
-  for (const route of [...routes, ...articleIds.map(id => `/newsinfo/${id}.html`)]) {
+  for (const route of ['/', '/404.html', ...routes, ...articleIds.map(id => `/newsinfo/${id}.html`)]) {
     const html = await readFile(pageFile(route), 'utf8');
     assert.match(html, /<html lang="en">/);
     assert.match(html, /<nav/);
     assert.match(html, /<main id="main-content"/);
     assert.match(html, /Arviva Therapeutics/);
+    assert.match(html, /href="\/home"[^>]*>Home Page<\/a>/);
+    assert.doesNotMatch(html, /href="\/sy(?:[/?#"])/);
   }
+});
+
+test('home is also available at root and the former home route is not generated', async () => {
+  const home = await readFile(pageFile('/home'), 'utf8');
+  assert.equal(await readFile(pageFile('/'), 'utf8'), home);
+  await assert.rejects(access(pageFile('/sy')), {code: 'ENOENT'});
 });
 
 test('medicine product entries require access checks and drug design remains under development', async () => {
@@ -54,7 +62,7 @@ test('every rendered internal link and media reference resolves locally', async 
 });
 
 test('home includes local playable videos and contact action explains the email draft', async () => {
-  const home = await readFile(pageFile('/sy'), 'utf8');
+  const home = await readFile(pageFile('/home'), 'utf8');
   assert.equal((home.match(/<video\b/g) || []).length, 3);
   assert.match(home, /preload="metadata"/);
   const contact = await readFile(pageFile('/lxwm'), 'utf8');

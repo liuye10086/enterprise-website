@@ -26,7 +26,7 @@ npm run build
 npm start
 ```
 
-打开 [真实登录版](http://127.0.0.1:4174/sy)。`npm start` 读取 `.env` 并连接 PostgreSQL；修改 `src/` 后重新执行 `npm run build` 并刷新页面，修改后端或配置后重启服务。
+打开 [真实登录版](http://127.0.0.1:4174/home)。`npm start` 读取 `.env` 并连接 PostgreSQL；修改 `src/` 后重新执行 `npm run build` 并刷新页面，修改后端或配置后重启服务。
 
 可选的 `MAIL_MODE=development` 使用随机六位验证码：点击 **Send code** 后，验证码保存在 `tmp/dev-mail/<规范化邮箱的 SHA-256>.json`，文件中的 `email` 可用于确认收件地址。**这是本地测试投递，没有发送真实邮件**，不能使用固定演示码代替。该模式只允许本机开发，生产环境禁用；`MAIL_MODE=disabled` 不发送验证码。
 
@@ -40,7 +40,7 @@ npm start
 npm run dev
 ```
 
-打开 [静态演示版](http://127.0.0.1:4173/sy)。此服务监视 `src/` 并自动构建，刷新即可查看改动；它使用演示状态，不连接真实账号数据。两个地址均仅供本机使用，停止终端进程即停止服务。
+打开 [静态演示版](http://127.0.0.1:4173/home)。此服务监视 `src/` 并自动构建，刷新即可查看改动；它使用演示状态，不连接真实账号数据。两个地址均仅供本机使用，停止终端进程即停止服务。
 
 ```powershell
 npm test

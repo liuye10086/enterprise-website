@@ -8,10 +8,10 @@ import http from 'node:http';
 async function fixture(t) {
   const base = await mkdtemp(path.join(tmpdir(), 'website-server-'));
   const root = path.join(base, 'dist');
-  await mkdir(path.join(root, 'sy'), {recursive: true});
+  await mkdir(path.join(root, 'home'), {recursive: true});
   await mkdir(path.join(root, 'newsinfo'));
   await mkdir(path.join(root, 'assets'));
-  await writeFile(path.join(root, 'sy/index.html'), '<h1>Home</h1>');
+  await writeFile(path.join(root, 'home/index.html'), '<h1>Home</h1>');
   await writeFile(path.join(root, 'newsinfo/123.html'), '<p>Article</p>');
   await writeFile(path.join(root, 'assets/movie.mp4'), '0123456789');
   await writeFile(path.join(base, 'secret.txt'), 'private');
@@ -33,7 +33,7 @@ async function fixture(t) {
 
 test('serves extensionless pages, article URLs and HEAD with correct MIME', async t => {
   const request = await fixture(t);
-  const home = await request('/sy?from=nav');
+  const home = await request('/home?from=nav');
   assert.equal(home.status, 200); assert.equal(home.body, '<h1>Home</h1>');
   assert.match(home.headers['content-type'], /^text\/html/);
   assert.equal((await request('/newsinfo/123.html')).body, '<p>Article</p>');
@@ -52,8 +52,8 @@ test('returns real 404 and rejects traversal, directory listing and symlink esca
     assert.notEqual(response.body, 'private');
   }
   assert.equal((await request('/%ZZ')).status, 400);
-  assert.equal((await request('/sy', {method: 'POST'})).status, 405);
-  assert.equal((await request('/sy')).status, 200);
+  assert.equal((await request('/home', {method: 'POST'})).status, 405);
+  assert.equal((await request('/home')).status, 200);
 });
 
 test('streams bounded, open-ended and suffix byte ranges and rejects invalid ranges', async t => {
