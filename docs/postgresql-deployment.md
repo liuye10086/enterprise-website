@@ -2,7 +2,16 @@
 
 真实登录依赖 Node.js、PostgreSQL 与同源后端。`npm start` 默认监听本机 `127.0.0.1:4174`；`npm run dev` 的 `4173` 是旧静态演示，不用于正式登录。**不能仅上传 `dist/`，也不能让 Nginx 直接公开平台 HTML 来绕过 Node。**
 
-本机已创建专用角色和 `arviva_website_dev`、`arviva_website_test`，配置保存在私密 `.env`。以下是新 Ubuntu 服务器的部署示例，尚未在目标服务器执行；示例域名 `example.com`、路径和证书位置需替换。
+## 当前部署（2026-10-10）
+
+- 新版地址：<https://new.arvivatherap.com/home>；旧版 <https://arvivatherap.com/sy> 继续运行于原平台。仅新增 `new` 的 A 记录，原根域 CNAME、MX 及邮箱客户端记录未修改。
+- 阿里云香港 Ubuntu 24.04，Node.js 24.21.0、PostgreSQL 16、Nginx 1.24。应用目录 `/srv/arviva`，以 `arviva` 系统用户和 `arviva.service` 运行并开机启动。
+- 生产应用库 `arviva_website` 与测试库 `arviva_website_test` 使用不同的非管理员数据库角色和密码。本机用户数据未迁移。`.env`、`.env.test` 均为 `600` 权限，不进入 Git。
+- `APP_ORIGIN=https://new.arvivatherap.com`，`NODE_ENV=production`，`MAIL_MODE=smtp`，`TRUST_PROXY=loopback`。Node `4174` 与 PostgreSQL `5432` 仅监听 `127.0.0.1`。
+- HTTPS 证书由 Certbot 管理，`certbot.timer` 自动续期，续期部署钩子会校验并重载 Nginx。HTTP 自动跳转 HTTPS；ACME 验证目录单独保留。`certbot renew --dry-run --run-deploy-hooks` 演练通过。
+- 服务器全量测试 71 项通过，无跳过；已核对未登录访问两个产品的普通地址、尾斜线、`index.html` 均受保护。用户已确认新版真实验证码收信与登录成功。
+
+以下为重建新环境时的步骤；现有服务器已经配置完成，不要重复建库或覆盖 `.env`。本机开发库仍为 `arviva_website_dev`，与服务器独立。
 
 ## 1. 安装运行环境与数据库
 
@@ -55,7 +64,7 @@ sudo install -d -o arviva -g arviva /srv/arviva
 NODE_ENV=production
 HOST=127.0.0.1
 PORT=4174
-APP_ORIGIN=https://example.com
+APP_ORIGIN=https://new.arvivatherap.com
 MAIL_MODE=smtp
 SMTP_HOST=smtp.qq.com
 SMTP_PORT=465
@@ -79,7 +88,7 @@ TRUST_PROXY=loopback
 
 当前先使用 **QQ 邮箱 SMTP**。在 QQ 邮箱设置中开启 SMTP 服务，按页面提示完成验证并取得授权码；在项目私密 `.env` 中填写上述配置。使用 `smtp.qq.com:465`，本项目会启用 SSL/TLS。授权码与服务器设置可参考 [腾讯官方邮箱配置说明](https://main.qcloudimg.com/raw/document/product/pdf/1270_46586_cn.pdf)。
 
-`SMTP_USER` 与 `SMTP_FROM` 都填写同一个完整 QQ 邮箱地址，`SMTP_PASSWORD` 填授权码，**不要填写 QQ 登录密码，也不要把授权码发在聊天里**。新环境填好前保持 `MAIL_MODE=development`，填好后改为 `MAIL_MODE=smtp` 并重启服务，再用实际收件邮箱验证送达。2026-10-10 本机已切换为 `smtp`，QQ SMTP TLS 连接、认证及验证码接口发送验证通过，用户随后确认收信并成功登录。新服务器仍需独立验证网络连接与邮件送达。
+`SMTP_USER` 与 `SMTP_FROM` 都填写同一个完整 QQ 邮箱地址，`SMTP_PASSWORD` 填授权码，**不要填写 QQ 登录密码，也不要把授权码发在聊天里**。新生产环境填好前使用 `MAIL_MODE=disabled`，填好后改为 `MAIL_MODE=smtp` 并重启服务，再用实际收件邮箱验证送达；`development` 仅可用于本机开发。2026-10-10 本机与香港服务器均通过 QQ SMTP TLS 连接和认证验证，用户分别确认了本机及新版线上官网的验证码收信、登录成功。
 
 以后换 **阿里云邮件推送（DirectMail）**，数据库、现有用户与前端登录流程无需修改。完成 DirectMail 的发信域名 DNS 认证、建立发信地址并设置 SMTP 专用密码后，更新 `.env` 的 `SMTP_HOST`、`SMTP_PORT`、`SMTP_USER`、`SMTP_PASSWORD`、`SMTP_FROM`，保持 `MAIL_MODE=smtp`，重启服务并验证收信即可。DirectMail 发信地址与 SMTP 服务地域必须一致，参考 [DirectMail SMTP 服务接入点](https://www.alibabacloud.com/help/en/direct-mail/smtp-endpoints) 和 [SMTP 发信说明](https://help.aliyun.com/en/direct-mail/user-guide/send-emails-using-smtp)。
 
@@ -98,22 +107,26 @@ npm start
 
 迁移按 `db/migrations/` 顺序执行并记录已应用版本，可重复运行。新服务器使用同一套迁移；迁移只建立结构，不会复制本机用户或数据。生产更新前应备份数据库。`npm start` 不自动构建或迁移。
 
-持续运行可创建 `/etc/systemd/system/arviva.service`；将 `/usr/bin/node` 替换为实际 Node.js 路径：
+持续运行可创建 `/etc/systemd/system/arviva.service`；当前 Node.js 路径为 `/usr/local/bin/node`，其他环境需按实际路径替换：
 
 ```ini
 [Unit]
-Description=Arviva website
-After=network.target postgresql.service
+Description=Arviva website (new.arvivatherap.com)
+After=network-online.target postgresql.service
+Wants=network-online.target
 
 [Service]
 User=arviva
 Group=arviva
 WorkingDirectory=/srv/arviva
-ExecStart=/usr/bin/node --env-file=/srv/arviva/.env /srv/arviva/scripts/start.mjs
+ExecStart=/usr/local/bin/node --env-file=/srv/arviva/.env /srv/arviva/scripts/start.mjs
 Restart=on-failure
 RestartSec=5
 UMask=0077
 NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
 
 [Install]
 WantedBy=multi-user.target
@@ -123,20 +136,27 @@ WantedBy=multi-user.target
 
 ## 5. HTTPS 与 Nginx 全路径反向代理
 
-先为实际域名准备有效证书，确认 DNS 指向服务器，再配置 Nginx。以下配置将页面、资源、`/runtime-config.js` 与所有 `/api/` 请求统一转交 Node；转发指令可参见 [Nginx 官方代理文档](https://nginx.org/en/docs/http/ngx_http_proxy_module.html)。
+先仅为新子域名添加 A 记录并准备有效证书；不要修改旧官网根域记录。当前配置位于 `/etc/nginx/sites-available/arviva`。以下配置将页面、资源、`/runtime-config.js` 与所有 `/api/` 请求统一转交 Node；转发指令可参见 [Nginx 官方代理文档](https://nginx.org/en/docs/http/ngx_http_proxy_module.html)。
 
 ```nginx
 server {
     listen 80;
-    server_name example.com;
-    return 301 https://example.com$request_uri;
+    server_name new.arvivatherap.com;
+    location /.well-known/acme-challenge/ {
+        root /var/www/arviva-acme;
+    }
+    location / {
+        return 301 https://new.arvivatherap.com$request_uri;
+    }
 }
 
 server {
     listen 443 ssl;
-    server_name example.com;
-    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    server_name new.arvivatherap.com;
+    ssl_certificate /etc/letsencrypt/live/new.arvivatherap.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/new.arvivatherap.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:ARVIVA_TLS:10m;
 
     location / {
         proxy_pass http://127.0.0.1:4174;
@@ -155,6 +175,28 @@ server {
 
 验证新邮箱随机验证码收信、首次注册、退出后会话撤销，以及每个产品独立的一次试用。未登录直接访问平台应被拒绝；平台获准进入后，同一会话可在 15 分钟内刷新。另测 `/research-platform/`、`/research-platform/index.html` 和 Prediction Platform 对应地址，确认没有静态旁路。
 
-自动认证测试应在独立环境设置 `TEST_DATABASE_URL` 后运行 `npm run test:auth`，不要指向生产库。SMTP 配置存在不代表真实收信已验证，需要使用实际邮箱检查送达。
+自动认证测试必须使用专用测试库。当前服务器单独保存 `.env.test`，运行全量测试时显式加载它，避免测试被跳过：
 
-当前没有在线支付、公开开通权限接口或完整产品功能。数据库与本地投递验证不能替代生产邮件、HTTPS、备份恢复及目标服务器检查；这些需要在实际部署环境完成。
+```bash
+sudo -u arviva bash -c 'cd /srv/arviva && npm run build && node --env-file=.env --env-file=.env.test --test tests/*.test.mjs'
+```
+
+本机的 `TEST_DATABASE_URL` 在 `.env` 中，仍直接使用 `npm test`。SMTP 配置存在不代表收信已验证；后续更换邮箱服务或新服务器时仍应实际登录验收。
+
+当前没有在线支付、公开开通权限接口或完整产品功能。生产邮箱登录与两个产品的占位页面是本次部署范围。
+
+## 7. 日常更新与备份
+
+提交并推送代码不会自动更新服务器。在服务器执行以下命令，保留已有环境配置与数据库：
+
+```bash
+sudo systemctl start arviva-backup.service
+sudo -u arviva bash -c 'cd /srv/arviva && git pull --ff-only origin main && npm ci --ignore-scripts && npm run db:migrate && npm run build'
+sudo systemctl restart arviva
+sudo systemctl is-active arviva nginx postgresql
+curl --fail https://new.arvivatherap.com/api/session
+```
+
+每日北京时间 `03:15`，`arviva-backup.timer` 调用 `/usr/local/sbin/arviva-backup`，在 `/var/backups/arviva` 保存 PostgreSQL 自定义格式备份，并清理超过 7 天的备份。目录权限 `700`，文件权限 `600`；该目录同时保存最新私密应用配置。查看任务可使用 `systemctl list-timers arviva-backup.timer certbot.timer`。
+
+首次备份已完整恢复到一次性独立数据库并验证迁移记录，临时数据库随后清理。备份目前在同一台服务器，不能防止整机或云盘丢失；后续应另行配置异地副本。恢复必须先在独立数据库验证，不要直接覆盖线上数据库。证书续期钩子在 `/etc/letsencrypt/renewal-hooks/deploy/arviva-nginx`，续期后会重载 Nginx。

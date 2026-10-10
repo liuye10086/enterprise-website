@@ -2,6 +2,8 @@
 
 根据原官网布局重建的独立网站，页面、图片、视频均从本项目加载。官网已接入 Node.js 与 PostgreSQL 邮箱验证码登录；产品功能页仍是占位页面，支付尚未接入。
 
+新版地址：[new.arvivatherap.com/home](https://new.arvivatherap.com/home)。旧版 [arvivatherap.com/sy](https://arvivatherap.com/sy) 继续由原建站平台提供，两站独立运行。新版首页及站内首页链接使用 `/home`，不会修改原官网。
+
 ## Git 仓库
 
 仓库：[liuye10086/enterprise-website](https://github.com/liuye10086/enterprise-website)，默认分支 `main`。
@@ -86,10 +88,10 @@ npm run test:auth
 
 ## 页面与素材范围
 
-保留 7 个原栏目地址和 5 篇新闻地址。`/kyfw` 为 **Super Intelligent Medicine**，两个入口分别打开 **Research Platform**（`/research-platform`）和 **Prediction Platform**（`/prediction-platform`），均显示 “This feature is coming soon”。`/ythpt` 更名为 **Innovative Drug Design**，仍显示“功能开发中”。用户弃用的两张 About Us 背景未使用。
+保留 7 个栏目和 5 篇新闻；新版首页地址改为 `/home`，其余栏目路径保留并使用新版子域名。新版不生成 `/sy`，根路径 `/` 仍可打开首页。`/kyfw` 为 **Super Intelligent Medicine**，两个入口分别打开 **Research Platform**（`/research-platform`）和 **Prediction Platform**（`/prediction-platform`），均显示 “This feature is coming soon”。`/ythpt` 更名为 **Innovative Drug Design**，仍显示“功能开发中”。用户弃用的两张 About Us 背景未使用。
 
 首页使用原来的 3 个本地 SD 视频。用户下载的 `AD 英.mp4` 已在本机归档为 `backup/2026-10-10/videos/ad-en-original.mp4`，不进入 Git 仓库且未加入首页；其编码为 HEVC、实际容器为 QuickTime/MOV，以后用于网页播放时应转换成兼容格式。
 
 联系表单仍会打开访客的邮件应用并生成草稿，需访客确认发送；验证码邮件服务不替代联系表单。目前没有服务端联系表单收件、后台管理或原平台表单服务。
 
-项目尚未发布到线上。本机 QQ 邮箱 SMTP 已配置，用户已确认验证码登录成功；服务器部署、HTTPS 与域名切换需在目标环境配置并验证。以后切换 DirectMail 时再配置该服务的发信域名认证。
+2026-10-10 已部署到阿里云香港服务器，使用独立的 `new.arvivatherap.com` 子域名和 HTTPS。只新增了 `new` 的 A 记录，原官网及企业邮箱记录保持原样。服务器使用独立的 PostgreSQL 应用库与测试库，本机账号数据未导入。服务器 71 项测试通过，用户已确认新版验证码收信及登录成功。运行、证书续期与备份维护见 [部署说明](docs/postgresql-deployment.md)。以后切换 DirectMail 时再配置该服务的发信域名认证。
