@@ -2,6 +2,7 @@ import path from 'node:path';
 import {isIP} from 'node:net';
 import {createStaticServer} from '../scripts/server.mjs';
 import {PRODUCTS} from '../src/access-state.js';
+import {ROUTES} from '../src/routes.mjs';
 
 const COOKIE='arviva_session';
 const SESSION_SECONDS=7*24*60*60;
@@ -39,13 +40,13 @@ function clientIp(req,config) {
   if(config.trustProxy&&['127.0.0.1','::1','::ffff:127.0.0.1'].includes(remote)&&typeof forwarded==='string'&&isIP(forwarded))return forwarded;
   return remote;
 }
-export function createApp({config,auth,mailer,root}) {
-  const sessionView=state=>({...state,mailReady:mailer.ready,developmentMail:mailer.development});
+export function createApp({config,auth,mailer,sms={ready:false,development:false},root}) {
+  const sessionView=state=>({...state,phone:state.phone??null,mailReady:mailer.ready,developmentMail:mailer.development,smsReady:sms.ready,developmentSms:sms.development});
   const protectProduct=async(req,res,product)=>{
     res.setHeader('Cache-Control','no-store');
     if(!['GET','HEAD'].includes(req.method))return json(res,405,{error:'method_not_allowed',message:'Method not allowed.'},{Allow:'GET, HEAD'});
     try {
-      if(!await auth.canViewProduct(tokenFrom(req),product.id)){res.writeHead(302,{Location:'/kyfw'});res.end();return true;}
+      if(!await auth.canViewProduct(tokenFrom(req),product.id)){res.writeHead(302,{Location:ROUTES.intelligent});res.end();return true;}
     } catch {return json(res,503,{error:'service_unavailable',message:'Product access is temporarily unavailable.'});}
     return false;
   };
@@ -73,7 +74,7 @@ export function createApp({config,auth,mailer,root}) {
         return json(res,200,sessionView(await auth.getSession(tokenFrom(req))));
       }
       const enter=/^\/api\/products\/(module-0[12])\/enter$/.exec(pathname);
-      if(!enter&&!['/api/auth/request-code','/api/auth/verify','/api/auth/logout'].includes(pathname))return json(res,404,{error:'not_found',message:'Not found.'});
+      if(!enter&&!['/api/auth/request-code','/api/auth/verify','/api/auth/sms/request-code','/api/auth/sms/verify','/api/auth/logout'].includes(pathname))return json(res,404,{error:'not_found',message:'Not found.'});
       if(req.method!=='POST')return json(res,405,{error:'method_not_allowed',message:'Method not allowed.'},{Allow:'POST'});
       if(req.headers.origin!==config.origin||req.headers['sec-fetch-site']==='cross-site')throw fail(403,'invalid_origin','This request must come from this website.');
       if(req.headers['content-type']?.split(';')[0].trim().toLowerCase()!=='application/json')throw fail(415,'invalid_content_type','Use application/json.');
@@ -84,11 +85,18 @@ export function createApp({config,auth,mailer,root}) {
         const result=await auth.requestCode(body.email,ip);
         return json(res,200,{...result,message:mailer.development?'A test code was saved on this computer. No email was sent.':result.message});
       }
-      if(pathname==='/api/auth/verify'){
-        const verified=await auth.verifyCode(body.email,body.code,ip);
+      if(pathname==='/api/auth/sms/request-code'){
+        if(!sms.ready)throw fail(503,'sms_unavailable','SMS sign-in is not configured yet.');
+        const result=await auth.requestPhoneCode(body.phone,ip);
+        return json(res,200,{...result,message:sms.development?'A test code was saved on this computer. No SMS was sent.':result.message});
+      }
+      if(pathname==='/api/auth/verify'||pathname==='/api/auth/sms/verify'){
+        const phoneLogin=pathname==='/api/auth/sms/verify';
+        if(phoneLogin&&!sms.ready)throw fail(503,'sms_unavailable','SMS sign-in is not configured yet.');
+        const verified=phoneLogin?await auth.verifyPhoneCode(body.phone,body.code,ip):await auth.verifyCode(body.email,body.code,ip);
         // Successful sign-in rotates the browser's previous session as well.
         if(token)await auth.logout(token);
-        return json(res,200,sessionView({authenticated:true,email:verified.email,products:verified.products}),{'Set-Cookie':cookie(config,verified.token,SESSION_SECONDS)});
+        return json(res,200,sessionView({authenticated:true,email:verified.email,phone:verified.phone??null,products:verified.products}),{'Set-Cookie':cookie(config,verified.token,SESSION_SECONDS)});
       }
       if(pathname==='/api/auth/logout'){
         await auth.logout(token);

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Arviva Therapeutics website with PostgreSQL email authentication",
+  "description": "Arviva Therapeutics website with PostgreSQL email and phone authentication",
   "engines": {
     "node": ">=22"
   },
@@ -11,12 +11,15 @@
     "build": "node scripts/build.mjs",
     "dev": "node scripts/dev.mjs",
     "test": "node scripts/build.mjs && node --env-file-if-exists=.env --test tests/*.test.mjs",
-    "test:auth": "node --env-file=.env --test tests/auth.integration.test.mjs tests/auth-http.test.mjs tests/auth-config.test.mjs tests/access-live.test.mjs",
+    "test:auth": "node --env-file=.env --test tests/auth.integration.test.mjs tests/auth-http.test.mjs tests/auth-config.test.mjs tests/auth-phone.test.mjs tests/access-live.test.mjs tests/sms.test.mjs tests/sms-http.test.mjs",
     "db:migrate": "node --env-file=.env scripts/migrate.mjs",
     "db:setup:local": "node --env-file=tmp/postgresql-admin.env scripts/setup-local-db.mjs",
     "start": "node --env-file=.env scripts/start.mjs"
   },
   "dependencies": {
+    "@alicloud/dypnsapi20170525": "^2.0.0",
+    "@alicloud/openapi-core": "^1.0.8",
+    "@darabonba/typescript": "^1.0.5",
     "nodemailer": "^10.0.16",
     "pg": "^8.23.1"
   }

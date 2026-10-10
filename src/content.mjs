@@ -1,5 +1,6 @@
 import {readdir, readFile, realpath} from 'node:fs/promises';
 import path from 'node:path';
+import {ARTICLE_ROUTES} from './routes.mjs';
 const layouts = JSON.parse(await readFile(new URL('./article-layout.json', import.meta.url),'utf8'));
 
 function articleParagraphs(body) {
@@ -50,12 +51,14 @@ export async function loadArticles(backupRoot) {
     const source = JSON.parse((await readFile(path.join(articleDirectory, file), 'utf8')).replace(/^\uFEFF/, ''));
     if (typeof source.body_text !== 'string') throw new Error(`Article ${id} has no original body_text`);
     const images = await Promise.all((source.article_images ?? []).map(image => localImage(image, articleDirectory, imagesDirectory)));
+    const route = ARTICLE_ROUTES.find(article => article.id === id);
+    if (!route) throw new Error(`Article ${id} needs an explicit public route in src/routes.mjs`);
     const article = {
       id,
       title:String(source.title ?? ''),
       body:source.body_text,
       images,
-      href:`/newsinfo/${id}.html`,
+      href:route.path,
       excerpt:source.body_text.trim().slice(0, 180),
       cover:covers[id] ? `/assets/images/${covers[id]}` : (images[0]?.src ?? ''),
     };

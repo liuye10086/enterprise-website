@@ -1,4 +1,5 @@
 import { PRODUCTS } from './access-state.js';
+import { ROUTES } from './routes.mjs';
 
 const arrow = '<span aria-hidden="true">→</span>';
 
@@ -10,7 +11,10 @@ export function renderAccessDialogs() {
     <h2 id="login-title">Welcome back</h2><p id="login-description" class="login-description">Log in with your email. No password needed.</p>
     <p class="login-demo" data-login-demo hidden>Interactive preview. No email will be sent.</p>
     <form class="login-form" data-login-form>
-      <label for="login-email">Email address</label><input id="login-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required maxlength="254" autofocus>
+      <div class="login-channels" data-login-channels role="group" aria-label="Sign-in method" hidden><button type="button" data-login-channel="email" aria-pressed="true">Email</button><button type="button" data-login-channel="sms" aria-pressed="false">Phone / SMS</button></div>
+      <div class="login-field" data-login-email-field><label for="login-email">Email address</label><input id="login-email" name="email" type="email" autocomplete="email" placeholder="you@qq.com or other email" required maxlength="254" autofocus></div>
+      <div class="login-field" data-login-phone-field hidden><label for="login-phone">Mobile number</label><div class="login-phone-row"><span id="login-phone-country" class="login-phone-country">+86</span><input id="login-phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="11-digit mobile number" pattern="1[3-9][0-9]{9}" maxlength="11" title="Enter an 11-digit mainland China mobile number" aria-describedby="login-phone-country login-identity-note" disabled></div></div>
+      <p id="login-identity-note" class="login-identity-note" data-login-identity-note>QQ and other email providers are supported.</p>
       <label for="login-code">Verification code</label><div class="login-code-row"><input id="login-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code" required pattern="[0-9]{6}" maxlength="6" title="Enter a 6-digit verification code"><button class="send-code-button" data-login-send-code type="button">Send code</button></div>
       <p class="login-status" data-login-status role="status" aria-live="polite"></p>
       <button class="primary-button login-submit" type="submit">Log in ${arrow}</button>
@@ -28,7 +32,7 @@ export function renderAccessDialogs() {
       <article class="access-plan trial-plan"><span class="plan-label" data-trial-label>TRY IT FIRST</span><h3>Free trial</h3><p class="plan-allowance" data-trial-allowance>1 use <span>per product</span></p><p class="plan-description" data-trial-description>Explore this product once, free of charge.</p><button class="primary-button" type="button" data-access-trial>Start free trial ${arrow}</button></article>
       <article class="access-plan full-plan"><span class="plan-label">CONTINUE EXPLORING</span><h3>Full access</h3><p class="plan-allowance">Product access</p><p class="plan-description">Continue using this product after your free trial.</p><button class="secondary-button" type="button" data-access-upgrade>Upgrade access ${arrow}</button></article>
     </div><p class="access-smallprint">Each product has its own trial and access plan.</p></section>
-    <section data-access-payment hidden><div class="payment-summary"><span class="plan-label">FULL ACCESS</span><h3 data-payment-product>${PRODUCTS[0].name}</h3><div class="payment-line"><span>Product access</span><strong>Price to be confirmed</strong></div></div><p class="payment-note">This is a purchase preview. No payment will be collected.</p><button class="primary-button access-primary" type="button" data-access-purchase>Simulate purchase ${arrow}</button><a class="secondary-button access-primary" href="/lxwm" data-access-contact hidden>Contact Arviva Therapeutics ${arrow}</a><button class="access-back" type="button" data-access-back>← Back to access options</button></section>
+    <section data-access-payment hidden><div class="payment-summary"><span class="plan-label">FULL ACCESS</span><h3 data-payment-product>${PRODUCTS[0].name}</h3><div class="payment-line"><span>Product access</span><strong>Price to be confirmed</strong></div></div><p class="payment-note">This is a purchase preview. No payment will be collected.</p><button class="primary-button access-primary" type="button" data-access-purchase>Simulate purchase ${arrow}</button><a class="secondary-button access-primary" href="${ROUTES.contact}" data-access-contact hidden>Contact Arviva Therapeutics ${arrow}</a><button class="access-back" type="button" data-access-back>← Back to access options</button></section>
     <section data-access-ready hidden><div class="access-success"><span aria-hidden="true">✓</span><p>Access is active for this product in the preview.</p></div><button class="primary-button access-primary" type="button" data-access-continue>Continue to product ${arrow}</button></section>
     <p class="login-status" data-access-status role="status" aria-live="polite"></p>
     <p class="login-availability" data-access-demo-note hidden>Interactive preview · No real charges</p>

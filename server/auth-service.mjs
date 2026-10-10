@@ -7,6 +7,11 @@ const CODE_LIFETIME = 10 * MINUTE;
 const SESSION_LIFETIME = 7 * 24 * HOUR;
 const GRANT_LIFETIME = 15 * MINUTE;
 const PRODUCT_IDS = PRODUCTS.map(({ id }) => id);
+// SQL identifiers below come only from this internal, fixed channel map.
+const CHANNELS = {
+  email: { identity: 'email', digest: 'email_digest', table: 'arviva_verification_challenges' },
+  phone: { identity: 'phone', digest: 'phone_digest', table: 'arviva_phone_verification_challenges' },
+};
 
 function authError(status, code, message) {
   return Object.assign(new Error(message), { status, code });
@@ -25,12 +30,21 @@ function normalizeEmail(value) {
   return email;
 }
 
+export function normalizePhone(value) {
+  if (typeof value !== 'string' || !/^[+0-9 \u00a0]+$/.test(value)) {
+    throw authError(400, 'INVALID_PHONE', 'Enter a valid mainland China mobile number.');
+  }
+  const match = /^(?:\+86|0086)?(1[3-9]\d{9})$/.exec(value.replace(/[ \u00a0]/g, ''));
+  if (!match) throw authError(400, 'INVALID_PHONE', 'Enter a valid mainland China mobile number.');
+  return `+86${match[1]}`;
+}
+
 function freshProducts() {
   return Object.fromEntries(PRODUCT_IDS.map((id) => [id, { trialUsed: false, paid: false }]));
 }
 
 function signedOut() {
-  return { authenticated: false, email: null, products: freshProducts() };
+  return { authenticated: false, email: null, phone: null, products: freshProducts() };
 }
 
 function sessionDigest(token) {
@@ -47,10 +61,12 @@ function rateLimited() {
   return authError(429, 'RATE_LIMITED', 'Too many requests. Please wait before trying again.');
 }
 
-export function createAuthService({ pool, secret, sendCode, now = Date.now }) {
+export function createAuthService({ pool, secret, sendCode, sendSmsCode, smsDailyLimit = 100, now = Date.now }) {
   if (!pool || typeof pool.connect !== 'function') throw new TypeError('A PostgreSQL pool is required.');
   if (typeof secret !== 'string' || secret.length < 32) throw new TypeError('The authentication secret must contain at least 32 characters.');
   if (typeof sendCode !== 'function') throw new TypeError('A code delivery function is required.');
+  if (sendSmsCode !== undefined && typeof sendSmsCode !== 'function') throw new TypeError('SMS code delivery must be a function.');
+  if (!Number.isSafeInteger(smsDailyLimit) || smsDailyLimit < 1) throw new TypeError('SMS daily limit must be a positive integer.');
 
   const timestamp = () => {
     const date = new Date(now());
@@ -58,7 +74,8 @@ export function createAuthService({ pool, secret, sendCode, now = Date.now }) {
     return date;
   };
   const hmac = (purpose, value) => createHmac('sha256', secret).update(`${purpose}\0${value}`).digest('hex');
-  const codeDigest = (email, code) => hmac('otp', `${email}\0${code}`);
+  // Preserve old email digests so codes delivered before migration still work.
+  const codeDigest = (channel, identity, code) => hmac(channel === 'email' ? 'otp' : 'otp-phone', `${identity}\0${code}`);
   const sourceDigest = (ip) => hmac('ip', typeof ip === 'string' && ip ? ip : 'unknown');
 
   // All statements in a transaction run on its leased client. Business errors can
@@ -82,7 +99,7 @@ export function createAuthService({ pool, secret, sendCode, now = Date.now }) {
 
   async function lockSubjects(client, subjects) {
     // Sorting gives every request the same lock order. Advisory locks also cover
-    // first requests, for which an email/challenge row does not exist yet.
+    // first requests, for which an identity/challenge row does not exist yet.
     const keys = [...new Set(subjects.map((subject) => createHash('sha256').update(subject).digest().readBigInt64BE(0).toString()))].sort();
     for (const key of keys) await client.query('SELECT pg_advisory_xact_lock($1::bigint)', [key]);
   }
@@ -96,102 +113,132 @@ export function createAuthService({ pool, secret, sendCode, now = Date.now }) {
     return products;
   }
 
-  async function recordEvent(client, kind, emailDigest, ipDigest, at) {
-    await client.query('INSERT INTO arviva_auth_events (id, kind, email_digest, ip_digest, created_at) VALUES ($1, $2, $3, $4, $5)', [randomUUID(), kind, emailDigest, ipDigest, at]);
+  async function recordEvent(client, kind, channel, identityDigest, ipDigest, at) {
+    await client.query('INSERT INTO arviva_auth_events (id, kind, email_digest, phone_digest, ip_digest, created_at) VALUES ($1, $2, $3, $4, $5, $6)', [randomUUID(), kind, channel === 'email' ? identityDigest : null, channel === 'phone' ? identityDigest : null, ipDigest, at]);
   }
 
-  async function requestCode(rawEmail, ip) {
-    const email = normalizeEmail(rawEmail);
-    const emailDigest = hmac('email', email);
+  async function requestVerificationCode(channel, identity, ip) {
+    const { identity: column, digest, table } = CHANNELS[channel];
+    const deliver = channel === 'email' ? sendCode : sendSmsCode;
+    const deliveryError = () => channel === 'email'
+      ? authError(503, 'MAIL_UNAVAILABLE', 'The verification email could not be sent. Please try again later.')
+      : authError(503, 'SMS_UNAVAILABLE', 'The verification text message could not be sent. Please try again later.');
+    if (!deliver) throw deliveryError();
+    const identityDigest = hmac(channel, identity);
     const ipDigest = sourceDigest(ip);
     const challengeId = randomUUID();
     let code = randomInt(0, 1_000_000).toString().padStart(6, '0');
 
     await transaction(async (client) => {
-      await lockSubjects(client, [`send-email:${emailDigest}`, `send-ip:${ipDigest}`]);
+      const subjects = [`send-${channel}:${identityDigest}`, `send-ip:${ipDigest}`];
+      if (channel === 'phone') subjects.push('send-sms-budget');
+      await lockSubjects(client, subjects);
       const at = timestamp();
       const recent = await client.query(`
-        SELECT count(*) FILTER (WHERE email_digest = $1)::int AS email_count,
+        SELECT count(*) FILTER (WHERE ${digest} = $1)::int AS identity_count,
                count(*) FILTER (WHERE ip_digest = $2)::int AS ip_count,
-               max(created_at) FILTER (WHERE email_digest = $1) AS last_email
+               max(created_at) FILTER (WHERE ${digest} = $1) AS last_identity
         FROM arviva_auth_events
-        WHERE kind = 'send' AND created_at > $3 AND (email_digest = $1 OR ip_digest = $2)
-      `, [emailDigest, ipDigest, new Date(at.getTime() - HOUR)]);
+        WHERE kind = 'send' AND created_at > $3 AND (${digest} = $1 OR ip_digest = $2)
+      `, [identityDigest, ipDigest, new Date(at.getTime() - HOUR)]);
       const limits = recent.rows[0];
-      if (limits.email_count >= 5 || limits.ip_count >= 30 || (limits.last_email && at.getTime() - new Date(limits.last_email).getTime() < MINUTE)) throw rateLimited();
-      const previous = (await client.query('SELECT code_digest FROM arviva_verification_challenges WHERE email = $1 FOR UPDATE', [email])).rows[0];
+      if (limits.identity_count >= 5 || limits.ip_count >= 30 || (limits.last_identity && at.getTime() - new Date(limits.last_identity).getTime() < MINUTE)) throw rateLimited();
+      if (channel === 'phone') {
+        const dayStart = new Date(Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate()));
+        const dayEnd = new Date(dayStart.getTime() + 24 * HOUR);
+        const budget = await client.query("SELECT count(*)::int AS count FROM arviva_auth_events WHERE kind = 'send' AND phone_digest IS NOT NULL AND created_at >= $1 AND created_at < $2", [dayStart, dayEnd]);
+        if (budget.rows[0].count >= smsDailyLimit) throw rateLimited();
+      }
+      const previous = (await client.query(`SELECT code_digest FROM ${table} WHERE ${column} = $1 FOR UPDATE`, [identity])).rows[0];
       // A resend must not accidentally reproduce the immediately previous code.
-      while (previous?.code_digest === codeDigest(email, code)) code = randomInt(0, 1_000_000).toString().padStart(6, '0');
-      await recordEvent(client, 'send', emailDigest, ipDigest, at);
+      while (previous?.code_digest === codeDigest(channel, identity, code)) code = randomInt(0, 1_000_000).toString().padStart(6, '0');
+      await recordEvent(client, 'send', channel, identityDigest, ipDigest, at);
       await client.query(`
-        INSERT INTO arviva_verification_challenges
-          (email, challenge_id, code_digest, status, attempts, requested_at, expires_at, delivered_at)
+        INSERT INTO ${table}
+          (${column}, challenge_id, code_digest, status, attempts, requested_at, expires_at, delivered_at)
         VALUES ($1, $2, $3, 'pending', 0, $4, $5, NULL)
-        ON CONFLICT (email) DO UPDATE SET
+        ON CONFLICT (${column}) DO UPDATE SET
           challenge_id = EXCLUDED.challenge_id, code_digest = EXCLUDED.code_digest,
           status = 'pending', attempts = 0, requested_at = EXCLUDED.requested_at,
           expires_at = EXCLUDED.expires_at, delivered_at = NULL
-      `, [email, challengeId, codeDigest(email, code), at, new Date(at.getTime() + CODE_LIFETIME)]);
+      `, [identity, challengeId, codeDigest(channel, identity, code), at, new Date(at.getTime() + CODE_LIFETIME)]);
     });
 
     try {
-      await sendCode({ email, code, expiresMinutes: 10 });
+      await deliver({ [column]: identity, code, expiresMinutes: 10 });
     } catch {
-      // The reservation and cooldown remain committed even when SMTP fails.
-      await pool.query("UPDATE arviva_verification_challenges SET status = 'failed' WHERE email = $1 AND challenge_id = $2 AND status = 'pending'", [email, challengeId]);
-      throw authError(503, 'MAIL_UNAVAILABLE', 'The verification email could not be sent. Please try again later.');
+      // Reservations and cooldowns remain committed when delivery fails, so
+      // retries cannot bypass rate limits or the global SMS spend ceiling.
+      await pool.query(`UPDATE ${table} SET status = 'failed' WHERE ${column} = $1 AND challenge_id = $2 AND status = 'pending'`, [identity, challengeId]);
+      throw deliveryError();
     }
     const deliveredAt = timestamp();
     const activated = await pool.query(`
-      UPDATE arviva_verification_challenges SET status = 'sent', delivered_at = $3, expires_at = $4
-      WHERE email = $1 AND challenge_id = $2 AND status = 'pending'
-    `, [email, challengeId, deliveredAt, new Date(deliveredAt.getTime() + CODE_LIFETIME)]);
+      UPDATE ${table} SET status = 'sent', delivered_at = $3, expires_at = $4
+      WHERE ${column} = $1 AND challenge_id = $2 AND status = 'pending'
+    `, [identity, challengeId, deliveredAt, new Date(deliveredAt.getTime() + CODE_LIFETIME)]);
     if (activated.rowCount !== 1) throw authError(409, 'CODE_SUPERSEDED', 'A newer verification code was requested. Use the code from that request.');
-    return { message: 'A verification code has been sent. Check your inbox.', retryAfterSeconds: 60 };
+    return { message: channel === 'email' ? 'A verification code has been sent. Check your inbox.' : 'A verification code has been sent to your phone.', retryAfterSeconds: 60 };
   }
 
-  async function verifyCode(rawEmail, rawCode, ip) {
-    const email = normalizeEmail(rawEmail);
+  async function verifyVerificationCode(channel, identity, rawCode, ip) {
+    const { identity: column, table } = CHANNELS[channel];
     const code = typeof rawCode === 'string' ? rawCode.trim() : '';
-    const emailDigest = hmac('email', email);
+    const identityDigest = hmac(channel, identity);
     const ipDigest = sourceDigest(ip);
     return transaction(async (client) => {
       await lockSubjects(client, [`verify-ip:${ipDigest}`]);
       const requestedAt = timestamp();
       const recent = await client.query("SELECT count(*)::int AS count FROM arviva_auth_events WHERE kind = 'verify' AND ip_digest = $1 AND created_at > $2", [ipDigest, new Date(requestedAt.getTime() - HOUR)]);
       if (recent.rows[0].count >= 60) return rateLimited();
-      await recordEvent(client, 'verify', emailDigest, ipDigest, requestedAt);
-      const challenge = (await client.query('SELECT * FROM arviva_verification_challenges WHERE email = $1 FOR UPDATE', [email])).rows[0];
+      await recordEvent(client, 'verify', channel, identityDigest, ipDigest, requestedAt);
+      const challenge = (await client.query(`SELECT * FROM ${table} WHERE ${column} = $1 FOR UPDATE`, [identity])).rows[0];
       const at = timestamp();
       if (!challenge || challenge.status !== 'sent' || new Date(challenge.expires_at).getTime() <= at.getTime() || challenge.attempts >= 5) return invalidCode();
-      const supplied = Buffer.from(codeDigest(email, code), 'hex');
+      const supplied = Buffer.from(codeDigest(channel, identity, code), 'hex');
       const expected = Buffer.from(challenge.code_digest, 'hex');
       if (!/^\d{6}$/.test(code) || !timingSafeEqual(supplied, expected)) {
-        await client.query("UPDATE arviva_verification_challenges SET attempts = attempts + 1, status = CASE WHEN attempts + 1 >= 5 THEN 'consumed' ELSE status END WHERE email = $1", [email]);
+        await client.query(`UPDATE ${table} SET attempts = attempts + 1, status = CASE WHEN attempts + 1 >= 5 THEN 'consumed' ELSE status END WHERE ${column} = $1`, [identity]);
         return invalidCode();
       }
-      await client.query("UPDATE arviva_verification_challenges SET status = 'consumed' WHERE email = $1", [email]);
+      await client.query(`UPDATE ${table} SET status = 'consumed' WHERE ${column} = $1`, [identity]);
       const user = (await client.query(`
-        INSERT INTO arviva_users (id, email, created_at) VALUES ($1, $2, $3)
-        ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email RETURNING id, email
-      `, [randomUUID(), email, at])).rows[0];
+        INSERT INTO arviva_users (id, ${column}, created_at) VALUES ($1, $2, $3)
+        ON CONFLICT (${column}) DO UPDATE SET ${column} = EXCLUDED.${column} RETURNING id, email, phone
+      `, [randomUUID(), identity, at])).rows[0];
       for (const productId of PRODUCT_IDS) {
         await client.query('INSERT INTO arviva_product_entitlements (user_id, product_id) VALUES ($1, $2) ON CONFLICT (user_id, product_id) DO NOTHING', [user.id, productId]);
       }
       const token = randomBytes(32).toString('hex');
       await client.query('INSERT INTO arviva_sessions (token_digest, user_id, created_at, expires_at) VALUES ($1, $2, $3, $4)', [sessionDigest(token), user.id, at, new Date(at.getTime() + SESSION_LIFETIME)]);
-      return { token, email: user.email, products: await productsFor(client, user.id) };
+      return { token, email: user.email, phone: user.phone, products: await productsFor(client, user.id) };
     });
+  }
+
+  async function requestCode(rawEmail, ip) {
+    return requestVerificationCode('email', normalizeEmail(rawEmail), ip);
+  }
+
+  async function verifyCode(rawEmail, rawCode, ip) {
+    return verifyVerificationCode('email', normalizeEmail(rawEmail), rawCode, ip);
+  }
+
+  async function requestPhoneCode(rawPhone, ip) {
+    return requestVerificationCode('phone', normalizePhone(rawPhone), ip);
+  }
+
+  async function verifyPhoneCode(rawPhone, rawCode, ip) {
+    return verifyVerificationCode('phone', normalizePhone(rawPhone), rawCode, ip);
   }
 
   async function getSession(token) {
     const digest = sessionDigest(token);
     if (!digest) return signedOut();
     const session = (await pool.query(`
-      SELECT s.user_id, u.email FROM arviva_sessions s JOIN arviva_users u ON u.id = s.user_id
+      SELECT s.user_id, u.email, u.phone FROM arviva_sessions s JOIN arviva_users u ON u.id = s.user_id
       WHERE s.token_digest = $1 AND s.revoked_at IS NULL AND s.expires_at > $2
     `, [digest, timestamp()])).rows[0];
-    return session ? { authenticated: true, email: session.email, products: await productsFor(pool, session.user_id) } : signedOut();
+    return session ? { authenticated: true, email: session.email, phone: session.phone, products: await productsFor(pool, session.user_id) } : signedOut();
   }
 
   async function logout(token) {
@@ -239,5 +286,5 @@ export function createAuthService({ pool, secret, sendCode, now = Date.now }) {
     return result.rowCount > 0;
   }
 
-  return { requestCode, verifyCode, getSession, logout, enterProduct, canViewProduct };
+  return { requestCode, verifyCode, requestPhoneCode, verifyPhoneCode, getSession, logout, enterProduct, canViewProduct };
 }

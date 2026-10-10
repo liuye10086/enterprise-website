@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
 
-async function fixture(t) {
+async function fixture(t, hooks = {}) {
   const base = await mkdtemp(path.join(tmpdir(), 'website-server-'));
   const root = path.join(base, 'dist');
   await mkdir(path.join(root, 'home'), {recursive: true});
@@ -17,7 +17,7 @@ async function fixture(t) {
   await writeFile(path.join(base, 'secret.txt'), 'private');
   await symlink(base, path.join(root, 'escape'), 'junction');
   const {createStaticServer} = await import('../scripts/server.mjs');
-  const server = createStaticServer({root});
+  const server = createStaticServer({root, ...hooks});
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(async () => { await new Promise(resolve => server.close(resolve)); await rm(base, {recursive: true, force: true}); });
   const request = (url, options = {}) => new Promise((resolve, reject) => {
@@ -40,6 +40,52 @@ test('serves extensionless pages, article URLs and HEAD with correct MIME', asyn
   const head = await request('/assets/movie.mp4', {method: 'HEAD'});
   assert.equal(head.status, 200); assert.equal(head.body, '');
   assert.equal(head.headers['content-length'], '10'); assert.equal(head.headers['content-type'], 'video/mp4');
+});
+
+test('legacy section and article GET/HEAD addresses redirect to fixed readable routes with the original query', async t => {
+  const request = await fixture(t);
+  const sections = [['/sy','/home'],['/gywm','/about'],['/kyfw','/intelligent'],['/ythpt','/drug-design'],['/tzzzq','/investors'],['/xwzx','/news'],['/lxwm','/contact']];
+  const articles = [
+    ['/newsinfo/3099692.html','/news/recruitment-join-us-to-redefine-medicine'],
+    ['/newsinfo/7224.html','/news/glp-1-the-key-behind-weight-loss'],
+    ['/newsinfo/7114.html','/news/gut-microbiota-and-feeding-behavior'],
+    ['/newsinfo/7062.html','/news/alzheimers-disease-pathogenesis'],
+    ['/newsinfo/7050.html','/news/alzheimers-drug-development-pipeline-2025'],
+  ];
+  const aliases = [
+    ...sections.flatMap(([legacy, canonical]) => [legacy, legacy+'/', legacy+'/index.html', canonical+'/', canonical+'/index.html'].map(alias => [alias, canonical])),
+    ...articles.flatMap(([legacy, canonical]) => [legacy, canonical+'/', canonical+'/index.html'].map(alias => [alias, canonical])),
+  ];
+  const query = '?source=old%2Fsite&next=https%3A%2F%2Fexample.com&tag=a&tag=b';
+  for (const [alias, canonical] of aliases) {
+    for (const method of ['GET', 'HEAD']) {
+      const response = await request(alias+query, {method});
+      assert.equal(response.status, 308, `${method} ${alias}`);
+      assert.equal(response.headers.location, canonical+query);
+      if (method === 'HEAD') assert.equal(response.body, '');
+    }
+  }
+  assert.equal((await request('/%67ywm')).headers.location, '/about');
+});
+
+test('redirects accept only known safe local GET/HEAD paths after request guards', async t => {
+  const request = await fixture(t);
+  for (const method of ['POST', 'PUT', 'DELETE', 'OPTIONS']) {
+    const response = await request('/kyfw?next=//example.com', {method});
+    assert.equal(response.status, 405);
+    assert.equal(response.headers.location, undefined);
+  }
+  for (const alias of ['/../kyfw', '/%2e%2e/kyfw', '/kyfw%00', '/kyfw%5c', '/kyfw:secret', '/%ZZ', '//example.com/kyfw', '/newsinfo/99999.html']) {
+    const response = await request(alias);
+    assert.ok([400,403,404].includes(response.status), alias);
+    assert.equal(response.headers.location, undefined);
+  }
+  const guarded = await fixture(t, {beforeRequest: (req, res) => {
+    res.writeHead(403); res.end('Blocked by request guard'); return true;
+  }});
+  const response = await guarded('/kyfw');
+  assert.equal(response.status, 403);
+  assert.equal(response.headers.location, undefined);
 });
 
 test('returns real 404 and rejects traversal, directory listing and symlink escape', async t => {

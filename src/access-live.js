@@ -3,20 +3,59 @@ import { PRODUCTS } from './access-state.js';
 const productById = new Map(PRODUCTS.map(product => [product.id, product]));
 
 export function readLiveSession(raw) {
+  const phone = raw?.phone === undefined ? null : raw.phone;
+  const smsReady = raw?.smsReady === undefined ? false : raw.smsReady;
+  const developmentSms = raw?.developmentSms === undefined ? false : raw.developmentSms;
+  const emailIdentity = typeof raw?.email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw.email) && phone === null;
+  const phoneIdentity = raw?.email === null && typeof phone === 'string' && /^\+861[3-9][0-9]{9}$/.test(phone);
   if (!raw || typeof raw.authenticated !== 'boolean' || typeof raw.mailReady !== 'boolean' ||
-    typeof raw.developmentMail !== 'boolean' ||
-    (raw.authenticated ? typeof raw.email !== 'string' || !raw.email.trim() : raw.email !== null) ||
+    typeof raw.developmentMail !== 'boolean' || typeof smsReady !== 'boolean' || typeof developmentSms !== 'boolean' ||
+    (raw.authenticated ? !emailIdentity && !phoneIdentity : raw.email !== null || phone !== null) ||
     PRODUCTS.some(({ id }) => typeof raw.products?.[id]?.trialUsed !== 'boolean' || typeof raw.products?.[id]?.paid !== 'boolean')) {
     throw new Error('The server returned an invalid session. Please try again.');
   }
   return {
     authenticated: raw.authenticated,
     email: raw.email,
+    phone,
     products: Object.fromEntries(PRODUCTS.map(({ id }) => [id, {
       trialUsed: raw.products[id].trialUsed, paid: raw.products[id].paid,
     }])),
     mailReady: raw.mailReady,
     developmentMail: raw.developmentMail,
+    smsReady,
+    developmentSms,
+  };
+}
+
+export function liveAccountLabel(session) {
+  return session.email || `${session.phone.slice(0, 3)} ${session.phone.slice(3, 6)}****${session.phone.slice(-4)}`;
+}
+
+export function normalizeLoginTarget(channel, value) {
+  const trimmed = value.trim();
+  return channel === 'email' ? trimmed.toLowerCase() : /^1[3-9][0-9]{9}$/.test(trimmed) ? `+86${trimmed}` : '';
+}
+
+export function createLoginFlow({ now = () => Date.now() } = {}) {
+  const deadlines = new Map();
+  let channel = 'email';
+  let destination = '';
+  let revision = 0;
+  const key = target => `${target.channel}:${target.destination}`;
+  return {
+    get channel() { return channel; },
+    setTarget(nextChannel, value) {
+      const nextDestination = normalizeLoginTarget(nextChannel, value);
+      if (channel !== nextChannel || destination !== nextDestination) ++revision;
+      channel = nextChannel;
+      destination = nextDestination;
+    },
+    attempt() { return { channel, destination, revision }; },
+    isCurrent(attempt) { return attempt.revision === revision; },
+    delayResend(attempt, seconds) { deadlines.set(key(attempt), now() + seconds * 1000); },
+    remainingSeconds() { return Math.max(0, Math.ceil(((deadlines.get(key({ channel, destination })) || 0) - now()) / 1000)); },
+    reset() { channel = 'email'; destination = ''; ++revision; },
   };
 }
 
@@ -37,7 +76,7 @@ export async function requestAccessApi(path, { method = 'GET', body, fetcher = f
     if (!response.ok) {
       const error = new Error(typeof data?.message === 'string' ? data.message : 'This request could not be completed. Please try again.');
       error.status = response.status;
-      error.retryAfterSeconds = Number(data?.retryAfterSeconds ?? response.headers.get('Retry-After')) || 0;
+      error.retryAfterSeconds = Number(data?.retryAfterSeconds ?? data?.retryAfter ?? response.headers.get('Retry-After')) || 0;
       throw error;
     }
     return data;
@@ -91,12 +130,13 @@ export function initializeLiveAccess(onOpen = () => {}) {
   const accessDialog = document.querySelector('[data-access-dialog]');
   const form = loginDialog?.querySelector('[data-login-form]');
   const email = form?.querySelector('input[name="email"]');
+  const phone = form?.querySelector('input[name="phone"]');
   const code = form?.querySelector('input[name="code"]');
   const sendCode = form?.querySelector('[data-login-send-code]');
-  if (!loginDialog || !form || !email || !code || !sendCode) return;
+  if (!loginDialog || !form || !email || !phone || !code || !sendCode) return;
 
   const ignoredCloseEvents = new Map();
-  const resendDeadlines = new Map();
+  const loginFlow = createLoginFlow();
   let session = null;
   let sessionError = '';
   let sessionSequence = 0;
@@ -112,7 +152,9 @@ export function initializeLiveAccess(onOpen = () => {}) {
   let resendTimer = null;
 
   const signedIn = () => session?.authenticated === true;
-  const normalizedEmail = () => email.value.trim().toLowerCase();
+  const targetInput = () => loginFlow.channel === 'sms' ? phone : email;
+  const channelReady = () => loginFlow.channel === 'sms' ? session?.smsReady : session?.mailReady;
+  const syncLoginTarget = () => loginFlow.setTarget(loginFlow.channel, targetInput().value);
   const isCurrent = sequence => sequence === flowSequence && currentDialog?.open;
   const setText = (selector, value, root = document) => root.querySelectorAll(selector).forEach(element => { element.textContent = value; });
   const setHidden = (selector, hidden, root = document) => root.querySelectorAll(selector).forEach(element => { element.hidden = hidden; });
@@ -129,12 +171,18 @@ export function initializeLiveAccess(onOpen = () => {}) {
 
   function updateControls() {
     const waiting = Boolean(busy) || refreshing;
-    const seconds = Math.max(0, Math.ceil(((resendDeadlines.get(normalizedEmail()) || 0) - Date.now()) / 1000));
-    sendCode.disabled = waiting || !session?.mailReady || signedIn() || seconds > 0;
+    const seconds = loginFlow.remainingSeconds();
+    const sms = loginFlow.channel === 'sms';
+    const targetLocked = Boolean(busy) && busy !== 'send';
+    sendCode.disabled = waiting || !channelReady() || signedIn() || seconds > 0;
     sendCode.textContent = busy === 'send' ? 'Sending…' : seconds > 0 ? `Resend in ${seconds}s` : 'Send code';
-    email.disabled = Boolean(busy);
+    email.disabled = targetLocked || sms;
+    email.required = !sms;
+    phone.disabled = targetLocked || !sms;
+    phone.required = sms;
+    form.querySelectorAll('[data-login-channel]').forEach(button => { button.disabled = targetLocked; });
     code.disabled = Boolean(busy);
-    form.querySelector('[type="submit"]').disabled = waiting || !session || signedIn();
+    form.querySelector('[type="submit"]').disabled = waiting || !channelReady() || signedIn();
     form.setAttribute('aria-busy', String(Boolean(busy)));
     document.querySelectorAll('[data-login-open], [data-product-open]').forEach(button => { button.disabled = Boolean(busy); });
     loginDialog.querySelectorAll('[data-live-logout]').forEach(button => { button.disabled = waiting || !signedIn(); });
@@ -148,16 +196,34 @@ export function initializeLiveAccess(onOpen = () => {}) {
   }
 
   function renderLogin() {
+    const sms = loginFlow.channel === 'sms';
     form.hidden = signedIn();
     setHidden('[data-login-session]', !signedIn(), loginDialog);
     setHidden('[data-login-demo]', true, loginDialog);
+    setHidden('[data-login-channels]', false, loginDialog);
+    setHidden('[data-login-email-field]', sms, loginDialog);
+    setHidden('[data-login-phone-field]', !sms, loginDialog);
+    form.querySelectorAll('[data-login-channel]').forEach(button => {
+      button.setAttribute('aria-pressed', String(button.dataset.loginChannel === loginFlow.channel));
+    });
     setText('#login-title', signedIn() ? 'Your account' : 'Welcome back', loginDialog);
     setText('#login-description', signedIn()
       ? 'Each product has its own free trial and access status.'
-      : 'Log in with your email. Your first sign-in creates an account automatically. No password needed.', loginDialog);
-    setText('[data-login-email]', signedIn() ? `Signed in as ${session.email}` : '', loginDialog);
-    setText('#login-availability', !session
-      ? sessionError || 'Checking email sign-in availability…'
+      : `Log in with your ${sms ? 'mobile number' : 'email'}. Your first sign-in creates an account automatically. No password needed.`, loginDialog);
+    setText('[data-login-email]', signedIn() ? `Signed in as ${liveAccountLabel(session)}` : '', loginDialog);
+    setText('[data-login-identity-note]', sms
+      ? 'Mainland China mobile numbers only. Email and phone accounts are separate.'
+      : 'QQ and other email providers are supported. Email and phone accounts are separate.', loginDialog);
+    setText('#login-availability', signedIn()
+      ? 'You are signed in. Log out to use another account.'
+      : !session
+      ? sessionError || 'Checking sign-in availability…'
+      : sms
+        ? !session.smsReady
+          ? 'SMS sign-in is temporarily unavailable. Please use email instead.'
+          : session.developmentSms
+            ? 'Local testing only: a random code is saved in tmp/dev-sms on this computer. No real SMS is sent.'
+            : 'A verification code will be sent by SMS. Codes expire after 10 minutes.'
       : !session.mailReady
         ? 'Email delivery has not been configured. Verification codes cannot be sent yet.'
         : session.developmentMail
@@ -197,10 +263,10 @@ export function initializeLiveAccess(onOpen = () => {}) {
 
   function refreshPage() {
     setHidden('[data-demo-panel], [data-demo-notice], [data-storage-note]', true);
-    setText('[data-login-label]', signedIn() ? session.email : 'Log in');
+    setText('[data-login-label]', signedIn() ? liveAccountLabel(session) : 'Log in');
     document.querySelectorAll('[data-login-open]').forEach(button => {
-      button.setAttribute('aria-label', signedIn() ? `Account: ${session.email}` : 'Log in');
-      button.title = signedIn() ? session.email : 'Log in';
+      button.setAttribute('aria-label', signedIn() ? `Account: ${liveAccountLabel(session)}` : 'Log in');
+      button.title = signedIn() ? liveAccountLabel(session) : 'Log in';
     });
     const labels = {
       unavailable: [sessionError ? 'Access unavailable' : 'Checking access…', 'Check access'],
@@ -252,7 +318,9 @@ export function initializeLiveAccess(onOpen = () => {}) {
 
   function resetLogin() {
     form.reset();
+    loginFlow.reset();
     loginMessage('');
+    renderLogin();
     updateControls();
   }
 
@@ -264,7 +332,7 @@ export function initializeLiveAccess(onOpen = () => {}) {
 
   function focusDialog(dialog) {
     const target = dialog === loginDialog
-      ? signedIn() ? dialog.querySelector('[data-live-logout]:not(:disabled)') : email.disabled ? null : email
+      ? signedIn() ? dialog.querySelector('[data-live-logout]:not(:disabled)') : targetInput().disabled ? null : targetInput()
       : dialog.querySelector('section:not([hidden]) button:not([hidden]):not(:disabled), section:not([hidden]) a:not([hidden])');
     (target || dialog.querySelector('.login-close') || dialog).focus();
   }
@@ -368,50 +436,75 @@ export function initializeLiveAccess(onOpen = () => {}) {
     showDialog(loginDialog);
   });
 
-  email.addEventListener('input', () => {
+  form.querySelectorAll('[data-login-channel]').forEach(button => button.addEventListener('click', () => {
+    if (button.disabled || button.dataset.loginChannel === loginFlow.channel) return;
+    const next = button.dataset.loginChannel;
+    loginFlow.setTarget(next, (next === 'sms' ? phone : email).value);
+    code.value = '';
+    loginMessage('');
+    renderLogin();
+    updateControls();
+    targetInput().focus();
+  }));
+  [email, phone].forEach(input => input.addEventListener('input', () => {
+    syncLoginTarget();
     code.value = '';
     loginMessage('');
     updateControls();
-  });
+  }));
   code.addEventListener('input', () => loginMessage(''));
   sendCode.addEventListener('click', async () => {
-    if (sendCode.disabled || !email.reportValidity()) return;
-    const destination = normalizedEmail();
+    if (sendCode.disabled || !targetInput().reportValidity()) return;
+    syncLoginTarget();
+    const attempt = loginFlow.attempt();
+    const sms = attempt.channel === 'sms';
+    if (!attempt.destination) return;
     const sequence = flowSequence;
+    const currentAttempt = () => isCurrent(sequence) && loginFlow.isCurrent(attempt);
     if (!beginOperation('send')) return;
     loginMessage('');
     code.value = '';
     try {
-      const result = await requestAccessApi('/api/auth/request-code', { method: 'POST', body: { email: destination } });
-      resendDeadlines.set(destination, Date.now() + Math.max(60, Number(result.retryAfterSeconds) || 60) * 1000);
-      if (!isCurrent(sequence)) return;
-      loginMessage(session.developmentMail
-        ? 'A random verification code was saved to the local development mail file. No email was sent.'
-        : result.message || 'Check your email for the verification code.');
+      const result = await requestAccessApi(sms ? '/api/auth/sms/request-code' : '/api/auth/request-code', {
+        method: 'POST', body: { [sms ? 'phone' : 'email']: attempt.destination },
+      });
+      loginFlow.delayResend(attempt, Math.max(60, Number(result.retryAfterSeconds ?? result.retryAfter) || 60));
+      if (!currentAttempt()) return;
+      loginMessage(sms
+        ? session.developmentSms
+          ? 'A random code was saved in tmp/dev-sms on this computer. No real SMS was sent.'
+          : result.message || 'Check your phone for the verification code.'
+        : session.developmentMail
+          ? 'A random verification code was saved to the local development mail file. No email was sent.'
+          : result.message || 'Check your email for the verification code.');
     } catch (error) {
-      if (error.status === 429) resendDeadlines.set(destination, Date.now() + Math.max(1, error.retryAfterSeconds || 60) * 1000);
-      if (isCurrent(sequence)) loginMessage(error.message);
+      if (error.status === 429) loginFlow.delayResend(attempt, Math.max(1, error.retryAfterSeconds || 60));
+      if (currentAttempt()) loginMessage(error.message);
     } finally {
       busy = null;
       updateControls();
-      if (isCurrent(sequence)) code.focus();
+      if (currentAttempt()) code.focus();
       void refreshSession();
     }
   });
 
   form.addEventListener('submit', async event => {
     event.preventDefault();
-    if (busy || refreshing || !session || signedIn() || !form.reportValidity()) return;
-    const payload = { email: normalizedEmail(), code: code.value.trim() };
+    if (busy || refreshing || !channelReady() || signedIn() || !form.reportValidity()) return;
+    syncLoginTarget();
+    const attempt = loginFlow.attempt();
+    const sms = attempt.channel === 'sms';
+    if (!attempt.destination) return;
+    const payload = { [sms ? 'phone' : 'email']: attempt.destination, code: code.value.trim() };
     const sequence = flowSequence;
     if (!beginOperation('verify')) return;
     loginMessage('');
     try {
-      session = readLiveSession(await requestAccessApi('/api/auth/verify', { method: 'POST', body: payload }));
+      session = readLiveSession(await requestAccessApi(sms ? '/api/auth/sms/verify' : '/api/auth/verify', { method: 'POST', body: payload }));
       sessionError = '';
       refreshPage();
       if (!isCurrent(sequence)) return;
-      announce(`Signed in as ${session.email}.`);
+      announce(`Signed in as ${liveAccountLabel(session)}.`);
       resetLogin();
       if (pendingProduct && accessDialog) {
         renderAccess();

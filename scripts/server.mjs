@@ -1,6 +1,7 @@
 import http from 'node:http';
 import {open, realpath, stat} from 'node:fs/promises';
 import path from 'node:path';
+import {publicRedirect} from '../src/routes.mjs';
 
 const mime = {'.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.ico': 'image/x-icon', '.mp4': 'video/mp4', '.webm': 'video/webm', '.woff2': 'font/woff2', '.pdf': 'application/pdf'};
 const within = (root, file) => { const relative = path.relative(root, file); return relative === '' || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative)); };
@@ -21,6 +22,12 @@ export function createStaticServer({root, beforeRequest, beforeFile}) {
       if (pathname.split('/').includes('..')) return reply(403, 'Forbidden');
       const candidate = path.resolve(absoluteRoot, `.${pathname}`);
       if (!within(absoluteRoot, candidate)) return reply(403, 'Forbidden');
+      const redirect = publicRedirect(pathname);
+      if (redirect) {
+        const queryAt = req.url.indexOf('?');
+        const query = queryAt === -1 ? '' : req.url.slice(queryAt);
+        return reply(308, 'Permanent Redirect', {Location: redirect + query});
+      }
       let file = candidate;
       let info = await stat(file);
       if (info.isDirectory()) { file = path.join(file, 'index.html'); info = await stat(file); }

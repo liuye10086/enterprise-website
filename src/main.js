@@ -11,19 +11,28 @@ export function createEmailDraft(values) {
   return `mailto:BD@arvivatherap.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
-function initialize() {
-  const menu = document.querySelector('.menu-toggle');
-  const nav = document.querySelector('#primary-navigation');
+export function initializeNavigation(root = document, desktop = window.matchMedia('(min-width: 1181px)')) {
+  const menu = root.querySelector('.menu-toggle');
+  const nav = root.querySelector('#primary-navigation');
   const setMenu = open => {
     menu?.setAttribute('aria-expanded',String(open));
     menu?.setAttribute('aria-label',open ? 'Close navigation' : 'Open navigation');
     nav?.classList.toggle('is-open',open);
   };
   menu?.addEventListener('click',()=>setMenu(menu.getAttribute('aria-expanded') !== 'true'));
-  document.addEventListener('keydown',event=>{
+  root.addEventListener('keydown',event=>{
     if (event.key === 'Escape' && menu?.getAttribute('aria-expanded') === 'true') {setMenu(false);menu.focus();}
   });
   nav?.addEventListener('click',event=>{if(event.target.closest('a')) setMenu(false);});
+  root.addEventListener('click', event => {
+    if (menu?.getAttribute('aria-expanded') === 'true' && !menu.contains(event.target) && !nav?.contains(event.target)) setMenu(false);
+  });
+  desktop.addEventListener('change', event => { if (event.matches) setMenu(false); });
+  return setMenu;
+}
+
+function initialize() {
+  const setMenu = initializeNavigation();
   (mode === 'live' ? initializeLiveAccess : initializeAccess)(()=>setMenu(false));
 
   const slides = [...document.querySelectorAll('[data-slide]')];

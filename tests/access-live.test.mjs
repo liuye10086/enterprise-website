@@ -5,12 +5,83 @@ import * as live from '../src/access-live.js';
 const serverSession = () => ({
   authenticated: true,
   email: 'person@example.com',
+  phone: null,
   products: {
     'module-01': { trialUsed: false, paid: false },
     'module-02': { trialUsed: true, paid: true },
   },
   mailReady: true,
   developmentMail: false,
+  smsReady: true,
+  developmentSms: false,
+});
+
+test('phone sessions preserve product access and display only a masked phone number', () => {
+  const session = { ...serverSession(), email: null, phone: '+8613800138000' };
+  assert.deepEqual(live.readLiveSession(session), session);
+  assert.equal(live.liveAccountLabel(session), '+86 138****8000');
+  assert.equal(live.liveAccountLabel(serverSession()), 'person@example.com');
+});
+
+test('sessions accept legacy email metadata but reject ambiguous or missing identities', () => {
+  const legacy = serverSession();
+  delete legacy.phone;
+  delete legacy.smsReady;
+  delete legacy.developmentSms;
+  assert.deepEqual(live.readLiveSession(legacy), { ...legacy, phone: null, smsReady: false, developmentSms: false });
+  for (const changes of [
+    { email: null, phone: null }, { phone: '+8613800138000' }, { email: null, phone: '13800138000' },
+    { email: null, phone: '+12125550100' }, { email: 'not-an-email' }, { smsReady: 'true' },
+    { developmentSms: 'true' }, { authenticated: false, phone: '+8613800138000', email: null },
+  ]) assert.throws(() => live.readLiveSession({ ...serverSession(), ...changes }), /session/i);
+});
+
+test('login target normalization accepts mainland mobile numbers and QQ or other email providers', () => {
+  assert.equal(live.normalizeLoginTarget('sms', '13800138000'), '+8613800138000');
+  assert.equal(live.normalizeLoginTarget('sms', ' 13800138000 '), '+8613800138000');
+  assert.equal(live.normalizeLoginTarget('email', ' Person@QQ.COM '), 'person@qq.com');
+  assert.equal(live.normalizeLoginTarget('email', 'Person@example.com'), 'person@example.com');
+  for (const value of ['', '123', '12800138000', '+8613800138000', '138 0013 8000', '138001380000']) {
+    assert.equal(live.normalizeLoginTarget('sms', value), '');
+  }
+});
+
+test('resend delays follow the channel and normalized destination after switching or resetting', () => {
+  let now = 1000;
+  const login = live.createLoginFlow({ now: () => now });
+  login.setTarget('email', 'Person@QQ.COM');
+  login.delayResend(login.attempt(), 60);
+  assert.equal(login.remainingSeconds(), 60);
+  login.setTarget('sms', '13800138000');
+  assert.equal(login.remainingSeconds(), 0);
+  login.delayResend(login.attempt(), 42);
+  login.setTarget('sms', '13900139000');
+  assert.equal(login.remainingSeconds(), 0);
+  login.setTarget('sms', '13800138000');
+  assert.equal(login.remainingSeconds(), 42);
+  login.reset();
+  login.setTarget('email', ' person@qq.com ');
+  assert.equal(login.remainingSeconds(), 60);
+  now += 60500;
+  assert.equal(login.remainingSeconds(), 0);
+});
+
+test('a response for a changed target or channel stays stale even after switching back', () => {
+  const login = live.createLoginFlow();
+  login.setTarget('sms', '13800138000');
+  const first = login.attempt();
+  assert.equal(first.destination, '+8613800138000');
+  assert.equal(login.isCurrent(first), true);
+  login.setTarget('sms', '13900139000');
+  assert.equal(login.isCurrent(first), false);
+  login.setTarget('sms', '13800138000');
+  assert.equal(login.isCurrent(first), false);
+  const second = login.attempt();
+  login.setTarget('email', 'person@qq.com');
+  assert.equal(login.isCurrent(second), false);
+  const third = login.attempt();
+  login.reset();
+  assert.equal(login.isCurrent(third), false);
 });
 
 test('live access accepts complete server sessions and never fills in missing eligibility', () => {
@@ -49,6 +120,13 @@ test('API failures preserve the server message, status and resend delay', async 
       status: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': '42' },
     }),
   }), error => error.status === 429 && error.retryAfterSeconds === 42 && error.message === 'Please wait before trying again.');
+});
+
+test('SMS API failures read the retryAfter response field', async () => {
+  await assert.rejects(live.requestAccessApi('/api/auth/sms/request-code', {
+    method: 'POST', body: { phone: '+8613800138000' },
+    fetcher: async () => new Response(JSON.stringify({ message: 'Please wait.', retryAfter: 35 }), { status: 429 }),
+  }), error => error.status === 429 && error.retryAfterSeconds === 35);
 });
 
 test('product destinations must match the requested platform on the current origin', () => {

@@ -23,14 +23,23 @@ export function loadConfig(env=process.env) {
   if (!['disabled','smtp','development'].includes(mailMode)) throw new Error('Invalid MAIL_MODE.');
   if (mailMode==='development'&&(production||!loopback(host)||!loopback(origin.hostname))) throw new Error('development mail requires a loopback-only development server.');
   if (mailMode==='smtp'&&['SMTP_HOST','SMTP_USER','SMTP_PASSWORD','SMTP_FROM'].some(key=>!env[key])) throw new Error('SMTP_HOST, SMTP_USER, SMTP_PASSWORD and SMTP_FROM are required for SMTP.');
+  const smsMode=env.SMS_MODE||'disabled';
+  if (!['disabled','development','aliyun-pnvs'].includes(smsMode)) throw new Error('Invalid SMS_MODE.');
+  if (smsMode==='development'&&(production||!loopback(host)||!loopback(origin.hostname))) throw new Error('development SMS requires a loopback-only development server.');
+  if (smsMode==='aliyun-pnvs'&&['ALIYUN_SMS_ACCESS_KEY_ID','ALIYUN_SMS_ACCESS_KEY_SECRET','ALIYUN_SMS_SIGN_NAME','ALIYUN_SMS_TEMPLATE_CODE'].some(key=>!env[key]?.trim())) throw new Error('ALIYUN_SMS_ACCESS_KEY_ID, ALIYUN_SMS_ACCESS_KEY_SECRET, ALIYUN_SMS_SIGN_NAME and ALIYUN_SMS_TEMPLATE_CODE are required for PNVS.');
+  if (env.ALIYUN_SMS_SCHEME_NAME&&[...env.ALIYUN_SMS_SCHEME_NAME].length>20) throw new Error('ALIYUN_SMS_SCHEME_NAME must be at most 20 characters.');
+  const smsDailyLimit=Number(env.SMS_DAILY_LIMIT??100);
+  if (!Number.isSafeInteger(smsDailyLimit)||smsDailyLimit<1) throw new Error('SMS_DAILY_LIMIT must be a positive integer.');
   if (env.TRUST_PROXY&&!['none','loopback'].includes(env.TRUST_PROXY)) throw new Error('TRUST_PROXY must be none or loopback.');
   const smtpPort=port(env.SMTP_PORT,465);
   return {
     production,host,port:serverPort,origin:origin.origin,
     databaseUrl:env.DATABASE_URL,authSecret:env.AUTH_SECRET,
-    secureCookies:origin.protocol==='https:',mailMode,
+    secureCookies:origin.protocol==='https:',mailMode,smsMode,smsDailyLimit,
     trustProxy:env.TRUST_PROXY==='loopback',
     developmentMailDir:path.join(projectRoot,'tmp','dev-mail'),
+    developmentSmsDir:path.join(projectRoot,'tmp','dev-sms'),
+    aliyunSms:{accessKeyId:env.ALIYUN_SMS_ACCESS_KEY_ID,accessKeySecret:env.ALIYUN_SMS_ACCESS_KEY_SECRET,signName:env.ALIYUN_SMS_SIGN_NAME,templateCode:env.ALIYUN_SMS_TEMPLATE_CODE,schemeName:env.ALIYUN_SMS_SCHEME_NAME||undefined},
     smtp:{host:env.SMTP_HOST,port:smtpPort,secure:smtpPort===465,auth:{user:env.SMTP_USER,pass:env.SMTP_PASSWORD},from:env.SMTP_FROM},
   };
 }

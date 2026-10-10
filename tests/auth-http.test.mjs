@@ -41,7 +41,7 @@ test('HTTP auth boundary enforces origin, cookies, methods and protected route a
     assert.equal((await post('/api/auth/request-code',{email:'x'.repeat(5000)})).status,413);
     for(const route of ['/research-platform','/research-platform/','/research-platform/index.html','/research%2dplatform/index.html','//research-platform//index.html','/prediction-platform']) {
       const response=await fetch(base+route,{redirect:'manual'});
-      assert.equal(response.status,302,route);assert.equal(response.headers.get('location'),'/kyfw');
+      assert.equal(response.status,302,route);assert.equal(response.headers.get('location'),'/intelligent');
     }
     assert.equal(await (await fetch(base+'/runtime-config.js')).text(),"export const mode = 'live';\n");
     assert.equal(await (await fetch(base+'/')).text(),'PUBLIC');
@@ -77,7 +77,7 @@ test('filesystem aliases cannot bypass product authorization or private cache he
     for(const route of aliases){
       const response=await fetch(base+route,{redirect:'manual'});
       assert.equal(response.status,302,route);
-      assert.equal(response.headers.get('location'),'/kyfw');
+      assert.equal(response.headers.get('location'),'/intelligent');
       assert.equal(response.headers.get('cache-control'),'no-store');
       assert.equal(checkedProducts.at(-1),'module-01');
     }

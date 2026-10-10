@@ -14,11 +14,12 @@ test('all five backup articles retain complete original bodies and local image o
   const articles = await module.loadArticles(backup);
   assert.equal(articles.length, 5);
   const covers = {'3099692':'173066242.jpg','7224':'33303291.png','7114':'33302710.png','7062':'33302463.png','7050':'33302416.png'};
+  const slugs = {'3099692':'recruitment-join-us-to-redefine-medicine','7224':'glp-1-the-key-behind-weight-loss','7114':'gut-microbiota-and-feeding-behavior','7062':'alzheimers-disease-pathogenesis','7050':'alzheimers-drug-development-pipeline-2025'};
   for (const article of articles) {
     const source = JSON.parse((await readFile(path.join(backup, 'pages/articles', `${article.id}.json`), 'utf8')).replace(/^\uFEFF/, ''));
     assert.equal(article.body, source.body_text);
     assert.equal(article.title, source.title);
-    assert.equal(article.href, `/newsinfo/${article.id}.html`);
+    assert.equal(article.href, `/news/${slugs[article.id]}`);
     assert.equal(article.cover, `/assets/images/${covers[article.id]}`);
     assert.ok(article.body.includes(article.excerpt));
     assert.deepEqual(article.images, source.article_images.map(image => ({src:`/assets/images/${path.basename(image.local_path)}`,alt:image.alt})));
@@ -29,16 +30,27 @@ test('BOM JSON is supported and unsafe image paths are rejected', async () => {
   try {
     await mkdir(path.join(root, 'pages/articles'), {recursive:true});
     await mkdir(path.join(root, 'images'));
-    await writeFile(path.join(root, 'images/photo.png'), 'image');
-    const file = path.join(root, 'pages/articles/123.json');
-    await writeFile(file, '\uFEFF'+JSON.stringify({title:'Original',body_text:' First line\n\nLast line. ',article_images:[{local_path:'../../images/photo.png',alt:'Photo'}]}));
+    const source = JSON.parse((await readFile(path.join(backup, 'pages/articles/7050.json'), 'utf8')).replace(/^\uFEFF/, ''));
+    for (const image of source.article_images) await writeFile(path.join(root, 'images', path.basename(image.local_path)), 'image');
+    const file = path.join(root, 'pages/articles/7050.json');
+    await writeFile(file, '\uFEFF'+JSON.stringify(source));
     const [article] = await module.loadArticles(root);
-    assert.equal(article.body, ' First line\n\nLast line. ');
-    assert.equal(article.images[0].src, '/assets/images/photo.png');
+    assert.equal(article.body, source.body_text);
+    assert.equal(article.images[0].src, `/assets/images/${path.basename(source.article_images[0].local_path)}`);
     for (const local_path of ['../../../secret.png','../../images/../../secret.png','C:\\secret.png','../../images/%2e%2e/secret.png']) {
       await writeFile(file, JSON.stringify({body_text:'Body',article_images:[{local_path}]}));
       await assert.rejects(() => module.loadArticles(root), /image|path/i);
     }
+  } finally { await rm(root, {recursive:true,force:true}); }
+});
+
+test('new articles require an explicit stable route before publication', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'content-route-test-'));
+  try {
+    await mkdir(path.join(root, 'pages/articles'), {recursive:true});
+    await mkdir(path.join(root, 'images'));
+    await writeFile(path.join(root, 'pages/articles/123.json'), JSON.stringify({title:'New article',body_text:'Original body',article_images:[]}));
+    await assert.rejects(() => module.loadArticles(root), /Article 123.*route/i);
   } finally { await rm(root, {recursive:true,force:true}); }
 });
 test('rendering escapes text and attributes and places figures after complete paragraphs', () => {

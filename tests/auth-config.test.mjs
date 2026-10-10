@@ -39,3 +39,35 @@ test('development delivery writes only to its private directory and never return
     assert.equal(message.delivery,'local-development-only');
   } finally {await rm(dir,{recursive:true,force:true});}
 });
+
+test('SMS is disabled by default and its daily budget must be a positive integer', () => {
+  const config=loadConfig(base);
+  assert.equal(config.smsMode,'disabled');
+  assert.equal(config.smsDailyLimit,100);
+  assert.equal(config.developmentSmsDir,path.resolve('tmp/dev-sms'));
+  assert.equal(loadConfig({...base,SMS_DAILY_LIMIT:'25'}).smsDailyLimit,25);
+  for (const value of ['0','-1','1.5','abc','Infinity','9007199254740992']) {
+    assert.throws(()=>loadConfig({...base,SMS_DAILY_LIMIT:value}),/SMS_DAILY_LIMIT/);
+  }
+});
+
+test('development SMS is allowed only on a nonproduction loopback server', () => {
+  assert.equal(loadConfig({...base,SMS_MODE:'development'}).smsMode,'development');
+  assert.throws(()=>loadConfig({...base,SMS_MODE:'unknown'}),/SMS_MODE/);
+  assert.throws(()=>loadConfig({...base,SMS_MODE:'development',HOST:'0.0.0.0'}),/loopback/);
+  assert.throws(()=>loadConfig({...base,SMS_MODE:'development',APP_ORIGIN:'https://example.com'}),/loopback/);
+  assert.throws(()=>loadConfig({...base,SMS_MODE:'development',NODE_ENV:'production',APP_ORIGIN:'https://example.com'}),/development/);
+});
+
+test('Aliyun PNVS configuration requires explicit credentials and console signature/template', () => {
+  const settings={...base,SMS_MODE:'aliyun-pnvs',ALIYUN_SMS_ACCESS_KEY_ID:'test-id',ALIYUN_SMS_ACCESS_KEY_SECRET:'test-secret',ALIYUN_SMS_SIGN_NAME:'Test signature',ALIYUN_SMS_TEMPLATE_CODE:'100001'};
+  for (const key of ['ALIYUN_SMS_ACCESS_KEY_ID','ALIYUN_SMS_ACCESS_KEY_SECRET','ALIYUN_SMS_SIGN_NAME','ALIYUN_SMS_TEMPLATE_CODE']) {
+    assert.throws(()=>loadConfig({...settings,[key]:''}),/ALIYUN_SMS/);
+  }
+  assert.deepEqual(loadConfig({...settings,ALIYUN_SMS_SCHEME_NAME:'Arviva'}).aliyunSms,{
+    accessKeyId:'test-id',accessKeySecret:'test-secret',signName:'Test signature',templateCode:'100001',schemeName:'Arviva',
+  });
+  assert.throws(()=>loadConfig({...settings,ALIYUN_SMS_SCHEME_NAME:'x'.repeat(21)}),/SCHEME_NAME/);
+  assert.equal(loadConfig(base).aliyunSms.accessKeyId,undefined);
+  assert.equal(loadConfig(base).aliyunSms.accessKeySecret,undefined);
+});
