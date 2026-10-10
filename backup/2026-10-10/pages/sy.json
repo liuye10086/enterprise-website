@@ -1,0 +1,69 @@
+{
+  "sourceUrl": "https://arvivatherap.com/sy",
+  "capturedDate": "2026-10-10",
+  "title": "Home Page-Enterprise Official Website",
+  "note": "从公开页面渲染 DOM 提取的文字参考；空白已规范化，导航和页脚单列，略去播放器控件、轮播箭头和动态访问量。不是可直接部署的源代码或完整页面归档。images 仅列 img 元素中的站点素材，不含 CSS 背景图、验证码和平台图标。",
+  "navigation": [
+    {
+      "text": "Home Page",
+      "url": "https://arvivatherap.com/sy"
+    },
+    {
+      "text": "About Us",
+      "url": "https://arvivatherap.com/gywm"
+    },
+    {
+      "text": "R & D Innovation",
+      "url": "https://arvivatherap.com/kyfw"
+    },
+    {
+      "text": "Integration platform",
+      "url": "https://arvivatherap.com/ythpt"
+    },
+    {
+      "text": "Investor Zone",
+      "url": "https://arvivatherap.com/tzzzq"
+    },
+    {
+      "text": "News information",
+      "url": "https://arvivatherap.com/xwzx"
+    },
+    {
+      "text": "Contact Us",
+      "url": "https://arvivatherap.com/lxwm"
+    }
+  ],
+  "company": "Arviva Therapeutics Inc.",
+  "text": "Efficient and rigorous team collaboration capabilities\n\nScientific staff training system\n\nTalent\n\nTechnology\n\nBig Data and AI to Discover\n\nUnique Drug Targets\n\nUnique peptide modification technology\n\nPioneering blue ocean drug R&D in anti-aging, appetite control, and antidepressants\n\nUnique advantages in entering overseas markets\n\nMarket\n\nOur Advantages\n\n家居设计及定制、安装等服务为一体的家居定制解决方案，从细微处体现出依据个人品味设计的独特魅力。\n\nProviding better treatment\n\nsolutions for global patients\n\nOffering new treatment options for chronical diseases\n\n专业的团队、敏锐的市场洞察力、独到的设计潮流把握国际化的视觉导向等，是为顾客带来成功的垫脚石。\n\nFocus to achieve，let the dream into reality\n\nInnovation is driving force.\n\nstarting from our endless\n\ndreams to improve human health.\n\nNews\n\nRecruitment, Join us to redefine medicine\n\nGLP-1 The Key Behind Weight Loss\n\nObesity is a sub-health issue that plagues many people today, and the history of humanity's struggle with obesity is also the history of the development of weight-loss drugs.\n\nAppetite Remote Control in the Gut How Specific Microbiota Regulate Brain Feeding Behavior\n\nMicrobiota in the gut are most abundant in the colon and largely regulate feeding behavior, possibly through neuroregulators, immune signals, and the vagal nerve pathway. However, it remains unclear how the host interprets microbial sensory information via direct neural circuits to adjust its own feeding behavior.\n\nHypotheses of Alzheimer’s Disease (AD) Pathogenesis\n\nCurrently, researchers have proposed several hypotheses regarding the pathogenesis of Alzheimer’s disease (AD). However, due to the complexity and heterogeneity of AD pathology, constructing a comprehensive theoretical framework remains highly challenging. This article will briefly introduce several major hypotheses proposed by researchers and discuss the current status of AD drug research and development.\n\nContact\n\nAddress：\nIrving Warehouse-207204 100 Circle Road, Ammann-C111 Stony Brook, NY 11790-3607\nPhone：\n6175153053\nEmail：\nBD@arvivatherap.com\nWebsite：\nhttps://arvivatherap.com/\nSubmit\n\nWe are an R&D-driven, AI-powered biopharmaceutical company dedicated to improving lives and delivering sustainable growth.\n\nOur Patent\n\nExplore our pipeline\nExplore our patent\n\nOur Pipeline\n\nOur Company\n\nOur company is dedicated to tackling some of the world’s most urgent health challenges—Alzheimer’s disease, obesity, and diabetes.\n\nWith a strong portfolio of patents, we deliver cutting-edge solutions that move beyond conventional treatments.\n\nIn Alzheimer’s disease, our proprietary technologies aim to enhance cognitive function through novel, targeted mechanisms.\n\nFor obesity and diabetes, we have developed breakthrough approaches that optimize key proteins, offering results similar to GLP-1 therapies—helping to regulate blood sugar and support effective weight management.\n\nThese innovations reflect our commitment to transforming scientific discovery into meaningful health outcomes, shaping a healthier future for patients worldwide.\n\nWe are advancing six pipelines in innovative drug development targeting Alzheimer’s disease, type 2 diabetes, obesity, depression, and anxiety.",
+  "images": [
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33300796.jpg",
+      "localPath": "../images/33300796.jpg"
+    },
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33316489.png",
+      "localPath": "../images/33316489.png"
+    },
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/173066242.jpg",
+      "localPath": "../images/173066242.jpg"
+    },
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33303291.png",
+      "localPath": "../images/33303291.png"
+    },
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302710.png",
+      "localPath": "../images/33302710.png"
+    },
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302463.png",
+      "localPath": "../images/33302463.png"
+    },
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33308154.png",
+      "localPath": "../images/33308154.png"
+    }
+  ],
+  "footer": "Copyright© Arviva Therapeutics Inc.\nPowered by 万网"
+}

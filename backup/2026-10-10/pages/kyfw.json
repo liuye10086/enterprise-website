@@ -1,0 +1,57 @@
+{
+  "sourceUrl": "https://arvivatherap.com/kyfw",
+  "capturedDate": "2026-10-10",
+  "title": "Arviva Therapeutics Inc.-R &amp; D Innovation",
+  "note": "从公开页面渲染 DOM 提取的文字参考；空白已规范化，导航和页脚单列，略去播放器控件、轮播箭头和动态访问量。不是可直接部署的源代码或完整页面归档。images 仅列 img 元素中的站点素材，不含 CSS 背景图、验证码和平台图标。",
+  "navigation": [
+    {
+      "text": "Home Page",
+      "url": "https://arvivatherap.com/sy"
+    },
+    {
+      "text": "About Us",
+      "url": "https://arvivatherap.com/gywm"
+    },
+    {
+      "text": "R & D Innovation",
+      "url": "https://arvivatherap.com/kyfw"
+    },
+    {
+      "text": "Integration platform",
+      "url": "https://arvivatherap.com/ythpt"
+    },
+    {
+      "text": "Investor Zone",
+      "url": "https://arvivatherap.com/tzzzq"
+    },
+    {
+      "text": "News information",
+      "url": "https://arvivatherap.com/xwzx"
+    },
+    {
+      "text": "Contact Us",
+      "url": "https://arvivatherap.com/lxwm"
+    }
+  ],
+  "company": "Arviva Therapeutics Inc.",
+  "text": "Scientific Discovery\n\nPipeline Overview\n\nAcademic Research\n\nAddress:\nIrving Warehouse-207204 100 Circle Road, Ammann-C111 Stony Brook, NY 11790-3607\nPhone：\n6175153053\nEmail:\nBD@arvivatherap.com\n\nAlzheimer's Disease (AD)\n\nA progressive neurodegenerative disorder that leads to memory loss, cognitive decline, and behavioral changes, profoundly affecting patients’ independence and quality of life.\n\nTechnology Highlights: Our novel approach has identified a small-molecule compound targeting a specific mechanism, demonstrating significant improvement in cognitive function.\n\nObesity\n\nA chronic metabolic condition marked by excessive body fat, increasing the risk of serious health issues such as cardiovascular disease, diabetes, and hypertension.\n\nDiabetes\n\nA metabolic disorder characterized by high blood sugar levels, which can lead to complications including cardiovascular disease, kidney damage, and retinopathy, affecting overall health and lifespan.\n\nTechnology Highlights: Our innovative approach optimizes key target proteins to regulate neural pathways, achieving effects similar to GLP-1 therapies. This breakthrough offers a highly effective strategy for managing both obesity and diabetes.\n\nBecome a leading enterprise in the global therapeutic field for chronical diseases\n\nPatent Achievements",
+  "images": [
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33300796.jpg",
+      "localPath": "../images/33300796.jpg"
+    },
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33316487.jpg",
+      "localPath": "../images/33316487.jpg"
+    },
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33316486.jpg",
+      "localPath": "../images/33316486.jpg"
+    },
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33307332.png",
+      "localPath": "../images/33307332.png"
+    }
+  ],
+  "footer": "Copyright© Arviva Therapeutics Inc.\nPowered by 万网"
+}

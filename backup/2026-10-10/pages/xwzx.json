@@ -1,0 +1,61 @@
+{
+  "sourceUrl": "https://arvivatherap.com/xwzx",
+  "capturedDate": "2026-10-10",
+  "title": "news information-corporate official website",
+  "note": "从公开页面渲染 DOM 提取的文字参考；空白已规范化，导航和页脚单列，略去播放器控件、轮播箭头和动态访问量。不是可直接部署的源代码或完整页面归档。images 仅列 img 元素中的站点素材，不含 CSS 背景图、验证码和平台图标。",
+  "navigation": [
+    {
+      "text": "Home Page",
+      "url": "https://arvivatherap.com/sy"
+    },
+    {
+      "text": "About Us",
+      "url": "https://arvivatherap.com/gywm"
+    },
+    {
+      "text": "R & D Innovation",
+      "url": "https://arvivatherap.com/kyfw"
+    },
+    {
+      "text": "Integration platform",
+      "url": "https://arvivatherap.com/ythpt"
+    },
+    {
+      "text": "Investor Zone",
+      "url": "https://arvivatherap.com/tzzzq"
+    },
+    {
+      "text": "News information",
+      "url": "https://arvivatherap.com/xwzx"
+    },
+    {
+      "text": "Contact Us",
+      "url": "https://arvivatherap.com/lxwm"
+    }
+  ],
+  "company": "Arviva Therapeutics Inc.",
+  "text": "Alzheimer's disease drug development pipeline\n\nAlzheimer’s disease (AD) is a major global public health challenge. Despite the approval of several anti-amyloid-beta (Aβ) monoclonal antibody drugs, the development of more effective and precise treatments remains a critical area of focus. Recently, Professor Jeffrey Cummings and his team published a review titled “Alzheimer’s disease drug development pipeline: 2025,” which systematically analyzed the current global landscape of AD drug development.\n\n2025-08-07\nHypotheses of Alzheimer’s Disease (AD) Pathogenesis\n\nCurrently, researchers have proposed several hypotheses regarding the pathogenesis of Alzheimer’s disease (AD). However, due to the complexity and heterogeneity of AD pathology, constructing a comprehensive theoretical framework remains highly challenging. This article will briefly introduce several major hypotheses proposed by researchers and discuss the current status of AD drug research and development.\n\n2025-08-07\nAppetite Remote Control in the Gut How Specific Microbiota Regulate Brain Feeding Behavior\n\nMicrobiota in the gut are most abundant in the colon and largely regulate feeding behavior, possibly through neuroregulators, immune signals, and the vagal nerve pathway. However, it remains unclear how the host interprets microbial sensory information via direct neural circuits to adjust its own feeding behavior.\n\n2025-08-07\nGLP-1 The Key Behind Weight Loss\n\nObesity is a sub-health issue that plagues many people today, and the history of humanity's struggle with obesity is also the history of the development of weight-loss drugs.\n\n2025-08-08\n\nNews information\n\nNews information",
+  "images": [
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33300796.jpg",
+      "localPath": "../images/33300796.jpg"
+    },
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302416.png",
+      "localPath": "../images/33302416.png"
+    },
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302463.png",
+      "localPath": "../images/33302463.png"
+    },
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302710.png",
+      "localPath": "../images/33302710.png"
+    },
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33303291.png",
+      "localPath": "../images/33303291.png"
+    }
+  ],
+  "footer": "Copyright© Arviva Therapeutics Inc.\nPowered by 万网"
+}

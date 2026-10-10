@@ -1,0 +1,55 @@
+{
+  "source_url": "https://arvivatherap.com/newsinfo/7114.html",
+  "retrieved_date": "2026-10-10",
+  "extraction_method": "Browser rendered DOM, .w-detail.innerText; text preserved verbatim",
+  "document_title": "Appetite Remote Control in the Gut How Specific Microbiota Regulate Brain Feeding Behavior-企业官网",
+  "title": "Appetite Remote Control in the Gut How Specific Microbiota Regulate Brain Feeding Behavior",
+  "body_text": "\"Appetite Remote Control\" in the Gut: How Specific Microbiota Regulate Brain Feeding Behavior\n\nMicrobiota in the gut are most abundant in the colon and largely regulate feeding behavior, possibly through neuroregulators, immune signals, and the vagal nerve pathway. However, it remains unclear how the host interprets microbial sensory information via direct neural circuits to adjust its own feeding behavior.\n\nOn July 23, 2025, Winston W. Liu and his team from the Duke University Enteric-Brain Neurobiology Laboratory published a paper titled \"A gut sense for a microbial pattern regulates feeding\" in Nature. The study shows that in colonic neuropod cells marked by peptide YY (PYY), the common microbial pattern flagellin stimulates Toll-like receptor 5 (TLR5). Compared to the control group, mice lacking TLR5 ate more and gained more weight. The authors found that flagellin stimulates neuropod cells in the colonic lumen, reducing feeding via the gut-brain sensory neural circuit. Moreover, flagellin's feeding reduction does not depend on an immune response, enabling the host to adjust its behavior in response to molecular patterns of its resident microbiota. The authors refer to this sensation at the interface of microbiota and the brain as \"neurobiotic sense.\"\n\n01 Expression and Function of TLR5 in PYY Cells\n\nThrough RNA sequencing and in situ hybridization, the study found that TLR5 genes are specifically enriched in PYY-marked neuropod cells in the colon. The colocalization rate of PYY cells and TLR5 in the distal colon (57.5±5.3%) is significantly higher than in the ileum (24.1±2.9%), while PYY cells in the small intestine and brain do not express TLR5. To explore its function, the researchers created mice with PYY cell-specific TLR5 knockout (Pyycre;Tlr5fl/fl). Compared to the control group, these mice had no metabolic disorders (such as normal blood glucose and fat pad weight) or inflammation (such as normal colon length and cytokine levels), but they ate more, gained significant weight, and had prolonged feeding duration in female mice, with increased meal size in both male and female mice. This indicates that TLR5 in PYY cells independently regulates feeding behavior from immune signals.\n\n02 PYY Cells Sense Flagellin and Release PYY via TLR5\n\nFlagellin, a structural component of bacterial flagella and a known ligand for TLR5, was found to be significantly higher in the feces of fed mice than in fasted mice, independent of TLR5 expression in PYY cells. Calcium imaging experiments showed that 26% of PYY cells responded to flagellin but not to the TLR4 ligand LPS. The response to the TLR3 ligand poly(I:C) was unaffected by TLR5 inhibitors, but the response to flagellin was significantly inhibited, proving that PYY cells sense flagellin via TLR5. Moreover, flagellin stimulation promotes the release of PYY from colonic crypts, which is blocked in Pyycre;Tlr5fl/fl mice, indicating that TLR5-mediated PYY release is a key step in signal transmission.\n\n03 Direct Connection Between PYY Cells and the Vagus Nerve\n\nTranscriptome analysis revealed that PYY cells are enriched with synaptic signal-related genes (such as Cplx2, Syn1), and about 21.7% of PYY cells contact peripheral nerves marked by PGP9.5. Through optogenetic experiments, 473nm light stimulation in the colonic lumen rapidly activated the cervical vagus nerve in PYY cells expressing channelrhodopsin-2 (ChR2), while 532nm light had no such effect, proving a direct functional connection between PYY cells and the vagus nerve. Further experiments showed that the vagus nerve itself does not express TLR5 and cannot directly sense flagellin, but relies on PYY cells to transmit signals: when PYY cell activity was inhibited with halorhodopsin, flagellin-induced vagus nerve discharge was eliminated, confirming that PYY cells are essential intermediaries in flagellin signal transmission.\n\n04 Flagellin Regulates Feeding via the PYY-Vagus Nerve Circuit\n\nThe study validated this function through enema experiments: wild-type mice receiving flagellin enema significantly reduced their food intake within 20 minutes, while Pyycre;Tlr5fl/fl mice did not respond. TLR5 inhibitors or Y2R inhibitors (BIIE-0246) blocked the anorectic effect of flagellin, proving that the process depends on TLR5 and Y2R. High-resolution behavioral analysis (Crunch Master system) showed that flagellin enema delayed the first feeding time and reduced total food intake but did not affect feeding frequency, indicating real-time regulation of feeding initiation. Moreover, flagellin still reduced feeding in germ-free mice, showing that this mechanism does not depend on the gut microbiota but can be achieved by directly sensing flagellin.\n\nSummary\n\nThis study focuses on how the host regulates feeding behavior by sensing gut microbiota signals, proposing the concept of \"neurobiotic sense\": the host perceives molecular patterns of gut microbiota (such as flagellin) via the gut-brain sensory neural circuit to regulate behavior in real-time. The study found that PYY-expressing neuropod cells in the mouse colon recognize the common microbial flagellin via TLR5, release PYY to act on the NPY2R receptors of vagal ganglion neurons, and thereby inhibit feeding. Knocking out TLR5 in these cells leads to increased food intake and weight gain in mice, independent of immune responses, metabolic changes, or the gut microbiota itself.\n\nThe study reveals the complete circuit of microbial pattern (flagellin) → PYY neuropod cells (TLR5) → PYY release → vagus nerve (NPY2R) → feeding regulation, defined as \"neurobiotic sense.\" This finding expands the understanding of the gut-brain axis, suggesting that microbial molecular patterns could be potential targets for regulating feeding. Future research needs to explore the effects of different flagellin variants and the impact of real-time regulation of the microbiota on this circuit.\n\nFuture Research Directions\n\n1. The flagellin used in this study is from Salmonella typhimurium. The pathogenicity or commensality of bacteria may depend on the specific flagellin variants they express. Therefore, the effects of other molecular variants of flagellin need further investigation.\n\n2. Future research should employ techniques for real-time regulation of microbial populations to explore the impact of flagellin fluctuations independently of exogenous induction, thus gaining a deeper understanding of the dynamic regulation mechanism of this gut-brain sensory neural circuit.\n\n3. Although a unique neuroepithelial circuit for sensing flagellin has been identified, the functions of neurons that respond to both nutrients (such as lipids) and flagellin simultaneously need further clarification in future studies to improve the understanding of how gut microbial patterns and nutritional signals integrate to regulate feeding behavior.\n\nDOI: https://doi.org/10.1038/s41586-025-09301-7",
+  "article_images": [
+    {
+      "index": 1,
+      "alt": "img1",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302694.png?",
+      "local_path": "../../images/33302694.png"
+    },
+    {
+      "index": 2,
+      "alt": "img2",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302695.png?",
+      "local_path": "../../images/33302695.png"
+    },
+    {
+      "index": 3,
+      "alt": "img3",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302696.png?",
+      "local_path": "../../images/33302696.png"
+    },
+    {
+      "index": 4,
+      "alt": "img4",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302697.png?",
+      "local_path": "../../images/33302697.png"
+    },
+    {
+      "index": 5,
+      "alt": "img5",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302698.png?",
+      "local_path": "../../images/33302698.png"
+    }
+  ],
+  "shared_page_images": [
+    {
+      "alt": "",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33300796.jpg"
+    },
+    {
+      "alt": "",
+      "url": "https://img.website.xin/Designer/Content/images/ga_icon.png?_version=20250709210034"
+    }
+  ],
+  "verification": {
+    "body_utf16_length": 6921,
+    "body_fnv1a_utf16": "9b3b3aac",
+    "article_image_count": 5
+  }
+}

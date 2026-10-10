@@ -1,0 +1,43 @@
+{
+  "source_url": "https://arvivatherap.com/newsinfo/7050.html",
+  "retrieved_date": "2026-10-10",
+  "extraction_method": "Browser rendered DOM, .w-detail.innerText; text preserved verbatim",
+  "document_title": "Alzheimer's disease drug development pipeline-企业官网",
+  "title": "Alzheimer's disease drug development pipeline",
+  "body_text": "Alzheimer’s Disease Drug Development Pipeline: A Comprehensive Overview in 2025\n\nAlzheimer’s disease (AD) is a major global public health challenge. Despite the approval of several anti-amyloid-beta (Aβ) monoclonal antibody drugs, the development of more effective and precise treatments remains a critical area of focus. Recently, Professor Jeffrey Cummings and his team published a review titled “Alzheimer’s disease drug development pipeline: 2025,” which systematically analyzed the current global landscape of AD drug development. This article will interpret the key content of the review from three perspectives: “scale expansion,” “target diversity,” and “technological innovation,” to provide a comprehensive understanding of the latest trends and progress in AD drug research and development.\n\nScale Expansion: 138 Drugs in 182 Clinical Trials\n\nAs of January 1, 2025, there were 138 AD candidate drugs undergoing 182 clinical trials globally, a significant increase compared to the previous year (127 drugs and 164 trials). In terms of development stages, the pipeline includes 48 Phase III clinical trials (involving 31 drugs), 86 Phase II trials (involving 75 drugs), and 48 Phase I trials (involving 45 drugs). Notably, the number of Phase I trials has increased by 85% from 26 to 48 since 2024, reflecting an accelerated exploration of novel mechanisms of action.\n\nIn terms of therapeutic strategies, disease-targeting therapy (DTT) remains the mainstream, accounting for 74% of the pipeline (60 small molecules and 42 biologics). Additionally, 14% of the drugs (19 in total) focus on cognitive enhancement through modulation of the cholinergic system or glutamate receptors to improve memory decline. Another 11% of the drugs (15 in total) target neuropsychiatric symptoms (NPS), such as agitation, psychosis, and apathy.\n\nTarget Diversity: Aβ and Tau No Longer Dominate\n\nThe Common Alzheimer's Disease Research Ontology (CADRO) has classified the targets and mechanisms of action of the drugs under development, revealing 15 pathological processes related to AD, with at least one drug in development for each category. This indicates that AD drug development is moving towards a multi-mechanistic and multi-dimensional direction. The classic targets of Aβ deposition and Tau hyperphosphorylation still hold key positions in AD drug research, with 18% and 11% of the drugs under development targeting these two core pathological mechanisms, respectively. Other emerging mechanisms, such as neurotransmitter receptors (22%), neuroinflammation/immunity (17%), synaptic plasticity/neuroprotection (6%), energy metabolism (6%), growth factors, lipid metabolism, protein homeostasis, vascular function, and circadian rhythm, are also becoming hotspots in AD research. More cutting-edge directions, such as targeting the “gut-brain axis” and epigenetic regulation, further demonstrate an in-depth exploration of the complex etiology of AD.\n\nTechnological Innovation: Biomarkers, Combination Therapy, and Drug Repurposing Drive Efficiency\n\nCompared to traditional AD clinical trial designs that mainly rely on symptom scores as primary endpoints, the application of biomarkers in current AD drug clinical research has significantly increased. Among the 182 AD clinical trials, 57% use biomarkers as inclusion or exclusion criteria, and 27% use them as primary endpoints. Magnetic resonance imaging (MRI) and Aβ positron emission tomography (PET) remain the most widely used imaging biomarkers. Meanwhile, the use of liquid biomarkers is also increasing, with high-sensitivity indicators such as p-tau217 and the Aβ42/40 ratio being adopted in some trials for screening and efficacy assessment.\n\n \n\nMoreover, the exploration of combination therapies is also on the rise. Currently, 20 trials are evaluating different combination regimens, including pharmacodynamic synergistic combinations (such as the combination of dasatinib and quercetin, targeting neuroinflammation to treat AD) and pharmacokinetic optimization combinations (such as the combination of dexmedetomidine and CYP2D6 inhibitors, which slow down the liver metabolism of dexmedetomidine to enhance efficacy).\n\nIn addition, the strategy of drug repurposing is increasingly popular in research and development, especially in DTT small molecules (43% of which are repurposed drugs) and drugs targeting NPS (53% of which are repurposed drugs), reflecting a cost-effective and efficient development trend. There are currently 46 drugs in the AD pipeline that are derived from other non-AD indications, either approved or under development.\n\nConclusion\n\nThe AD drug development pipeline is characterized by “scale expansion, target diversity, and technological innovation.” From the classic Aβ and Tau targeting pathways to multiple therapeutic directions such as inflammation, metabolism, and neurotransmitters, the research field is continuously expanding. The application of biomarkers and the exploration of combination therapy strategies are also driving clinical research to be more precise and efficient. With the diversification of targets and continuous technological innovation, AD drug research and development has entered a hopeful new phase, which may bring more personalized and precise treatment options for patients in the future.",
+  "article_images": [
+    {
+      "index": 1,
+      "alt": "img1",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302418.jpeg?",
+      "local_path": "../../images/33302418.jpeg"
+    },
+    {
+      "index": 2,
+      "alt": "img2",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302419.png?",
+      "local_path": "../../images/33302419.png"
+    },
+    {
+      "index": 3,
+      "alt": "img3",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302420.png?",
+      "local_path": "../../images/33302420.png"
+    }
+  ],
+  "shared_page_images": [
+    {
+      "alt": "",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33300796.jpg"
+    },
+    {
+      "alt": "",
+      "url": "https://img.website.xin/Designer/Content/images/ga_icon.png?_version=20250709210034"
+    }
+  ],
+  "verification": {
+    "body_utf16_length": 5313,
+    "body_fnv1a_utf16": "2fada2ba",
+    "article_image_count": 3
+  }
+}

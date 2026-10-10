@@ -1,0 +1,43 @@
+{
+  "source_url": "https://arvivatherap.com/newsinfo/7062.html",
+  "retrieved_date": "2026-10-10",
+  "extraction_method": "Browser rendered DOM, .w-detail.innerText; text preserved verbatim",
+  "document_title": "Hypotheses of Alzheimer’s Disease (AD) Pathogenesis-企业官网",
+  "title": "Hypotheses of Alzheimer’s Disease (AD) Pathogenesis",
+  "body_text": "Hypotheses of Alzheimer’s Disease (AD) Pathogenesis\n\nFigure 1: Mechanisms of AD Pathogenesis in Various Hypotheses**\n\nCurrently, researchers have proposed several hypotheses regarding the pathogenesis of Alzheimer’s disease (AD). However, due to the complexity and heterogeneity of AD pathology, constructing a comprehensive theoretical framework remains highly challenging. This article will briefly introduce several major hypotheses proposed by researchers and discuss the current status of AD drug research and development.\n\nBeta-Amyloid Hypothesis\n\nThe beta-amyloid hypothesis posits that AD is closely related to the abnormal accumulation of beta-amyloid (Aβ) proteins, which disrupt neuronal connections and lead to cognitive decline. In familial (genetic) AD, mutations in the PS1/PS2 genes may lead to increased production or impaired clearance of Aβ. In sporadic (non-genetic) AD, the imbalance between Aβ production and clearance is implicated. However, Aβ-targeted therapies based on this hypothesis have shown limited efficacy in improving cognitive function, suggesting that Aβ may be a pathological consequence rather than the primary cause of AD.\n\nTau Protein Hypothesis\n\nUnder normal conditions, tau proteins are primarily located in the axons of neurons, where they stabilize microtubules within the cell. Their function relies on the dynamic balance between kinases and phosphatases. When this balance is disrupted, tau proteins become hyperphosphorylated, detaching from microtubules and undergoing structural changes. They then mislocalize and aggregate into oligomers, paired helical filaments, and neurofibrillary tangles. These abnormal aggregates disrupt normal neuronal function, induce synaptic damage and neuroinflammation, and ultimately lead to neuronal death. Targeted therapies against tau are still under investigation, but as a key pathological marker of AD, tau has become a potential therapeutic target.\n\nNeuroinflammation Hypothesis\n\nMicroglia are the primary immune cells in the central nervous system (CNS) and act as the first line of defense against external dangers. As mentioned earlier, Aβ proteins are typical triggers for microglial activation. Once activated, microglia engulf Aβ and release enzymes to break it down. However, over time, their efficiency in handling Aβ may decline, while they continue to produce pro-inflammatory cytokines, leading to chronic inflammation. In the later stages of AD, interactions between microglia and tau proteins may lead to tau hyperphosphorylation and the spread of tau via exosome secretion, accelerating its propagation between neurons and worsening neurodegeneration. Genome-wide association studies (GWAS) have identified several risk genes closely related to microglial function, further highlighting the importance of microglia as a potential therapeutic target.\n\nOxidative Stress Hypothesis\n\nDuring normal metabolism, reactive oxygen species (ROS) are kept at low levels by efficient antioxidant defenses to protect cells from oxidative damage. However, in the brains of AD patients, factors such as metal deposition, overactive enzymes, and mitochondrial dysfunction lead to excessive ROS production, causing oxidative imbalance and damaging neuronal structures, ultimately leading to cell death.\n\nMetal Ion Hypothesis\n\nUnder normal conditions, trace metals maintain the homeostasis of the metal ion microenvironment. However, in Alzheimer’s disease (AD), the imbalance of Fe²⁺, Cu²⁺, and Zn²⁺ is closely related to the pathological process. The abnormal accumulation of these metals in Aβ plaques and neurofibrillary tangles (NFTs) not only promotes pathological protein deposition but may also trigger a ROS cascade reaction by sequestering within the deposits, exacerbating neurotoxicity. Further research is needed to elucidate the role of metal imbalance in AD.\n\nExcitotoxicity Hypothesis\n\nUnder normal conditions, glutamate regulates the balance of sodium and calcium ions inside neurons through NMDA receptors. However, in AD patients, overactivation of NMDA receptors leads to the detachment of magnesium ions and abnormal influx of large amounts of sodium and calcium ions, causing ionic imbalance. This not only induces cell swelling but also activates calcium-dependent signaling pathways, leading to ROS production, mitochondrial dysfunction, and cell death, causing irreversible damage to neurons. However, due to the limitations of neurotransmitter-related drugs and the shift in research focus to other hypotheses, further exploration of the excitotoxicity mechanism has been hindered.\n\nMicrobiota-Gut-Brain Axis Hypothesis\n\nThe gut-brain axis describes the bidirectional communication system between the gut and the brain through metabolic, endocrine, neural, and immune pathways. In AD patients, gut microbiota dysbiosis caused by dietary changes, antibiotic use, or stress can disrupt the gut barrier, allowing harmful substances to enter the bloodstream and trigger systemic inflammation. Inflammatory cytokines that cross the blood-brain barrier can activate microglia, further exacerbating neuroinflammation and neurodegeneration. However, research on this mechanism is still in its early stages, and the specific connections between gut microbiota and brain activity or other pathological features of AD remain to be explored.\n\nAutophagy Dysfunction Hypothesis\n\nAutophagy is a key cellular metabolic process responsible for clearing damaged proteins and organelles and maintaining cellular homeostasis through lysosomal degradation of waste. In AD patients, impaired autophagy leads to the accumulation of pathological proteins such as Aβ and tau, as well as damaged organelles like mitochondria, disrupting intracellular protein homeostasis and further exacerbating neuronal dysfunction and disease progression. Autophagy-activating drugs (including small molecule therapies and gene therapies) have shown significant neuroprotective effects in various AD animal models, offering a potential intervention strategy for AD treatment.\n\nFigure: Schematic Diagram of AD-Related Signaling Pathways",
+  "article_images": [
+    {
+      "index": 1,
+      "alt": "img1",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302452.png?",
+      "local_path": "../../images/33302452.png"
+    },
+    {
+      "index": 2,
+      "alt": "img2",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302453.png?",
+      "local_path": "../../images/33302453.png"
+    },
+    {
+      "index": 3,
+      "alt": "img3",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33302454.png?",
+      "local_path": "../../images/33302454.png"
+    }
+  ],
+  "shared_page_images": [
+    {
+      "alt": "",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33300796.jpg"
+    },
+    {
+      "alt": "",
+      "url": "https://img.website.xin/Designer/Content/images/ga_icon.png?_version=20250709210034"
+    }
+  ],
+  "verification": {
+    "body_utf16_length": 6108,
+    "body_fnv1a_utf16": "3e33c84f",
+    "article_image_count": 3
+  }
+}

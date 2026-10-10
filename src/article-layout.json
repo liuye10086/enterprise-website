@@ -1,0 +1,48 @@
+{
+  "_source": "Original article .w-detail paragraph/image DOM inspected with CUA Edge on 2026-10-10. Indices include original non-breaking-space paragraphs. before is the zero-based original paragraph index before which an image appears.",
+  "3099692": {
+    "bodyHash": "b9c8c440", "paragraphCount": 1,
+    "headings": [], "captions": [], "images": []
+  },
+  "7224": {
+    "bodyHash": "07d9bc08", "paragraphCount": 33,
+    "headings": [0, 2, 13, 17, 23, 27, 30],
+    "captions": [5, 7, 10, 14, 20],
+    "images": [
+      {"before": 5, "filename": "33303239.jpeg"},
+      {"before": 7, "filename": "33303240.jpeg"},
+      {"before": 10, "filename": "33303241.png"},
+      {"before": 14, "filename": "33303242.jpeg"},
+      {"before": 20, "filename": "33303243.png"}
+    ]
+  },
+  "7114": {
+    "bodyHash": "9b3b3aac", "paragraphCount": 19,
+    "headings": [0, 3, 5, 7, 9, 11, 14], "captions": [],
+    "images": [
+      {"before": 3, "filename": "33302694.png"},
+      {"before": 5, "filename": "33302695.png"},
+      {"before": 7, "filename": "33302696.png"},
+      {"before": 9, "filename": "33302697.png"},
+      {"before": 11, "filename": "33302698.png"}
+    ]
+  },
+  "7062": {
+    "bodyHash": "3e33c84f", "paragraphCount": 20,
+    "headings": [0, 3, 5, 7, 9, 11, 13, 15, 17], "captions": [1, 19],
+    "images": [
+      {"before": 1, "filename": "33302452.png"},
+      {"before": 5, "filename": "33302453.png"},
+      {"before": 19, "filename": "33302454.png"}
+    ]
+  },
+  "7050": {
+    "bodyHash": "2fada2ba", "paragraphCount": 14,
+    "headings": [0, 2, 5, 7, 12], "captions": [],
+    "images": [
+      {"before": 2, "filename": "33302418.jpeg"},
+      {"before": 5, "filename": "33302419.png"},
+      {"before": 7, "filename": "33302420.png"}
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "source_url": "https://arvivatherap.com/newsinfo/3099692.html",
+  "retrieved_date": "2026-10-10",
+  "extraction_method": "Browser rendered DOM, .w-detail.innerText; text preserved verbatim",
+  "document_title": "Recruitment, Join us to redefine medicine-企业官网",
+  "title": "Recruitment, Join us to redefine medicine",
+  "body_text": "   Arviva Therapeutics Inc. is an R&D-driven, AI-powered biopharmaceutical company dedicated to pioneering the next generation of innovative therapies. We focus on developing treatments for Alzheimer’s disease, diabetes, obesity, depression, and other major health challenges. We are looking for talents with expertise in BD and R&D, who have an MD and/or PhD in medicine related majors with a strong publication record and work experience. Please send Resume to bd@arvivatherap.com",
+  "article_images": [],
+  "shared_page_images": [
+    {
+      "alt": "",
+      "url": "https://img.website.xin/contents/sitefiles10827/54139684/images/33300796.jpg"
+    },
+    {
+      "alt": "",
+      "url": "https://img.website.xin/Designer/Content/images/ga_icon.png?_version=20250709210034"
+    }
+  ],
+  "verification": {
+    "body_utf16_length": 482,
+    "body_fnv1a_utf16": "b9c8c440",
+    "article_image_count": 0
+  }
+}

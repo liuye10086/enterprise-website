@@ -1,0 +1,45 @@
+{
+  "sourceUrl": "https://arvivatherap.com/lxwm",
+  "capturedDate": "2026-10-10",
+  "title": "Contact Us-Enterprise Official Website",
+  "note": "从公开页面渲染 DOM 提取的文字参考；空白已规范化，导航和页脚单列，略去播放器控件、轮播箭头和动态访问量。不是可直接部署的源代码或完整页面归档。images 仅列 img 元素中的站点素材，不含 CSS 背景图、验证码和平台图标。",
+  "navigation": [
+    {
+      "text": "Home Page",
+      "url": "https://arvivatherap.com/sy"
+    },
+    {
+      "text": "About Us",
+      "url": "https://arvivatherap.com/gywm"
+    },
+    {
+      "text": "R & D Innovation",
+      "url": "https://arvivatherap.com/kyfw"
+    },
+    {
+      "text": "Integration platform",
+      "url": "https://arvivatherap.com/ythpt"
+    },
+    {
+      "text": "Investor Zone",
+      "url": "https://arvivatherap.com/tzzzq"
+    },
+    {
+      "text": "News information",
+      "url": "https://arvivatherap.com/xwzx"
+    },
+    {
+      "text": "Contact Us",
+      "url": "https://arvivatherap.com/lxwm"
+    }
+  ],
+  "company": "Arviva Therapeutics Inc.",
+  "text": "Contact Us\n\n提交\nAddress：\nIrving Warehouse-207204 100 Circle Road, Ammann-C111 Stony Brook, NY 11790-3607\nPhone：\n6175153053\nEmail：\nBD@arvivatherap.com\nWebsite：\nhttps://arvivatherap.com/",
+  "images": [
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33300796.jpg",
+      "localPath": "../images/33300796.jpg"
+    }
+  ],
+  "footer": "Copyright© Arviva Therapeutics Inc.\nPowered by 万网"
+}

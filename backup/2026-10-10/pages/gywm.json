@@ -1,0 +1,45 @@
+{
+  "sourceUrl": "https://arvivatherap.com/gywm",
+  "capturedDate": "2026-10-10",
+  "title": "About Us-Corporate Official Website",
+  "note": "从公开页面渲染 DOM 提取的文字参考；空白已规范化，导航和页脚单列，略去播放器控件、轮播箭头和动态访问量。不是可直接部署的源代码或完整页面归档。images 仅列 img 元素中的站点素材，不含 CSS 背景图、验证码和平台图标。",
+  "navigation": [
+    {
+      "text": "Home Page",
+      "url": "https://arvivatherap.com/sy"
+    },
+    {
+      "text": "About Us",
+      "url": "https://arvivatherap.com/gywm"
+    },
+    {
+      "text": "R & D Innovation",
+      "url": "https://arvivatherap.com/kyfw"
+    },
+    {
+      "text": "Integration platform",
+      "url": "https://arvivatherap.com/ythpt"
+    },
+    {
+      "text": "Investor Zone",
+      "url": "https://arvivatherap.com/tzzzq"
+    },
+    {
+      "text": "News information",
+      "url": "https://arvivatherap.com/xwzx"
+    },
+    {
+      "text": "Contact Us",
+      "url": "https://arvivatherap.com/lxwm"
+    }
+  ],
+  "company": "Arviva Therapeutics Inc.",
+  "text": "We are an AI-powered biopharmaceutical company dedicated to pioneering the next generation of innovative therapies. Leveraging advanced AI technologies and a robust R&D platform, we focus on developing treatments for Alzheimer’s disease, diabetes, obesity, depression, and other major health challenges. Our mission is to deliver high-quality, effective therapies to patients worldwide while upholding the highest standards of compliance, sustainability, and corporate social responsibility. By combining cutting-edge science with AI-driven innovation, we aim to transform healthcare and create lasting value for society.\n\nOur Company\n\nOur biotech company is powered by an elite R&D team that combines AI-driven innovation with deep expertise in key therapeutic areas. Focused on transforming treatments for diabetes, Alzheimer’s disease, and obesity, our team leverages advanced AI technologies to accelerate drug discovery and development. By integrating cutting-edge AI algorithms with rigorous scientific research, we uncover novel therapeutic pathways and develop groundbreaking solutions for complex health challenges. Their work represents the future of personalized, effective medicine, driving progress and hope in the biotech industry.\n\nOur Team",
+  "images": [
+    {
+      "sourceUrl": "https://img.website.xin/contents/sitefiles10827/54139684/images/33300796.jpg",
+      "localPath": "../images/33300796.jpg"
+    }
+  ],
+  "footer": "Copyright© Arviva Therapeutics Inc.\nPowered by 万网"
+}

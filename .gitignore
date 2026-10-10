@@ -1,0 +1,28 @@
+# Generated files and dependencies
+dist/
+node_modules/
+*.log
+.preview.pid
+
+# Secrets and local credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.dump
+*.backup
+
+# Local scratch files, test emails and internal work records
+tmp/
+docs/qa/
+docs/superpowers/
+docs/*-report.txt
+docs/progress.txt
+
+# Original platform account inventory and unused source video stay local
+backup/*/metadata/
+backup/*/备份说明.txt
+backup/*/videos/ad-en-original.mp4

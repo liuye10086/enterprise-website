@@ -1,0 +1,95 @@
+# Arviva Therapeutics 官网
+
+根据原官网布局重建的独立网站，页面、图片、视频均从本项目加载。官网已接入 Node.js 与 PostgreSQL 邮箱验证码登录；产品功能页仍是占位页面，支付尚未接入。
+
+## Git 仓库
+
+仓库：[liuye10086/enterprise-website](https://github.com/liuye10086/enterprise-website)，默认分支 `main`。
+
+```bash
+git clone https://github.com/liuye10086/enterprise-website.git
+cd enterprise-website
+npm ci
+npm run build
+```
+
+仓库包含源码、测试、数据库迁移与网站所需素材。`.env`、授权码、数据库数据、临时文件、云账号备份记录、内部验收截图和未使用的原始视频仅保留本机，不进入仓库。新电脑或服务器需要参考 `.env.example` 单独配置数据库与邮件服务；`git pull` 只更新代码，不会同步密码或数据库记录。
+
+## 本地运行
+
+需要 Node.js 22 或以上版本、npm 和 PostgreSQL。本机已为项目创建专用数据库角色及 `arviva_website_dev`、`arviva_website_test` 两个独立数据库；连接配置保存在私密的 `.env`，不要覆盖、提交或公开该文件。新环境按照 [PostgreSQL 部署说明](docs/postgresql-deployment.md) 配置。
+
+```powershell
+npm ci
+npm run db:migrate
+npm run build
+npm start
+```
+
+打开 [真实登录版](http://127.0.0.1:4174/sy)。`npm start` 读取 `.env` 并连接 PostgreSQL；修改 `src/` 后重新执行 `npm run build` 并刷新页面，修改后端或配置后重启服务。
+
+可选的 `MAIL_MODE=development` 使用随机六位验证码：点击 **Send code** 后，验证码保存在 `tmp/dev-mail/<规范化邮箱的 SHA-256>.json`，文件中的 `email` 可用于确认收件地址。**这是本地测试投递，没有发送真实邮件**，不能使用固定演示码代替。该模式只允许本机开发，生产环境禁用；`MAIL_MODE=disabled` 不发送验证码。
+
+当前本机已启用 **QQ 邮箱通过 SMTP 发送验证码**：`MAIL_MODE=smtp`、`SMTP_HOST=smtp.qq.com`、`SMTP_PORT=465`（SSL/TLS），`SMTP_USER` 和 `SMTP_FROM` 均填写完整 QQ 邮箱地址，`SMTP_PASSWORD` 填写开启 SMTP 后生成的 QQ 邮箱授权码，**不是 QQ 登录密码**。2026-10-10 已验证 TLS 连接、SMTP 认证及网站验证码接口发送；用户随后确认收信并成功登录。具体步骤见 [部署说明](docs/postgresql-deployment.md)。
+
+以后换阿里云邮件推送（DirectMail）时，只需完成该服务的发信域名认证，更新 `SMTP_HOST`、`SMTP_PORT`、`SMTP_USER`、`SMTP_PASSWORD`、`SMTP_FROM` 并重启服务；数据库、已注册账号与前端登录流程不用改。
+
+旧版静态演示单独保留：
+
+```powershell
+npm run dev
+```
+
+打开 [静态演示版](http://127.0.0.1:4173/sy)。此服务监视 `src/` 并自动构建，刷新即可查看改动；它使用演示状态，不连接真实账号数据。两个地址均仅供本机使用，停止终端进程即停止服务。
+
+```powershell
+npm test
+npm run test:auth
+```
+
+认证集成测试使用 `.env` 中的 `TEST_DATABASE_URL`；必须指向专用测试库，不能指向生产库。`npm test` 同时包含页面、素材和原有演示回归。
+
+## 登录与产品访问
+
+顶部 **Log in** 支持邮箱与六位验证码登录，首次验证成功自动注册，无需密码。验证码 10 分钟有效、最多尝试 5 次，同邮箱发送间隔至少 60 秒；会话最长 7 天，退出会撤销服务端会话。数据库保存验证码和会话令牌的摘要，不保存其明文。
+
+每个邮箱对每个产品各有一次免费试用。点击 **Start free trial** 时由后端检查并记录额度，再打开对应平台；浏览器阻止预开新标签时不会提交试用请求。获得访问资格后，同一会话可在 15 分钟内刷新平台页面。再次从入口申请试用仍需剩余额度。
+
+真实模式隐藏演示控制和模拟购买按钮。试用用完后可联系公司了解完整访问权限；**在线支付与自行开通尚未提供**。前端展示的资格以服务器为准，直接访问平台地址也经过登录与访问凭据检查。
+
+### 静态演示流程
+
+仅在 `npm run dev` 的本机静态入口启用，并显示 Preview / Demo：
+
+1. 输入格式有效的邮箱，点击 **Send code**，使用页面显示的 `123456` 演示登录，不会发邮件或创建真实账号。
+2. 两个产品分别有一次 **Free trial**；**Upgrade access → Simulate purchase** 仅模拟开通，不收费。
+3. **Preview controls** 可模拟单个产品资格或 **Reset demo**，顶部 **Demo account** 可退出。
+
+演示使用同一个示例账号，`sessionStorage` 的 `arviva-access-preview-v1` 只保存演示登录标记与产品资格，不保存邮箱、验证码或令牌。它与 PostgreSQL 账号、试用额度完全独立，不作为生产鉴权。
+
+## 文件位置
+
+- `src/render.mjs`：栏目、导航、首页布局与联系信息。
+- `src/styles.css`：电脑与手机样式。
+- `src/main.js`、`src/runtime-config.js`：页面交互与 live/demo 入口切换；真实服务器提供 live 配置。
+- `src/access-live.js`：真实邮箱登录与服务端产品访问交互。
+- `src/access.js`、`src/access-state.js`：静态演示逻辑及 `PRODUCTS` 产品名称、目标配置。
+- `src/access-view.mjs`：产品卡片和登录、资格窗口模板。
+- `server/`：配置、邮件投递、认证服务与 HTTP 路由。
+- `db/migrations/`、`scripts/migrate.mjs`：PostgreSQL 迁移。
+- `src/content.mjs`：读取备份文章并生成内容。
+- `src/article-layout.json`：按原站 DOM 核实的文章图文位置；修改备份正文或图片时需同步核实映射，内容不匹配会报错。
+- `backup/2026-10-10/`：分类素材与原文；含账号信息的备份校验记录仅留本机。
+- `tests/`：页面、素材、交互、构建、服务与真实 PostgreSQL 认证检查。
+
+`dist/` 是生成文件，修改页面请改 `src/`。构建通过清单管理旧产物，未登记文件不会自动删除。真实登录部署需要 Node.js、PostgreSQL、服务器配置和应用代码，**不能只上传 `dist/`**；详见 [部署说明](docs/postgresql-deployment.md)。
+
+## 页面与素材范围
+
+保留 7 个原栏目地址和 5 篇新闻地址。`/kyfw` 为 **Super Intelligent Medicine**，两个入口分别打开 **Research Platform**（`/research-platform`）和 **Prediction Platform**（`/prediction-platform`），均显示 “This feature is coming soon”。`/ythpt` 更名为 **Innovative Drug Design**，仍显示“功能开发中”。用户弃用的两张 About Us 背景未使用。
+
+首页使用原来的 3 个本地 SD 视频。用户下载的 `AD 英.mp4` 已在本机归档为 `backup/2026-10-10/videos/ad-en-original.mp4`，不进入 Git 仓库且未加入首页；其编码为 HEVC、实际容器为 QuickTime/MOV，以后用于网页播放时应转换成兼容格式。
+
+联系表单仍会打开访客的邮件应用并生成草稿，需访客确认发送；验证码邮件服务不替代联系表单。目前没有服务端联系表单收件、后台管理或原平台表单服务。
+
+项目尚未发布到线上。本机 QQ 邮箱 SMTP 已配置，用户已确认验证码登录成功；服务器部署、HTTPS 与域名切换需在目标环境配置并验证。以后切换 DirectMail 时再配置该服务的发信域名认证。
