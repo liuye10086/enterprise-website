@@ -9,7 +9,8 @@
 - 生产应用库 `arviva_website` 与测试库 `arviva_website_test` 使用不同的非管理员数据库角色和密码。本机用户数据未迁移。`.env`、`.env.test` 均为 `600` 权限，不进入 Git。
 - `APP_ORIGIN=https://new.arvivatherap.com`，`NODE_ENV=production`，`MAIL_MODE=smtp`，`TRUST_PROXY=loopback`。Node `4174` 与 PostgreSQL `5432` 仅监听 `127.0.0.1`。
 - HTTPS 证书由 Certbot 管理，`certbot.timer` 自动续期，续期部署钩子会校验并重载 Nginx。HTTP 自动跳转 HTTPS；ACME 验证目录单独保留。`certbot renew --dry-run --run-deploy-hooks` 演练通过。
-- 服务器全量测试 71 项通过，无跳过；已核对未登录访问两个产品的普通地址、尾斜线、`index.html` 均受保护。用户已确认新版真实验证码收信与登录成功。
+- 应用版本 `a39cbda` 已发布，服务器全量测试 116 项通过，无跳过；已核对未登录访问两个产品的普通地址、尾斜线、`index.html` 均受保护。邮箱登录状态在迁移后保留，用户已确认新版线上短信送达并登录成功。
+- 生产已配置 `SMS_MODE=aliyun-pnvs` 与专用 RAM 凭据，`SMS_DAILY_LIMIT=10`。生产与本机限额分别计算，共用短信套餐；阿里云签名、模板及权限沿用已经开通的配置。
 
 以下为重建新环境时的步骤；现有服务器已经配置完成，不要重复建库或覆盖 `.env`。本机开发库仍为 `arviva_website_dev`，与服务器独立。
 
@@ -189,7 +190,9 @@ sudo -u arviva bash -c 'cd /srv/arviva && npm run build && node --env-file=.env 
 
 ### 短信登录、英文路径与 UI 优化的发布步骤
 
-2026-10-10 用户已确认本机真实短信验证码可以登录，随后验收 UI 与英文路径，并授权一起提交、推送和发布。本机发布前全量测试 116 项通过，无跳过。线上送达与登录需在部署后单独验收。
+2026-10-10 用户已确认本机真实短信验证码可以登录，随后验收 UI 与英文路径，并授权一起提交、推送和发布。应用版本 `a39cbda` 已完成部署，本机及服务器全量测试各 116 项通过，无跳过；用户确认线上短信送达并登录成功。
+
+本次发布已备份数据库、私密配置和 Nginx 配置，执行 `002_phone_auth.sql`，并在发布前后分别完成备份试恢复。迁移后原邮箱会话仍有效，原用户和产品资格保留；SMTP TLS 连接及认证通过（未额外发送邮件）。新栏目与新闻页面、旧路径 GET/HEAD 跳转和查询参数、产品鉴权、敏感文件隔离均通过检查。Nginx 配置、原站根域和邮箱 DNS 未修改，旧官网 `/sy` 仍返回 200。
 
 发布时一并核对：
 
