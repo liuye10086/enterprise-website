@@ -36,6 +36,8 @@ function navigationFixture() {
   };
   const menu = element();
   const nav = element();
+  const firstMoreLink = element();
+  nav.querySelector = () => firstMoreLink;
   const desktop = element();
   const root = {
     querySelector: selector => selector === '.menu-toggle' ? menu : nav,
@@ -43,7 +45,7 @@ function navigationFixture() {
     dispatch: (name, event) => listeners.get(name)?.(event),
   };
   client.initializeNavigation(root, desktop);
-  return { menu, nav, root, desktop };
+  return { menu, nav, root, desktop, firstMoreLink };
 }
 
 test('navigation closes after an outside click but stays open for clicks within the menu', () => {
@@ -54,7 +56,7 @@ test('navigation closes after an outside click but stays open for clicks within 
   assert.equal(nav.classList.contains('is-open'), true);
   root.dispatch('click', { target: {} });
   assert.equal(menu.getAttribute('aria-expanded'), 'false');
-  assert.equal(menu.getAttribute('aria-label'), 'Open navigation');
+  assert.equal(menu.getAttribute('aria-label'), 'Show more pages');
   assert.equal(nav.classList.contains('is-open'), false);
 });
 
@@ -78,4 +80,17 @@ test('Escape returns focus to the menu and following a navigation link closes it
   menu.dispatch('click');
   nav.dispatch('click', { target: { closest: () => ({}) } });
   assert.equal(nav.classList.contains('is-open'), false);
+});
+
+test('keyboard opening More reaches the first additional page, while pointer opening keeps focus', () => {
+  const { menu, nav, firstMoreLink, root } = navigationFixture();
+  menu.dispatch('click', { detail: 1 });
+  assert.equal(firstMoreLink.focused, undefined);
+  root.dispatch('keydown', { key: 'Escape' });
+  menu.dispatch('click', { detail: 0 });
+  assert.equal(nav.classList.contains('is-open'), true);
+  assert.equal(menu.getAttribute('aria-label'), 'Hide more pages');
+  assert.equal(firstMoreLink.focused, true);
+  root.dispatch('keydown', { key: 'Escape' });
+  assert.equal(menu.focused, true);
 });

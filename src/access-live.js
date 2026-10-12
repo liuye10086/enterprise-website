@@ -29,7 +29,7 @@ export function readLiveSession(raw) {
 }
 
 export function liveAccountLabel(session) {
-  return session.email || `${session.phone.slice(0, 3)} ${session.phone.slice(3, 6)}****${session.phone.slice(-4)}`;
+  return session.email || `${session.phone.slice(3, 6)}****${session.phone.slice(-4)}`;
 }
 
 export function normalizeLoginTarget(channel, value) {

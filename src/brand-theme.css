@@ -1,0 +1,253 @@
+/* Shared Arviva visual theme. Preserve the existing type metrics, spacing,
+   grids and interactions; extend the approved homepage finish to every page. */
+body.brand-theme {
+  --blue: #2f6140;
+  --brand-dark: #21472e;
+  --brand-soft: #f0f5e9;
+  --green: #7ea934;
+  --ink: #22362b;
+  --muted: #626e64;
+  --line: #e0e6dc;
+  --soft: #f6f8f2;
+  --shadow: 0 12px 32px #263a2310;
+  --brand-orange: #b85423;
+  background: #fdfefb;
+  color: var(--ink);
+}
+
+html:has(.brand-theme) { scroll-padding-top: 130px; }
+.brand-theme ::selection { background: #e2edcb; color: #22362b; }
+.brand-theme :is(a,button,input,textarea,summary):focus-visible {
+  outline-color: #527e2b;
+}
+
+/* The shared sticky header retains its natural height; only its finish changes. */
+.brand-theme .site-header {
+  background: #fdfefbf5;
+  box-shadow: 0 5px 22px #22362b06;
+}
+.brand-theme .site-header::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, #86bd29 0%, #86bd29 64%, #f38c2f 100%);
+  pointer-events: none;
+}
+.brand-theme .skip-link { z-index: 20; }
+.brand-theme .navigation-row { border-bottom-color: #e3e8dd; }
+.brand-theme #primary-navigation a { color: #465247; }
+.brand-theme #primary-navigation a:hover { color: #244d31; background: #f1f5e9; }
+.brand-theme #primary-navigation a[aria-current=page] {
+  color: #2f5629;
+  border-color: #dae6c8;
+  background: #edf3e2;
+}
+.brand-theme #primary-navigation a[aria-current=page]::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  border-radius: 2px;
+  background: #89b745;
+  pointer-events: none;
+}
+.brand-theme .company-name { color: #243a2d; }
+.brand-theme .login-trigger {
+  background: #2f553a;
+  border-color: #2f553a;
+  box-shadow: 0 3px 9px #29432b0c;
+}
+.brand-theme .login-trigger:enabled:hover {
+  background: #23462e;
+  border-color: #23462e;
+  box-shadow: 0 4px 14px #29432b1a;
+}
+
+/* Molecular art is an abstract illustration, not a scientific structure. */
+.brand-theme .hero {
+  background: #f7f9f4;
+  border-color: #dee6d6;
+  border-radius: 16px;
+  box-shadow: 0 12px 42px #30432207;
+}
+.brand-theme .hero-slide {
+  position: relative;
+  isolation: isolate;
+  background-color: #f8faf6;
+  background-image: url('/assets/images/ai-biomed-hero-v1.png');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.brand-theme .hero-slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: linear-gradient(#58713d09 1px, transparent 1px),
+    linear-gradient(90deg, #58713d09 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: linear-gradient(90deg,#0005,transparent 28%,transparent 72%,#0005);
+  pointer-events: none;
+}
+.brand-theme .hero-slide--second {
+  background-image: linear-gradient(#f3f7eb28,#f3f7eb28), url('/assets/images/ai-biomed-hero-v1.png');
+}
+.brand-theme .hero-content { color: #213b2a; }
+.brand-theme .hero h2 { text-shadow: 0 1px 12px #ffffff80; }
+.brand-theme .hero p { color: #566551; }
+.brand-theme .hero-control {
+  background: #ffffffeb;
+  color: #365d37;
+  border-color: #e1e7d9;
+  box-shadow: 0 4px 16px #2f482411;
+}
+.brand-theme .hero-control:enabled:hover {
+  background: #f9fbf5;
+  border-color: #a1bc74;
+  color: #24452c;
+  box-shadow: 0 5px 20px #2f48241a;
+}
+.brand-theme .hero-dots button:after { background: #bac5b0; }
+.brand-theme .hero-dots button[aria-pressed=true]:after { background: #a15529; }
+.brand-theme .hero-dots button:hover:after { background: #658c3c; }
+
+.brand-theme .section-heading { color: #243a2d; border-left-color: #91b84a; }
+.brand-theme .lead { color: #526050; }
+.brand-theme .text-link { color: #355d37; }
+.brand-theme .text-link span {
+  color: #9e5426;
+  background: #f8eee2;
+}
+.brand-theme .text-link:hover { color: #a44e23; }
+.brand-theme .text-link:hover span { background: #f5e3ce; color: #93491f; }
+.brand-theme .advantages-grid {
+  background: linear-gradient(120deg,#f4f7ee,#fcfcf7);
+  border-color: #e0e6d5;
+  box-shadow: 0 10px 32px #3b4f2305;
+}
+.brand-theme .advantage p { color: #5b6654; }
+.brand-theme .advantage.talent h3 { color: #466731; }
+.brand-theme .advantage.market h3 { color: #aa592a; }
+.brand-theme .advantage.technology h3 { color: #334d36; }
+.brand-theme .video-card video { background: #24372a; box-shadow: 0 4px 18px #263a2310; }
+.brand-theme .video-card figcaption { color: #69725f; }
+.brand-theme .news-card { background: #fff; border-color: #e1e6db; }
+.brand-theme .news-card:focus-within,
+.brand-theme .news-card:has(a:hover) { border-color: #a5bf7e; box-shadow: var(--shadow); }
+.brand-theme .news-image { background: #f6f8f1; }
+.brand-theme .news-card h3 { color: #2e4231; }
+.brand-theme .read-more { color: #426336; }
+.brand-theme .read-more:hover { color: #a75226; }
+.brand-theme .contact-icon { color: #679336; }
+.brand-theme .contact-details strong { color: #334a34; }
+.brand-theme .contact-form { background: #f7f9f2; border-color: #e0e6d7; }
+.brand-theme .contact-form label { color: #55634e; }
+.brand-theme .contact-form :is(input,textarea) { border-color: #dce3d5; }
+.brand-theme .contact-form :is(input,textarea):hover { border-color: #9eaf89; }
+.brand-theme .contact-form :is(input,textarea):focus { border-color: #62883f; }
+.brand-theme .site-footer { border-top-color: #dfe5d8; color: #6c7468; }
+
+/* Retain the native dialog, focus trap, sizes and all authentication controls. */
+.brand-theme .login-dialog { border-color: #e0e7d8; box-shadow: 0 24px 80px #25362124; }
+.brand-theme .login-dialog::backdrop { background: #1c2f2461; }
+.brand-theme .login-channels { background: #f2f6ec; border-color: #dfe6d7; }
+.brand-theme .login-channels button { color: #637058; }
+.brand-theme .login-channels button[aria-pressed=true] { color: #355d37; }
+.brand-theme .login-form input { background: #fbfcf8; border-color: #dce4d5; }
+.brand-theme .login-form input:focus { background: #fff; border-color: #62883f; }
+.brand-theme .login-phone-country { background: #f0f4e9; border-color: #dce4d5; color: #5b6951; }
+.brand-theme .send-code-button { border-color: #d5e0c7; }
+.brand-theme .send-code-button:enabled:hover { background: #e4edd7; border-color: #a7bc8a; }
+
+/* Interior pages share the same palette without changing their layout. */
+.brand-theme #primary-navigation a:active { background: #e2eccf; }
+.brand-theme .primary-button:not(:disabled):hover { box-shadow: 0 3px 12px #29432b17; }
+.brand-theme .investor-overview p,
+.brand-theme .article-body { color: #526050; }
+.brand-theme .model-grid article { border-color: #e0e6d5; box-shadow: 0 8px 28px #263a2307; }
+.brand-theme .contact-strip { background: linear-gradient(120deg,#f0f5e9,#fcfcf7); border-color: #e0e6d5; }
+.brand-theme .development-symbol { border-color: #d9e5c7; }
+.brand-theme .news-banner {
+  background: linear-gradient(90deg,#f6f9f2fa 0%,#f6f9f2ed 42%,#f6f9f220 100%),
+    url('/assets/images/ai-biomed-hero-v1.png') center/cover no-repeat;
+  box-shadow: inset 0 0 0 1px #e0e6d5;
+}
+.brand-theme .news-banner h2 { color: #243a2d; }
+.brand-theme .article-back:hover { color: var(--brand-orange); }
+.brand-theme .medicine-intro {
+  background: linear-gradient(115deg,#edf3e2 0%,#fafbf6 65%,#fcf3e7 100%);
+  border-color: #dfe6d5;
+}
+.brand-theme .medicine-description { color: #5b6854; }
+.brand-theme .medicine-module { --module-accent: #355d37; --module-soft: #f0f5e9; }
+.brand-theme .medicine-module:nth-child(2) { --module-accent: #a15529; --module-soft: #fbf1e5; }
+.brand-theme .module-trial-note { color: #5c6c52; }
+.brand-theme .module-trial-note span { color: #628b3b; }
+.brand-theme .product-status { background: #f0f3eb; color: #616c58; }
+/* Preserve the meaning and distinct colors of product access states. */
+.brand-theme .product-status[data-state="trial-available"] { background: var(--brand-soft); color: var(--blue); }
+.brand-theme .product-status[data-state="trial-used"] { background: #fff1dd; color: #925616; }
+.brand-theme .product-status[data-state="paid"] { background: #e9f5ed; color: #2b7447; }
+
+/* The same finish follows sign-in and product access through every state. */
+.brand-theme .login-close { color: #65715e; }
+.brand-theme .login-close:enabled:hover { background: #f0f5e9; }
+.brand-theme .login-form input:enabled:hover:not(:focus) { border-color: #9eaf89; }
+.brand-theme .login-form input::placeholder { color: #788271; }
+.brand-theme .login-channels button[aria-pressed=true] { box-shadow: 0 1px 5px #263a2312; }
+.brand-theme .login-session p { color: #56664e; }
+.brand-theme .demo-notice,
+.brand-theme .login-demo { background: #f5f8ef; border-color: #dfe7d4; color: #5c6c50; }
+.brand-theme .demo-badge { color: #4f6e37; }
+.brand-theme .demo-notice p { color: #626e58; }
+.brand-theme .demo-panel { background: #fafcf7; }
+.brand-theme .demo-panel summary,
+.brand-theme .demo-panel-content>p:first-child { color: #4f6446; }
+.brand-theme .demo-panel summary span { color: #728168; }
+.brand-theme .demo-panel summary:focus-visible { outline-color: #527e2b; }
+.brand-theme .secondary-button { border-color: #d5e0c7; color: #355d37; }
+.brand-theme .secondary-button:not(:disabled):hover { border-color: #a7bc8a; }
+.brand-theme .reset-demo-button { border-color: #dce4d4; color: #637058; }
+.brand-theme .reset-demo-button:enabled:hover { background: #eef3e7; }
+.brand-theme .access-smallprint,
+.brand-theme .payment-note,
+.brand-theme .access-back { color: #68765d; }
+.brand-theme .access-back:enabled:hover { color: var(--blue); }
+.brand-theme .access-plan { border-color: #dfe6d5; }
+.brand-theme .trial-plan { background: #f4f8ee; border-color: #d4e2c1; }
+.brand-theme .plan-label { color: #687e53; }
+.brand-theme .access-plan h3 { color: #243a2d; }
+.brand-theme .plan-allowance { color: #355a39; }
+.brand-theme .plan-allowance span { color: #708164; }
+.brand-theme .plan-description { color: #5e6d55; }
+.brand-theme .payment-summary { background: #f6f8f1; border-color: #dfe6d5; }
+.brand-theme .payment-summary h3,
+.brand-theme .payment-line strong { color: #35553a; }
+.brand-theme .payment-line { border-color: #dfe6d5; color: #6a785f; }
+
+@media (max-width:1180px) {
+  html:has(.brand-theme) { scroll-padding-top: 174px; }
+  .brand-theme #primary-navigation { background: #fdfefb; border-color: #dce5d0; box-shadow: 0 16px 36px #263a231a; }
+  .brand-theme #primary-navigation a { background: #f6f8f1; border-color: #e7ecdf; }
+  .brand-theme #primary-navigation a[aria-current=page] { background: #edf3e2; border-color: #dae6c8; }
+  .brand-theme #primary-navigation a[aria-current=page]::after { left: 14px; right: auto; width: 28px; }
+  .brand-theme .menu-toggle { border-color: #dae3ce; background: #fcfdf9; }
+  .brand-theme .menu-toggle:hover { background: #f0f5e7; border-color: #a5bd84; }
+  .brand-theme .menu-toggle[data-current-section=true] { color: #2f5629; background: #edf3e2; border-color: #dae6c8; }
+  .brand-theme .mobile-primary-links a { color: #465247; background: #f6f8f1; border-color: #e7ecdf; }
+  .brand-theme .mobile-primary-links a:hover { color: #244d31; background: #f1f5e9; border-color: #a5bd84; }
+  .brand-theme .mobile-primary-links a[aria-current=page] { color: #2f5629; background: #edf3e2; border-color: #dae6c8; }
+}
+@media (max-width:640px) {
+  html:has(.brand-theme) { scroll-padding-top: 168px; }
+  .brand-theme .hero-slide {
+    /* A shallow full-width art layer keeps both brand colors on narrow screens. */
+    background-size: 100% 100%, 100% auto;
+    background-position: center, center bottom;
+    background-image: linear-gradient(#f8faf64d,#f8faf64d), url('/assets/images/ai-biomed-hero-v1.png');
+  }
+}

@@ -19,7 +19,7 @@ const serverSession = () => ({
 test('phone sessions preserve product access and display only a masked phone number', () => {
   const session = { ...serverSession(), email: null, phone: '+8613800138000' };
   assert.deepEqual(live.readLiveSession(session), session);
-  assert.equal(live.liveAccountLabel(session), '+86 138****8000');
+  assert.equal(live.liveAccountLabel(session), '138****8000');
   assert.equal(live.liveAccountLabel(serverSession()), 'person@example.com');
 });
 

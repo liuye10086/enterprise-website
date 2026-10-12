@@ -42,7 +42,7 @@ test('medicine product entries require access checks and drug design remains und
     assert.ok(medicine.includes(`<h3 id="${route === '/research-platform' ? 'module-01' : 'module-02'}-title">${name}</h3>`));
     const platform = await readFile(pageFile(route), 'utf8');
     assert.ok(platform.includes(`<title>${name} |`));
-    assert.match(platform, /<h2>This feature is coming soon<\/h2>/);
+    assert.match(platform, /<h2>Platform in development<\/h2>/);
     assert.match(platform, /href="\/intelligent">Back to platforms/);
   }
   assert.doesNotMatch(medicine, /href="https:\/\/www\.(?:google|baidu)\.com/);
@@ -50,7 +50,7 @@ test('medicine product entries require access checks and drug design remains und
   await assert.doesNotReject(access(path.join(root,'access-state.js')));
   const design = await readFile(pageFile('/drug-design'), 'utf8');
   assert.match(design, /<title>Innovative Drug Design \|/);
-  assert.match(design, /功能开发中/);
+  assert.match(design, /<h2 lang="en">In development<\/h2>/);
   const all = await Promise.all(routes.map(route => readFile(pageFile(route), 'utf8')));
   assert.doesNotMatch(all.join(''), /-52791|2000000663|website\.xin|wezhan\.cn|video\.wanwang/);
   assert.doesNotMatch(all.join(''), /R &amp; D Innovation|Integration platform/);

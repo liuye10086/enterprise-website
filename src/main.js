@@ -1,6 +1,7 @@
 import { initializeAccess } from './access.js';
 import { initializeLiveAccess } from './access-live.js';
 import { mode } from './runtime-config.js';
+import { initializeLanguage } from './i18n.js';
 
 export function createEmailDraft(values) {
   const fields = Object.fromEntries(['name','email','subject','message'].map(key=>[key,String(values[key] ?? '').trim()]));
@@ -16,10 +17,15 @@ export function initializeNavigation(root = document, desktop = window.matchMedi
   const nav = root.querySelector('#primary-navigation');
   const setMenu = open => {
     menu?.setAttribute('aria-expanded',String(open));
-    menu?.setAttribute('aria-label',open ? 'Close navigation' : 'Open navigation');
+    menu?.setAttribute('aria-label',open ? 'Hide more pages' : 'Show more pages');
     nav?.classList.toggle('is-open',open);
   };
-  menu?.addEventListener('click',()=>setMenu(menu.getAttribute('aria-expanded') !== 'true'));
+  menu?.addEventListener('click',event=>{
+    const opening = menu.getAttribute('aria-expanded') !== 'true';
+    setMenu(opening);
+    // Keyboard activation reaches the dropdown, which precedes its trigger in the DOM.
+    if (opening && event.detail === 0) nav?.querySelector('a:not([data-mobile-primary])')?.focus();
+  });
   root.addEventListener('keydown',event=>{
     if (event.key === 'Escape' && menu?.getAttribute('aria-expanded') === 'true') {setMenu(false);menu.focus();}
   });
@@ -31,21 +37,56 @@ export function initializeNavigation(root = document, desktop = window.matchMedi
   return setMenu;
 }
 
-function initialize() {
-  const setMenu = initializeNavigation();
-  (mode === 'live' ? initializeLiveAccess : initializeAccess)(()=>setMenu(false));
+export function initializeCarousel(root = document, browser = root.defaultView) {
+  const hero = root.querySelector('.hero');
+  if (!hero) return () => {};
+  const slides = [...hero.querySelectorAll('[data-slide]')];
+  const dots = [...hero.querySelectorAll('[data-carousel-dot]')];
+  if (slides.length < 2) return () => {};
 
-  const slides = [...document.querySelectorAll('[data-slide]')];
-  const dots = [...document.querySelectorAll('[data-carousel-dot]')];
-  let current = 0;
+  const motion = browser.matchMedia('(prefers-reduced-motion: reduce)');
+  let current = Math.max(0, slides.findIndex(slide => !slide.hidden));
+  let timer = null;
+  const listeners = [];
+  const listen = (target, name, handler) => {
+    if (!target) return;
+    target.addEventListener(name, handler);
+    listeners.push(() => target.removeEventListener(name, handler));
+  };
   const showSlide = index => {
     current=(index+slides.length)%slides.length;
     slides.forEach((slide,i)=>{slide.hidden=i!==current;});
     dots.forEach((dot,i)=>dot.setAttribute('aria-pressed',String(i===current)));
   };
-  document.querySelector('[data-carousel-prev]')?.addEventListener('click',()=>showSlide(current-1));
-  document.querySelector('[data-carousel-next]')?.addEventListener('click',()=>showSlide(current+1));
-  dots.forEach((dot,i)=>dot.addEventListener('click',()=>showSlide(i)));
+  const schedule = () => {
+    browser.clearTimeout(timer);
+    timer = null;
+    // Always start a fresh interval after manual navigation or returning to the tab.
+    if (!motion.matches && !root.hidden) timer = browser.setTimeout(() => {
+      showSlide(current + 1);
+      schedule();
+    }, 5000);
+  };
+  const navigate = index => { showSlide(index); schedule(); };
+  listen(hero.querySelector('[data-carousel-prev]'), 'click', () => navigate(current - 1));
+  listen(hero.querySelector('[data-carousel-next]'), 'click', () => navigate(current + 1));
+  dots.forEach((dot, i) => listen(dot, 'click', () => navigate(i)));
+  listen(root, 'visibilitychange', schedule);
+  listen(motion, 'change', schedule);
+  showSlide(current);
+  schedule();
+  return () => {
+    browser.clearTimeout(timer);
+    listeners.forEach(remove => remove());
+  };
+}
+
+function initialize() {
+  initializeLanguage();
+  const setMenu = initializeNavigation();
+  document.querySelector('[data-language-select]')?.addEventListener('change',()=>setMenu(false));
+  (mode === 'live' ? initializeLiveAccess : initializeAccess)(()=>setMenu(false));
+  initializeCarousel();
 
   const videos = [...document.querySelectorAll('video')];
   videos.forEach(video=>video.addEventListener('play',()=>videos.forEach(other=>{if(other!==video) other.pause();})));

@@ -99,9 +99,13 @@ npm run test:auth
 
 本应用收到旧栏目 `/sy`、`/gywm`、`/kyfw`、`/ythpt`、`/tzzzq`、`/xwzx`、`/lxwm` 或五个旧 `/newsinfo/<ID>.html` 地址时，对 GET/HEAD 请求返回 308 跳转到对应新地址，并原样保留查询参数。栏目尾斜杠、`/index.html` 别名及新文章地址的相同别名也跳转到标准地址，不生成重复的旧内容页。新增文章需先在 `src/routes.mjs` 登记固定英文地址。跳转只作用于运行本应用的站点，不会更改原建站平台或域名配置。
 
-`/intelligent` 为 **Super Intelligent Medicine**，两个入口继续使用 **Research Platform**（`/research-platform`）和 **Prediction Platform**（`/prediction-platform`），产品 ID 与访问鉴权保持不变，均显示 “This feature is coming soon”。`/drug-design` 为 **Innovative Drug Design**，仍显示“功能开发中”。用户弃用的两张 About Us 背景未使用。
+`/intelligent` 为 **Super Intelligent Medicine**，两个入口继续使用 **Research Platform**（`/research-platform`）和 **Prediction Platform**（`/prediction-platform`），产品 ID 与访问鉴权保持不变，均显示 “Platform in development”。`/drug-design` 为 **Innovative Drug Design**，仍为开发中状态，统一显示 “In development”。用户弃用的两张 About Us 背景未使用。
 
 首页使用原来的 3 个本地 SD 视频。用户下载的 `AD 英.mp4` 已在本机归档为 `backup/2026-10-10/videos/ad-en-original.mp4`，不进入 Git 仓库且未加入首页；其编码为 HEVC、实际容器为 QuickTime/MOV，以后用于网页播放时应转换成兼容格式。
+
+企业介绍、首页、平台介绍和合作文案集中维护在 `src/site-copy.mjs`，以 AI 赋能生物医药研发为主线。平台功能尚未确定，介绍只描述研发方向并保留开发中状态。历史官网备份和五篇新闻正文保持原样；登录、试用和访问状态提示仍由原功能模块管理。
+
+导航提供 English / 简体中文选择，首次访问默认英文，选择保存在浏览器 `arviva.language` 中。`src/i18n.js` 负责无刷新切换与动态提示翻译；`locale-site-zh.mjs`、`locale-access-zh.mjs`、`locale-articles-zh.mjs` 分别维护站点、登录/权限和文章的中文词典。新增英文文案需同步补充词条。URL、表单值、账号与权限状态保持不变，图片内文字和视频音轨保留原素材；禁用 JavaScript 时显示英文。导航中的手机号显示为 `138****8000`，短信登录仍使用中国大陆 +86 号码格式。
 
 联系表单仍会打开访客的邮件应用并生成草稿，需访客确认发送；验证码邮件服务不替代联系表单。目前没有服务端联系表单收件、后台管理或原平台表单服务。
 

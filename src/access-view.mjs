@@ -1,5 +1,7 @@
 import { PRODUCTS } from './access-state.js';
 import { ROUTES } from './routes.mjs';
+import { SITE_COPY as copy } from './site-copy.mjs';
+import { escapeHtml as e } from './content.mjs';
 
 const arrow = '<span aria-hidden="true">→</span>';
 
@@ -41,10 +43,10 @@ export function renderAccessDialogs() {
 }
 
 export function medicineModules() {
-  return `<section class="medicine-page"><div class="medicine-intro"><p class="medicine-eyebrow">EXPLORE OUR PLATFORMS</p><h2>Super Intelligent Medicine</h2><p class="medicine-description">Choose a product to view your trial and access.</p></div>
+  return `<section class="medicine-page"><div class="medicine-intro"><p class="medicine-eyebrow">${e(copy.platforms.eyebrow)}</p><h2>Super Intelligent Medicine</h2><p class="medicine-description">${e(copy.platforms.description)}</p></div>
     <div class="demo-notice" data-demo-notice hidden><span class="demo-badge">INTERACTIVE PREVIEW</span><p>Demo sign-in and purchases. No emails or charges.</p><a href="#preview-controls">Preview controls ↓</a></div>
-    <div class="medicine-modules">${PRODUCTS.map(product=>`<article class="medicine-module"><div class="module-topline"><span class="module-number">${product.number}</span><span class="product-status" data-product-status="${product.id}">Sign in required</span></div><h3 id="${product.id}-title">${product.name}</h3><p class="module-destination">This feature is coming soon</p><p class="module-trial-note"><span aria-hidden="true">✓</span> 1 free trial · Separate product access</p><button type="button" class="module-open" data-product-open="${product.id}" aria-labelledby="${product.id}-title ${product.id}-action"><span id="${product.id}-action" data-product-cta="${product.id}">Open product</span>${arrow}</button></article>`).join('')}</div>
-    <p class="module-note">Each product includes one free trial. Continued use requires access to that product.</p>
+    <div class="medicine-modules">${PRODUCTS.map(product=>`<article class="medicine-module"><div class="module-topline"><span class="module-number">${product.number}</span><span class="product-status" data-product-status="${product.id}">Sign in required</span></div><h3 id="${product.id}-title">${product.name}</h3><p class="module-destination">${e(product.id === 'module-01' ? copy.platforms.research : copy.platforms.prediction)}</p><p class="module-trial-note"><span aria-hidden="true">✓</span> 1 free trial · Separate product access</p><button type="button" class="module-open" data-product-open="${product.id}" aria-labelledby="${product.id}-title ${product.id}-action"><span id="${product.id}-action" data-product-cta="${product.id}">Open product</span>${arrow}</button></article>`).join('')}</div>
+    <p class="module-note">${e(copy.platforms.note)}</p>
     <section id="preview-controls" class="demo-panel" data-demo-panel hidden><details><summary>Preview controls <span>Try different access states</span></summary><div class="demo-panel-content"><p data-demo-session>Signed out</p><div class="demo-actions">${PRODUCTS.map(product=>`<button type="button" class="secondary-button" data-demo-grant="${product.id}" disabled>Simulate ${product.name} access</button>`).join('')}<button type="button" class="reset-demo-button" data-demo-reset>Reset demo</button></div><p class="access-smallprint">These controls only affect this local preview. Reset restores both free trials.</p></div></details></section>
     <p class="storage-note" data-storage-note hidden></p>
     <noscript><p class="storage-note">Enable JavaScript to use the product access preview.</p></noscript>
