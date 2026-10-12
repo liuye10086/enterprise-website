@@ -1,6 +1,6 @@
 # Arviva Therapeutics 官网
 
-根据原官网布局重建的独立网站，页面、图片、视频均从本项目加载。官网使用 Node.js 与 PostgreSQL，支持邮箱验证码与阿里云中国大陆手机号验证码登录。短信登录、UI 与英文路径已于 2026-10-10 发布到 <https://new.arvivatherap.com/home>，用户确认线上短信送达并登录成功。产品功能页仍是占位页面，支付尚未接入。
+根据原官网布局重建的独立网站，页面、图片、视频均从本项目加载。官网使用 Node.js 与 PostgreSQL，支持邮箱验证码与阿里云中国大陆手机号验证码登录。2026-10-12 已将 AI 生物医药主题、双语切换、响应式导航和自动轮播发布到 <https://new.arvivatherap.com/home>；本机和服务器各 127 项测试通过。短信登录于 2026-10-10 上线，用户已确认线上短信送达并登录成功。产品功能页仍是占位页面，支付尚未接入。
 
 新版地址：[new.arvivatherap.com/home](https://new.arvivatherap.com/home)。旧版 [arvivatherap.com/sy](https://arvivatherap.com/sy) 继续由原建站平台提供，两站独立运行。新版首页及站内首页链接使用 `/home`，不会修改原官网。
 
@@ -80,6 +80,7 @@ npm run test:auth
 - `src/render.mjs`：栏目、导航、首页布局与联系信息。
 - `src/routes.mjs`：栏目与新闻的固定英文地址、导航标签、旧地址跳转映射。
 - `src/styles.css`：电脑与手机样式。
+- `src/brand-theme.css`：全站 AI 生物医药主题；首页保留原有布局，轮播默认每 5 秒切换，手动切换后重新计时，后台页面或系统要求减少动态效果时暂停。
 - `src/main.js`、`src/runtime-config.js`：页面交互与 live/demo 入口切换；真实服务器提供 live 配置。
 - `src/access-live.js`：邮箱、手机号登录与服务端产品访问交互。
 - `src/access.js`、`src/access-state.js`：静态演示逻辑及 `PRODUCTS` 产品名称、目标配置。

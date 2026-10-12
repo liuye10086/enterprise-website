@@ -2,14 +2,14 @@
 
 真实登录依赖 Node.js、PostgreSQL 与同源后端。`npm start` 默认监听本机 `127.0.0.1:4174`；`npm run dev` 的 `4173` 是旧静态演示，不用于正式登录。**不能仅上传 `dist/`，也不能让 Nginx 直接公开平台 HTML 来绕过 Node。**
 
-## 当前部署（2026-10-10）
+## 当前部署（2026-10-12）
 
 - 新版地址：<https://new.arvivatherap.com/home>；旧版 <https://arvivatherap.com/sy> 继续运行于原平台。仅新增 `new` 的 A 记录，原根域 CNAME、MX 及邮箱客户端记录未修改。
 - 阿里云香港 Ubuntu 24.04，Node.js 24.21.0、PostgreSQL 16、Nginx 1.24。应用目录 `/srv/arviva`，以 `arviva` 系统用户和 `arviva.service` 运行并开机启动。
 - 生产应用库 `arviva_website` 与测试库 `arviva_website_test` 使用不同的非管理员数据库角色和密码。本机用户数据未迁移。`.env`、`.env.test` 均为 `600` 权限，不进入 Git。
 - `APP_ORIGIN=https://new.arvivatherap.com`，`NODE_ENV=production`，`MAIL_MODE=smtp`，`TRUST_PROXY=loopback`。Node `4174` 与 PostgreSQL `5432` 仅监听 `127.0.0.1`。
 - HTTPS 证书由 Certbot 管理，`certbot.timer` 自动续期，续期部署钩子会校验并重载 Nginx。HTTP 自动跳转 HTTPS；ACME 验证目录单独保留。`certbot renew --dry-run --run-deploy-hooks` 演练通过。
-- 应用版本 `a39cbda` 已发布，服务器全量测试 116 项通过，无跳过；已核对未登录访问两个产品的普通地址、尾斜线、`index.html` 均受保护。邮箱登录状态在迁移后保留，用户已确认新版线上短信送达并登录成功。
+- 应用版本 `6f21fae` 已发布，服务器全量测试 127 项通过，无跳过；新主题、双语切换、手机导航和首页自动轮播已上线。已核对未登录访问两个产品的普通地址、尾斜线、`index.html` 均受保护。2026-10-10 用户已确认新版线上短信送达并登录成功；本次保留原认证配置，没有额外发送验证码或消耗产品试用。
 - 生产已配置 `SMS_MODE=aliyun-pnvs` 与专用 RAM 凭据，`SMS_DAILY_LIMIT=10`。生产与本机限额分别计算，共用短信套餐；阿里云签名、模板及权限沿用已经开通的配置。
 
 以下为重建新环境时的步骤；现有服务器已经配置完成，不要重复建库或覆盖 `.env`。本机开发库仍为 `arviva_website_dev`，与服务器独立。
@@ -187,6 +187,14 @@ sudo -u arviva bash -c 'cd /srv/arviva && npm run build && node --env-file=.env 
 当前没有在线支付、公开开通权限接口或完整产品功能。邮箱与短信登录、两个产品的占位页面属于发布范围。
 
 ## 7. 日常更新与备份
+
+### 2026-10-12：AI 生物医药主题与双语发布
+
+应用提交 `6f21fae` 已推送至 `main` 并部署。发布前备份保存在 `/var/backups/arviva/releases/20261012-6f21fae`，包含数据库、原 `.env` / `.env.test`、Nginx 配置、原提交号和旧 `dist/`。本次没有依赖或数据库迁移变化，服务器私密配置的校验和在发布前后保持一致。
+
+本机和服务器均通过 127 项测试，无失败和跳过。公网 7 栏目、5 篇文章、主题样式、双语模块和首页新图片均与本地构建哈希一致；真实邮箱与短信服务配置就绪，产品访问保护和私密文件隔离通过检查。旧官网 `/sy` 仍返回 200；未更改 DNS、证书或 Nginx 配置。
+
+此次本机 SSH 22 通道不稳定，Git 推送通过单次 SSH 443 参数完成，没有更改仓库远程地址或永久 SSH 设置；服务器更新通过已登录的阿里云命令助手执行。脚本先校验版本并备份，再更新、构建、测试及重启，失败时自动恢复原提交和构建页面。
 
 ### 短信登录、英文路径与 UI 优化的发布步骤
 
