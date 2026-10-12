@@ -245,9 +245,12 @@ html:has(.brand-theme) { scroll-padding-top: 130px; }
 @media (max-width:640px) {
   html:has(.brand-theme) { scroll-padding-top: 168px; }
   .brand-theme .hero-slide {
-    /* A shallow full-width art layer keeps both brand colors on narrow screens. */
-    background-size: 100% 100%, 100% auto;
-    background-position: center, center bottom;
-    background-image: linear-gradient(#f8faf64d,#f8faf64d), url('/assets/images/ai-biomed-hero-v1.png');
+    /* Fill the slide behind its text; crop toward the molecular art, not the empty center. */
+    background-size: 100% 100%, cover;
+    background-position: center, 15% center;
+    background-image: linear-gradient(#f8faf680,#f8faf680), url('/assets/images/ai-biomed-hero-v1.png');
+  }
+  .brand-theme .hero-slide--second {
+    background-position: center, 85% center;
   }
 }
