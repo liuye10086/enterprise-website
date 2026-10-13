@@ -19,7 +19,7 @@ export async function build() {
     await writeFile(target,html,'utf8');
     owned.push(relative);
   }
-  for (const name of ['styles.css','brand-theme.css','main.js','access.js','access-state.js','access-live.js','runtime-config.js','i18n.js','locale-site-zh.mjs','locale-access-zh.mjs','locale-articles-zh.mjs']) {
+  for (const name of ['styles.css','brand-theme.css','main.js','access.js','access-state.js','access-live.js','runtime-config.js','i18n.js','locale-site-zh.mjs','locale-access-zh.mjs','locale-articles-zh.mjs','locale-drug-design-zh.mjs']) {
     const text = await readFile(path.join(root,'src',name),'utf8');
     texts.push(text);
     await writeFile(await outputPath(dist,name),text,'utf8');

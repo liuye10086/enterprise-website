@@ -6,7 +6,6 @@ export const ACCESS_ZH = {
   'Super Intelligent Medicine': '超级智能医药',
   'AI FOR BIOPHARMACEUTICAL R&D': 'AI 赋能生物医药研发',
   'Our Research and Prediction platforms are being developed to support AI-enabled biopharmaceutical research.': '研究平台和预测平台正在开发中，旨在支持 AI 驱动的生物医药研究。',
-  'AI-enabled research, grounded in biology. Platform in development.': '以生物学为基础，开展 AI 驱动的研究。平台开发中。',
   'Exploring AI for biological prediction. Platform in development.': '探索 AI 在生物学预测中的应用。平台开发中。',
   'Platforms are in development. Each product has a separate trial and access plan.': '平台正在开发中。每款产品的试用和访问方案相互独立。',
   'Platform in development': '平台开发中',

@@ -3,6 +3,7 @@ import { renderAccessDialogs, medicineModules } from './access-view.mjs';
 import { PRODUCTS } from './access-state.js';
 import { SECTIONS, ROUTES, ARTICLE_ROUTES } from './routes.mjs';
 import { SITE_COPY as copy } from './site-copy.mjs';
+import { DRUG_DESIGN_COPY as designCopy } from './drug-design-copy.mjs';
 
 const navigation = SECTIONS.map(section => [section.key === 'news' ? copy.newsTitle : section.label, section.path]);
 const img = (name, alt, className = '', loading = 'lazy') => `<img src="/assets/images/${e(name)}" alt="${e(alt)}" class="${className}" loading="${loading}" decoding="async">`;
@@ -69,7 +70,7 @@ function newsCard(article) {
 }
 
 function home(articles) {
-  const approach = copy.home.approach.map(p=>`<p>${e(p)}</p>`).join('');
+  const approach = copy.home.approach.map(item=>`<p><strong>${e(item.title)}</strong> <span>${e(item.description)}</span></p>`).join('');
   const videos = [['parkinsons-en-sd.mp4','175297174.jpg',"A new era in Parkinson’s treatment"],['obesity-en-sd.mp4','174621906.png','Obesity and the future of treatment'],['alzheimers-en-sd.mp4','175297136.jpg',"Understanding Alzheimer’s disease"]];
   return carousel() + `<section class="section company-section"><h2 class="section-heading">${e(copy.home.companyTitle)}</h2><p class="lead">${e(copy.home.company)}</p></section>
   <section class="section pipeline-section"><h2 class="section-heading">${e(copy.home.focusTitle)}</h2><p class="lead">${e(copy.home.focus)}</p><div class="section-action">${link(e(copy.home.focusLink),ROUTES.intelligent)}</div></section>
@@ -88,8 +89,14 @@ function investors() {
   return `<section class="section"><h2 class="section-heading">${e(copy.investors.title)}</h2><p class="lead">${e(copy.investors.introduction)}</p></section><section class="section"><h2 class="section-heading">${e(copy.investors.overviewTitle)}</h2><div class="investor-overview">${img('33316488.jpeg','Arviva Therapeutics investment and development model')}<div><h3>${e(copy.investors.collaborationTitle)}</h3><p>${e(copy.investors.collaboration)}</p><h3>${e(copy.investors.portfolioTitle)}</h3><p>${e(copy.investors.portfolio[0])}</p><p>${e(copy.investors.portfolio[1])}</p><h3>${e(copy.investors.valueTitle)}</h3></div></div></section><section class="section"><h2 class="section-heading">${e(copy.investors.modelTitle)}</h2><p class="lead">${e(copy.investors.modelIntroduction)}</p><div class="model-grid">${copy.investors.models.map((model,index)=>`<article>${img(modelImages[index],model.title)}<h3>${e(model.title)}</h3><p>${e(model.description)}</p></article>`).join('')}</div></section><section class="contact-strip"><p>${e(copy.investors.contact)}</p>${link(e(copy.investors.contactLink),ROUTES.contact)}</section>`;
 }
 
-function placeholder(title) {
-  return `<section class="development-page"><p class="eyebrow">${title}</p><div class="development-symbol" aria-hidden="true">⋯</div><h2 lang="en">${e(copy.drugDesignStatus)}</h2><a class="primary-button" href="${ROUTES.home}">Back to home <span aria-hidden="true">→</span></a></section>`;
+function drugDesign() {
+  return `<div class="drug-design-page">
+    <section class="design-intro"><h2>${e(designCopy.title)}</h2><p class="lead">${e(designCopy.introduction)}</p></section>
+    <section class="section"><h2 class="section-heading">${e(designCopy.platformsTitle)}</h2><div class="design-platform-grid">${designCopy.platforms.map((platform,index)=>`<article class="design-platform"><div class="design-platform-image">${img(platform.image,'')}</div><div class="design-platform-label"><span class="design-platform-number" aria-hidden="true">${String(index+1).padStart(2,'0')}</span><h3>${e(platform.title)}</h3></div></article>`).join('')}</div></section>
+    <section class="section"><h2 class="section-heading">${e(designCopy.headquartersTitle)}</h2><div class="design-headquarters"><div><p class="lead">${e(designCopy.headquartersDescription)}</p><h3 class="design-subheading">${e(designCopy.strategyTitle)}</h3><ol class="design-strategy">${designCopy.strategy.map(item=>`<li><h4>${e(item.title)}</h4><p>${e(item.description)}</p></li>`).join('')}</ol></div><aside class="design-contact"><h3>${e(copy.contactTitle)}</h3>${contactDetails()}</aside></div></section>
+    <section class="section"><h2 class="section-heading">${e(designCopy.productionTitle)}</h2><div class="design-production">${designCopy.productionPhotos.map(photo=>`<figure>${img(photo.image,photo.alt)}</figure>`).join('')}</div></section>
+    <section class="contact-strip design-mission"><p>${e(designCopy.mission)}</p>${link('Contact Us',ROUTES.contact)}</section>
+  </div>`;
 }
 
 function platformPlaceholder(product) {
@@ -103,7 +110,7 @@ export async function renderPages({articles}) {
     [ROUTES.home,shell('Home Page',ROUTES.home,home(sorted))],
     [ROUTES.about,shell('About Us',ROUTES.about,about(),copy.descriptions.about)],
     [ROUTES.intelligent,shell('Super Intelligent Medicine',ROUTES.intelligent,medicineModules(),copy.descriptions.intelligent)],
-    [ROUTES.drugDesign,shell('Innovative Drug Design',ROUTES.drugDesign,placeholder('Innovative Drug Design'),copy.descriptions.drugDesign)],
+    [ROUTES.drugDesign,shell('Innovative Drug Design',ROUTES.drugDesign,drugDesign(),designCopy.description)],
     [ROUTES.investors,shell('Investor Zone',ROUTES.investors,investors(),copy.descriptions.investors)],
     [ROUTES.news,shell(copy.newsTitle,ROUTES.news,`<section class="news-banner"><h2>${e(copy.newsTitle)}</h2></section><section class="section news-list">${sorted.map(newsCard).join('')}</section>`,copy.descriptions.news)],
     [ROUTES.contact,shell('Contact Us',ROUTES.contact,`<section class="section contact-page"><h2 class="section-heading">${e(copy.contactTitle)}</h2><div class="contact-grid">${contactDetails()}${contactForm('contact')}</div></section>`,copy.descriptions.contact)]]);

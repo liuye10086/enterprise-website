@@ -5,7 +5,6 @@ export const SITE_COPY = {
   descriptions: {
     about: 'Learn how Arviva Therapeutics brings AI and biological research together, with a focus on neuroscience, metabolic disease and drug discovery.',
     intelligent: 'Explore Arviva Therapeutics’ Research and Prediction platforms for AI-enabled biopharmaceutical research. Both platforms are in development.',
-    drugDesign: 'Arviva Therapeutics explores AI-guided drug design as part of its biopharmaceutical research. This section is in development.',
     investors: 'Explore Arviva Therapeutics’ approach to AI-enabled drug discovery, intellectual property, research collaboration and licensing opportunities.',
     news: 'Research insights and company updates from Arviva Therapeutics, spanning neuroscience, metabolic disease and biopharmaceutical discovery.',
     contact: 'Connect with Arviva Therapeutics to discuss AI-enabled biopharmaceutical research, licensing and scientific collaboration.',
@@ -26,15 +25,22 @@ export const SITE_COPY = {
     focusTitle: 'Our research focus',
     focus: 'Our research focuses on Alzheimer’s disease, type 2 diabetes, obesity, depression and anxiety. We explore how AI and biological insight can inform new therapeutic approaches.',
     focusLink: 'Explore our research platforms',
-    approachTitle: 'Connecting AI and biology',
+    approachTitle: 'AI-driven Biomedical Research',
     approach: [
-      'Our research approach brings AI, biological data and disease knowledge together to explore therapeutic targets.',
-      'We use computational insight to guide research questions and connect them with experimental investigation.',
-      'In neuroscience, we explore disease mechanisms and new research directions for Alzheimer’s disease, depression and anxiety.',
-      'In metabolic disease, we investigate pathways relevant to type 2 diabetes and obesity, with a focus on target discovery and peptide research.',
-      'Our goal is to turn scientific insight into research opportunities for future therapies.',
+      {
+        title: 'Analyze research data:',
+        description: 'Use the latest AI tools to analyze raw research data and generate figures and charts presenting the findings.',
+      },
+      {
+        title: 'Draft SCI research papers:',
+        description: 'Generate initial manuscripts for SCI-indexed journals from research figures and charts and recommend suitable journals for submission. Assist with revisions in response to reviewer feedback throughout the publication process.',
+      },
+      {
+        title: 'Draft theses and dissertations:',
+        description: 'Generate initial drafts from research figures and charts, following the formatting requirements of the relevant university. Refine the draft in response to review feedback to meet high academic standards.',
+      },
     ],
-    approachLink: 'Discover our AI research direction',
+    approachLink: 'Explore the Research Platform',
     strengthsTitle: 'The foundations of our research',
     expertiseTitle: 'Expertise',
     expertise: ['Bringing AI and life science expertise together', 'Connecting computational and experimental perspectives'],
@@ -54,7 +60,11 @@ export const SITE_COPY = {
   platforms: {
     eyebrow: 'AI FOR BIOPHARMACEUTICAL R&D',
     description: 'Our Research and Prediction platforms are being developed to support AI-enabled biopharmaceutical research.',
-    research: 'AI-enabled research, grounded in biology. Platform in development.',
+    research: [
+      'Analyze research data (sequencing data and biomedical statistical data)',
+      'Draft SCI research papers (for high-impact journals)',
+      'Draft theses and dissertations (bachelor’s, master’s and doctoral)',
+    ],
     prediction: 'Exploring AI for biological prediction. Platform in development.',
     note: 'Platforms are in development. Each product has a separate trial and access plan.',
     status: 'Platform in development',
@@ -79,7 +89,6 @@ export const SITE_COPY = {
     contactLink: 'Discuss collaboration',
   },
   newsTitle: 'News & Insights',
-  drugDesignStatus: 'In development',
   contactTitle: 'Contact & collaboration',
   contactHelp: 'Discuss research, licensing or collaboration. Opens your email app. Nothing is sent automatically.',
 };

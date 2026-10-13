@@ -32,7 +32,7 @@ test('home is also available at root and legacy content pages are not generated'
   }
 });
 
-test('medicine product entries require access checks and drug design remains under development', async () => {
+test('medicine product entries require access checks and drug design restores archived platform content', async () => {
   const medicine = await readFile(pageFile('/intelligent'), 'utf8');
   assert.match(medicine, /<title>Super Intelligent Medicine \|/);
   assert.doesNotMatch(medicine, /功能开发中/);
@@ -50,7 +50,14 @@ test('medicine product entries require access checks and drug design remains und
   await assert.doesNotReject(access(path.join(root,'access-state.js')));
   const design = await readFile(pageFile('/drug-design'), 'utf8');
   assert.match(design, /<title>Innovative Drug Design \|/);
-  assert.match(design, /<h2 lang="en">In development<\/h2>/);
+  const archive = JSON.parse(await readFile('backup/2026-10-10/pages/ythpt.json', 'utf8'));
+  const visibleDesign = design.replace(/<[^>]*>/g, ' ').replaceAll('&amp;', '&').replace(/\s+/g, ' ');
+  assert.ok(visibleDesign.includes(archive.text.split('\n\n')[0]), 'preserves the archived R&D introduction');
+  const platforms = archive.text.split('\n\n').find(block => block.startsWith('Compound Discovery')).split('\n');
+  assert.equal(platforms.length, 12);
+  for (const platform of platforms) assert.ok(visibleDesign.includes(platform), `restores ${platform}`);
+  for (const heading of ['Headquarters Overview', 'Strategic Focus', 'Production Management']) assert.ok(visibleDesign.includes(heading));
+  assert.doesNotMatch(design, /class="development-page"|<h2[^>]*>In development<\/h2>/);
   const all = await Promise.all(routes.map(route => readFile(pageFile(route), 'utf8')));
   assert.doesNotMatch(all.join(''), /-52791|2000000663|website\.xin|wezhan\.cn|video\.wanwang/);
   assert.doesNotMatch(all.join(''), /R &amp; D Innovation|Integration platform/);
