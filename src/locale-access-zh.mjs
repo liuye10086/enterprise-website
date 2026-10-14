@@ -1,6 +1,7 @@
 // Exact display-copy translations only. Account identifiers and verification
 // codes remain untouched; authentication and product access stay server-owned.
 export const ACCESS_ZH = {
+  'Your free trial for this product has been used. Explore the monthly plans for this product.': '本产品的免费试用已使用，您可以查看本产品的月度套餐。',
   'Research Platform': '研究平台',
   'Prediction Platform': '预测平台',
   'Super Intelligent Medicine': '超级智能医药',

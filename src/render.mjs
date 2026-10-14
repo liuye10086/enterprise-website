@@ -4,6 +4,7 @@ import { PRODUCTS } from './access-state.js';
 import { SECTIONS, ROUTES, ARTICLE_ROUTES } from './routes.mjs';
 import { SITE_COPY as copy } from './site-copy.mjs';
 import { DRUG_DESIGN_COPY as designCopy } from './drug-design-copy.mjs';
+import { renderCheckoutPage } from './checkout-view.mjs';
 
 const navigation = SECTIONS.map(section => [section.key === 'news' ? copy.newsTitle : section.label, section.path]);
 const img = (name, alt, className = '', loading = 'lazy') => `<img src="/assets/images/${e(name)}" alt="${e(alt)}" class="${className}" loading="${loading}" decoding="async">`;
@@ -33,9 +34,9 @@ function footer() {
   return `<footer class="site-footer wrap"><p>Copyright© Arviva Therapeutics Inc.</p><a href="mailto:BD@arvivatherap.com">BD@arvivatherap.com</a><a class="back-top" href="#top">Back to top ↑</a></footer>`;
 }
 
-function shell(title, active, body, description=copy.description) {
+function shell(title, active, body, description=copy.description, extraHead='') {
   const isHome = active === ROUTES.home;
-  const theme = '<link rel="stylesheet" href="/brand-theme.css">' + (isHome ? '<link rel="preload" as="image" href="/assets/images/ai-biomed-hero-v1.png">' : '');
+  const theme = '<link rel="stylesheet" href="/brand-theme.css">' + extraHead + (isHome ? '<link rel="preload" as="image" href="/assets/images/ai-biomed-hero-v1.png">' : '');
   return `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${e(title)} | Arviva Therapeutics</title><meta name="description" content="${e(description)}"><link rel="icon" href="/assets/images/33300796.jpg"><link rel="stylesheet" href="/styles.css">${theme}<script type="module" src="/main.js"></script></head><body id="top" class="brand-theme${isHome ? ' home-page' : ''}">${header(active)}<main id="main-content" class="wrap">${body}</main>${footer()}${renderAccessDialogs()}</body></html>`;
 }
 
@@ -117,6 +118,7 @@ export async function renderPages({articles}) {
   for (const product of PRODUCTS) {
     pages.set(product.url,shell(product.name,ROUTES.intelligent,platformPlaceholder(product)));
   }
+  pages.set('/plans', shell('Plans & payment', ROUTES.intelligent, renderCheckoutPage(), 'Preview monthly plans and payment options for Arviva Therapeutics platforms.', '<link rel="stylesheet" href="/checkout.css"><meta name="robots" content="noindex">'));
   for (const article of sorted) {
     pages.set(article.href,shell(article.title,ROUTES.news,`<article class="article-page"><a class="article-back" href="${ROUTES.news}">← ${e(copy.newsTitle)}</a><h2 class="article-title">${e(article.title)}</h2>${renderArticleBody(article)}<div class="article-end">${link('All news',ROUTES.news)}</div></article>`,article.excerpt));
   }

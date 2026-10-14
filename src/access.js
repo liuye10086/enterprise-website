@@ -9,6 +9,7 @@ import {
   activateDemoProduct,
 } from './access-state.js';
 import { updateAccountTrigger } from './account-trigger.js';
+import { getCheckoutUrl } from './checkout.js';
 
 const STORAGE_KEY = 'arviva-access-preview-v1';
 const DEMO_CODE = '123456';
@@ -140,26 +141,23 @@ export function initializeAccess(onOpen = () => {}) {
       : 'Email sign-in is not available yet. No verification emails can be sent.', loginDialog);
   }
 
-  function renderAccess(view = 'options') {
+  function renderAccess() {
     const product = productById.get(pendingProduct);
     if (!accessDialog || !product) return;
     const access = demoEnabled ? getProductAccess(state, product.id) : 'signed-out';
-    const section = access === 'signed-out' ? 'signed-out' : access === 'paid' ? 'ready' : view;
-    for (const name of ['signed-out', 'options', 'payment', 'ready']) {
+    const section = access === 'signed-out' ? 'signed-out' : access === 'paid' ? 'ready' : 'options';
+    for (const name of ['signed-out', 'options', 'ready']) {
       setHidden(`[data-access-${name}]`, name !== section, accessDialog);
     }
     setHidden('[data-access-demo-note]', !demoEnabled, accessDialog);
     setText('[data-access-eyebrow]', `PLATFORM ${product.number} · ${demoEnabled ? 'ACCESS PREVIEW' : 'PRODUCT ACCESS'}`, accessDialog);
     setText('#access-title', product.name, accessDialog);
     setText('[data-access-status]', '', accessDialog);
-    setText('[data-payment-product]', product.name, accessDialog);
     setText('[data-access-login]', demoEnabled ? 'Go to login' : 'View login status', accessDialog);
     if (section === 'signed-out') {
       setText('#access-description', demoEnabled
         ? 'Log in to check your free trial or full access for this product.'
         : 'Product sign-in and access are not available yet. Please check back when the service launches.', accessDialog);
-    } else if (section === 'payment') {
-      setText('#access-description', 'Preview full access for this product. No payment will be collected.', accessDialog);
     } else if (section === 'ready') {
       setText('#access-description', `Demo full access is active for this product. Continue to open ${product.destination} in a new tab.`, accessDialog);
     } else {
@@ -377,21 +375,8 @@ export function initializeAccess(onOpen = () => {}) {
   });
   accessDialog?.querySelector('[data-access-upgrade]')?.addEventListener('click', () => {
     if (!demoEnabled || !signedIn() || !pendingProduct) return;
-    renderAccess('payment');
-    focusDialog(accessDialog);
-  });
-  accessDialog?.querySelector('[data-access-back]')?.addEventListener('click', () => {
-    renderAccess();
-    focusDialog(accessDialog);
-  });
-  accessDialog?.querySelector('[data-access-purchase]')?.addEventListener('click', () => {
-    if (!demoEnabled || !signedIn() || !pendingProduct) return;
-    const product = productById.get(pendingProduct);
-    updateState(activateDemoProduct(state, product.id));
-    renderAccess('ready');
-    focusDialog(accessDialog);
-    setText('[data-access-status]', 'Demo full access is active. No payment was made.', accessDialog);
-    announce(`Demo full access activated for ${product.name}. No payment was made.`);
+    const destination = getCheckoutUrl(pendingProduct);
+    if (destination) window.location.assign(destination);
   });
   accessDialog?.querySelector('[data-access-continue]')?.addEventListener('click', () => {
     if (!demoEnabled || !pendingProduct || getProductAccess(state, pendingProduct) !== 'paid') return;

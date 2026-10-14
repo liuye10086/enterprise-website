@@ -1,5 +1,6 @@
 import { PRODUCTS } from './access-state.js';
 import { updateAccountTrigger } from './account-trigger.js';
+import { getCheckoutUrl } from './checkout.js';
 
 const productById = new Map(PRODUCTS.map(product => [product.id, product]));
 
@@ -149,7 +150,6 @@ export function initializeLiveAccess(onOpen = () => {}) {
   let restoreFocusTarget = null;
   let pendingProduct = null;
   let pendingTab = null;
-  let accessView = 'options';
   let resendTimer = null;
 
   const signedIn = () => session?.authenticated === true;
@@ -188,7 +188,6 @@ export function initializeLiveAccess(onOpen = () => {}) {
     document.querySelectorAll('[data-login-open], [data-product-open]').forEach(button => { button.disabled = Boolean(busy); });
     loginDialog.querySelectorAll('[data-live-logout]').forEach(button => { button.disabled = waiting || !signedIn(); });
     accessDialog?.querySelectorAll('section button').forEach(button => { button.disabled = waiting || !session; });
-    accessDialog?.querySelectorAll('[data-access-purchase]').forEach(button => { button.disabled = true; });
     if (currentDialog && !waiting && document.activeElement?.closest('[hidden]')) focusDialog(currentDialog);
     if (restoreFocusTarget && !currentDialog && !busy) {
       if (restoreFocusTarget.isConnected && !restoreFocusTarget.disabled) restoreFocusTarget.focus();
@@ -236,16 +235,14 @@ export function initializeLiveAccess(onOpen = () => {}) {
     const product = productById.get(pendingProduct);
     if (!accessDialog || !product) return;
     const access = productAccess(product.id);
-    const section = !signedIn() ? 'signed-out' : access === 'paid' ? 'ready' : accessView;
-    for (const name of ['signed-out', 'options', 'payment', 'ready']) setHidden(`[data-access-${name}]`, name !== section, accessDialog);
+    const section = !signedIn() ? 'signed-out' : access === 'paid' ? 'ready' : 'options';
+    for (const name of ['signed-out', 'options', 'ready']) setHidden(`[data-access-${name}]`, name !== section, accessDialog);
     setText('[data-access-eyebrow]', `PLATFORM ${product.number} · PRODUCT ACCESS`, accessDialog);
     setText('#access-title', product.name, accessDialog);
-    setText('[data-payment-product]', product.name, accessDialog);
     setText('[data-access-login]', 'Go to login', accessDialog);
     const descriptions = {
       'signed-out': session ? 'Log in to check your free trial or full access for this product.' : sessionError || 'Checking your product access…',
-      options: access === 'trial-used' ? 'Your free trial for this product has been used. Contact us about full access.' : 'Try this product once for free. Each product has its own trial.',
-      payment: 'Online payment is not available yet. Contact us about full access for this product.',
+      options: access === 'trial-used' ? 'Your free trial for this product has been used. Explore the monthly plans for this product.' : 'Try this product once for free. Each product has its own trial.',
       ready: `Your account has full access. Continue to open ${product.name} in a new tab.`,
     };
     setText('#access-description', descriptions[section], accessDialog);
@@ -255,11 +252,8 @@ export function initializeLiveAccess(onOpen = () => {}) {
     setText('[data-trial-description]', access === 'trial-used'
       ? 'Trial used. This product has no free uses remaining.'
       : `One free use per account. Opens ${product.name} in a new tab.`, accessDialog);
-    setText('.payment-line strong', 'Contact us', accessDialog);
-    setText('.payment-note', 'Online payment is not available yet. Contact Arviva Therapeutics about full access.', accessDialog);
     setText('.access-success p', 'Your account has access to this product.', accessDialog);
-    setHidden('[data-access-contact]', false, accessDialog);
-    setHidden('[data-access-purchase], [data-access-demo-note]', true, accessDialog);
+    setHidden('[data-access-demo-note]', true, accessDialog);
   }
 
   function refreshPage() {
@@ -420,7 +414,6 @@ export function initializeLiveAccess(onOpen = () => {}) {
     ++flowSequence;
     pendingProduct = trigger.dataset.productOpen;
     returnTarget = trigger;
-    accessView = 'options';
     accessMessage('');
     renderAccess();
     showDialog(accessDialog);
@@ -563,16 +556,8 @@ export function initializeLiveAccess(onOpen = () => {}) {
   accessDialog?.querySelector('[data-access-continue]')?.addEventListener('click', enterProduct);
   accessDialog?.querySelector('[data-access-upgrade]')?.addEventListener('click', () => {
     if (busy || refreshing || !signedIn()) return;
-    accessView = 'payment';
-    accessMessage('');
-    renderAccess();
-    focusDialog(accessDialog);
-  });
-  accessDialog?.querySelector('[data-access-back]')?.addEventListener('click', () => {
-    if (busy || refreshing) return;
-    accessView = 'options';
-    renderAccess();
-    focusDialog(accessDialog);
+    const destination = getCheckoutUrl(pendingProduct);
+    if (destination) window.location.assign(destination);
   });
 
   const startResendTimer = () => { if (!resendTimer) resendTimer = window.setInterval(updateControls, 1000); };

@@ -3,6 +3,7 @@ import { initializeLiveAccess } from './access-live.js';
 import { mode } from './runtime-config.js';
 import { initializeLanguage } from './i18n.js';
 import { initializeModuleHighlight } from './module-highlight.js';
+import { initializeCheckout } from './checkout.js';
 export { initializeModuleHighlight } from './module-highlight.js';
 
 export function createEmailDraft(values) {
@@ -90,6 +91,7 @@ function initialize() {
   (mode === 'live' ? initializeLiveAccess : initializeAccess)(()=>setMenu(false));
   initializeCarousel();
   initializeModuleHighlight();
+  initializeCheckout();
 
   const videos = [...document.querySelectorAll('video')];
   videos.forEach(video=>video.addEventListener('play',()=>videos.forEach(other=>{if(other!==video) other.pause();})));

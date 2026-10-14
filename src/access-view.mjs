@@ -1,5 +1,4 @@
 import { PRODUCTS } from './access-state.js';
-import { ROUTES } from './routes.mjs';
 import { SITE_COPY as copy } from './site-copy.mjs';
 import { escapeHtml as e } from './content.mjs';
 
@@ -34,7 +33,6 @@ export function renderAccessDialogs() {
       <article class="access-plan trial-plan"><span class="plan-label" data-trial-label>TRY IT FIRST</span><h3>Free trial</h3><p class="plan-allowance" data-trial-allowance>1 use <span>per product</span></p><p class="plan-description" data-trial-description>Explore this product once, free of charge.</p><button class="primary-button" type="button" data-access-trial>Start free trial ${arrow}</button></article>
       <article class="access-plan full-plan"><span class="plan-label">CONTINUE EXPLORING</span><h3>Full access</h3><p class="plan-allowance">Product access</p><p class="plan-description">Continue using this product after your free trial.</p><button class="secondary-button" type="button" data-access-upgrade>Upgrade access ${arrow}</button></article>
     </div><p class="access-smallprint">Each product has its own trial and access plan.</p></section>
-    <section data-access-payment hidden><div class="payment-summary"><span class="plan-label">FULL ACCESS</span><h3 data-payment-product>${PRODUCTS[0].name}</h3><div class="payment-line"><span>Product access</span><strong>Price to be confirmed</strong></div></div><p class="payment-note">This is a purchase preview. No payment will be collected.</p><button class="primary-button access-primary" type="button" data-access-purchase>Simulate purchase ${arrow}</button><a class="secondary-button access-primary" href="${ROUTES.contact}" data-access-contact hidden>Contact Arviva Therapeutics ${arrow}</a><button class="access-back" type="button" data-access-back>← Back to access options</button></section>
     <section data-access-ready hidden><div class="access-success"><span aria-hidden="true">✓</span><p>Access is active for this product in the preview.</p></div><button class="primary-button access-primary" type="button" data-access-continue>Continue to product ${arrow}</button></section>
     <p class="login-status" data-access-status role="status" aria-live="polite"></p>
     <p class="login-availability" data-access-demo-note hidden>Interactive preview · No real charges</p>
