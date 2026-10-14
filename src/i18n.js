@@ -63,7 +63,7 @@ export function initializeLanguage(root = document) {
   const resolve = createTranslationCache();
   const excluded = 'script,style,noscript,input,textarea,code,pre,[translate="no"],[data-no-translate]';
   const attributes = ['aria-label', 'aria-roledescription', 'title', 'alt', 'placeholder'];
-  const selectors = [...root.querySelectorAll('[data-language-select]')];
+  const toggles = [...root.querySelectorAll('[data-language-toggle]')];
   let observer;
 
   const apply = () => {
@@ -87,9 +87,7 @@ export function initializeLanguage(root = document) {
       }
     }
     for (const element of root.querySelectorAll('h2[lang]')) element.lang = locale;
-    selectors.forEach(select => { select.value = locale; });
-    root.querySelectorAll('[data-language-name]').forEach(label => { label.textContent = locale === 'zh-CN' ? '简体中文' : 'English'; });
-    root.querySelectorAll('[data-language-short]').forEach(label => { label.textContent = locale === 'zh-CN' ? '中文' : 'EN'; });
+    toggles.forEach(toggle => toggle.setAttribute('aria-checked', String(locale === 'zh-CN')));
     observer?.observe(root.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...attributes, 'content'] });
   };
   const setLocale = value => {
@@ -97,7 +95,7 @@ export function initializeLanguage(root = document) {
     writePreferredLocale(storage, locale);
     apply();
   };
-  selectors.forEach(select => select.addEventListener('change', () => setLocale(select.value)));
+  toggles.forEach(toggle => toggle.addEventListener('click', () => setLocale(locale === 'en' ? 'zh-CN' : 'en')));
   apply();
   observer = new root.defaultView.MutationObserver(apply);
   observer.observe(root.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...attributes, 'content'] });

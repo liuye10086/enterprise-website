@@ -8,6 +8,7 @@ import {
   consumeTrial,
   activateDemoProduct,
 } from './access-state.js';
+import { updateAccountTrigger } from './account-trigger.js';
 
 const STORAGE_KEY = 'arviva-access-preview-v1';
 const DEMO_CODE = '123456';
@@ -92,7 +93,7 @@ export function initializeAccess(onOpen = () => {}) {
 
   function refreshPage() {
     const authenticated = signedIn();
-    setText('[data-login-label]', authenticated ? 'Demo account' : 'Log in');
+    updateAccountTrigger(document, authenticated ? 'Demo account' : '');
     setHidden('[data-demo-panel]', !demoEnabled);
     setHidden('[data-demo-notice]', !demoEnabled);
     setHidden('[data-storage-note]', !demoEnabled || storageAvailable);

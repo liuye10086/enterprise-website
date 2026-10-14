@@ -3,6 +3,47 @@ import assert from 'node:assert/strict';
 
 import * as i18n from '../src/i18n.js';
 
+function languageFixture(storage) {
+  const attributes = new Map();
+  const events = new Map();
+  const toggle = {
+    setAttribute: (key, value) => attributes.set(key, value),
+    addEventListener: (event, listener) => events.set(event, listener),
+  };
+  const root = {
+    defaultView: { localStorage: storage, MutationObserver: class { observe() {} disconnect() {} } },
+    documentElement: { lang: 'en' },
+    createTreeWalker: () => ({ nextNode: () => null }),
+    querySelectorAll: selector => selector === '[data-language-toggle]' ? [toggle] : [],
+  };
+  const language = i18n.initializeLanguage(root);
+  return { root, language, attributes, click: () => events.get('click')?.() };
+}
+
+test('language switch toggles both ways and restores the saved preference on another page', () => {
+  const values = new Map();
+  const storage = { getItem: key => values.get(key), setItem: (key, value) => values.set(key, value) };
+  const ui = languageFixture(storage);
+  assert.equal(ui.root.documentElement.lang, 'en');
+  assert.equal(ui.attributes.get('aria-checked'), 'false');
+  ui.click();
+  assert.equal(ui.root.documentElement.lang, 'zh-CN');
+  assert.equal(ui.attributes.get('aria-checked'), 'true');
+  assert.equal(languageFixture(storage).language.locale, 'zh-CN');
+  ui.click();
+  assert.equal(ui.root.documentElement.lang, 'en');
+  assert.equal(ui.attributes.get('aria-checked'), 'false');
+  assert.equal(storage.getItem(i18n.LANGUAGE_KEY), 'en');
+});
+
+test('language switch still works when preference storage is blocked', () => {
+  const ui = languageFixture({ getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } });
+  ui.click();
+  assert.equal(ui.language.locale, 'zh-CN');
+  ui.click();
+  assert.equal(ui.language.locale, 'en');
+});
+
 test('English is the default and only the two supported language choices persist', () => {
   assert.equal(i18n.readPreferredLocale({ getItem: () => null }), 'en');
   assert.equal(i18n.readPreferredLocale({ getItem: () => 'zh-CN' }), 'zh-CN');

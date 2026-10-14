@@ -82,3 +82,14 @@ test('home includes local playable videos and contact action explains the email 
   assert.match(contact, /Open email draft/);
   assert.match(contact, /Nothing is sent automatically/);
 });
+
+test('research topic links identify their module while the general platform link stays unqualified', async () => {
+  const home = await readFile(pageFile('/home'), 'utf8');
+  for (const title of ['Analyze research data:', 'Draft SCI research papers:', 'Draft theses and dissertations:']) {
+    assert.ok(home.includes(`<a class="research-topic-link" href="/intelligent#research-platform"><strong>${title}</strong></a>`));
+  }
+  assert.match(home, /class="text-link" href="\/intelligent">Explore the Research Platform/);
+  const medicine = await readFile(pageFile('/intelligent'), 'utf8');
+  assert.match(medicine, /<article class="medicine-module" id="research-platform" aria-labelledby="module-01-title">/);
+  assert.match(medicine, /<article class="medicine-module" id="prediction-platform" aria-labelledby="module-02-title">/);
+});

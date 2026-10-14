@@ -2,6 +2,8 @@ import { initializeAccess } from './access.js';
 import { initializeLiveAccess } from './access-live.js';
 import { mode } from './runtime-config.js';
 import { initializeLanguage } from './i18n.js';
+import { initializeModuleHighlight } from './module-highlight.js';
+export { initializeModuleHighlight } from './module-highlight.js';
 
 export function createEmailDraft(values) {
   const fields = Object.fromEntries(['name','email','subject','message'].map(key=>[key,String(values[key] ?? '').trim()]));
@@ -84,9 +86,10 @@ export function initializeCarousel(root = document, browser = root.defaultView) 
 function initialize() {
   initializeLanguage();
   const setMenu = initializeNavigation();
-  document.querySelector('[data-language-select]')?.addEventListener('change',()=>setMenu(false));
+  document.querySelector('[data-language-toggle]')?.addEventListener('click',()=>setMenu(false));
   (mode === 'live' ? initializeLiveAccess : initializeAccess)(()=>setMenu(false));
   initializeCarousel();
+  initializeModuleHighlight();
 
   const videos = [...document.querySelectorAll('video')];
   videos.forEach(video=>video.addEventListener('play',()=>videos.forEach(other=>{if(other!==video) other.pause();})));

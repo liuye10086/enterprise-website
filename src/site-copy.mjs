@@ -65,7 +65,7 @@ export const SITE_COPY = {
       'Draft SCI research papers (for high-impact journals)',
       'Draft theses and dissertations (bachelor’s, master’s and doctoral)',
     ],
-    prediction: 'Exploring AI for biological prediction. Platform in development.',
+    prediction: 'Exploring AI tools for disease diagnosis, and prediction of disease progression.',
     note: 'Platforms are in development. Each product has a separate trial and access plan.',
     status: 'Platform in development',
   },

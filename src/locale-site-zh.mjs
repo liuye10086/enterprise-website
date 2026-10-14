@@ -1,6 +1,7 @@
 // Exact English source strings for general site copy and accessibility labels.
 // Brand names, physical addresses and contact details retain their original form.
 export const SITE_ZH = {
+  "Use Simplified Chinese": "使用简体中文",
   "Arviva Therapeutics connects AI, biology and experimental research to explore therapeutic targets and advance biopharmaceutical drug discovery.": "Arviva Therapeutics 将人工智能、生物学与实验研究相结合，探索治疗靶点，推进生物医药研发。",
   "Learn how Arviva Therapeutics brings AI and biological research together, with a focus on neuroscience, metabolic disease and drug discovery.": "了解 Arviva Therapeutics 如何将人工智能与生物学研究相结合，聚焦神经科学、代谢性疾病与药物研发。",
   "Explore Arviva Therapeutics’ Research and Prediction platforms for AI-enabled biopharmaceutical research. Both platforms are in development.": "了解 Arviva Therapeutics 面向 AI 赋能生物医药研发的研究平台与预测平台。两个平台均在开发中。",
@@ -52,7 +53,7 @@ export const SITE_ZH = {
   "Analyze research data (sequencing data and biomedical statistical data)": "分析科研数据（各类测序数据、生物医学统计学数据）",
   "Draft SCI research papers (for high-impact journals)": "生成 SCI 科研论文（高影响因子论文）",
   "Draft theses and dissertations (bachelor’s, master’s and doctoral)": "生成毕业论文初稿（本科、硕士、博士论文）",
-  "Exploring AI for biological prediction. Platform in development.": "探索 AI 在生物学预测中的应用。平台正在开发中。",
+  "Exploring AI tools for disease diagnosis, and prediction of disease progression.": "探索用于疾病诊断和疾病进展预测的 AI 工具。",
   "Platforms are in development. Each product has a separate trial and access plan.": "各平台正在开发中。每个产品均有独立的试用与访问方案。",
   "Platform in development": "平台开发中",
 

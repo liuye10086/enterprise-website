@@ -1,4 +1,5 @@
 import { PRODUCTS } from './access-state.js';
+import { updateAccountTrigger } from './account-trigger.js';
 
 const productById = new Map(PRODUCTS.map(product => [product.id, product]));
 
@@ -263,11 +264,7 @@ export function initializeLiveAccess(onOpen = () => {}) {
 
   function refreshPage() {
     setHidden('[data-demo-panel], [data-demo-notice], [data-storage-note]', true);
-    setText('[data-login-label]', signedIn() ? liveAccountLabel(session) : 'Log in');
-    document.querySelectorAll('[data-login-open]').forEach(button => {
-      button.setAttribute('aria-label', signedIn() ? `Account: ${liveAccountLabel(session)}` : 'Log in');
-      button.title = signedIn() ? liveAccountLabel(session) : 'Log in';
-    });
+    updateAccountTrigger(document, signedIn() ? liveAccountLabel(session) : '');
     const labels = {
       unavailable: [sessionError ? 'Access unavailable' : 'Checking access…', 'Check access'],
       'signed-out': ['Sign in required', 'Check access'],

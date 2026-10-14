@@ -11,8 +11,8 @@ const arrow = '<span aria-hidden="true">↗</span>';
 const link = (label, href) => `<a class="text-link" href="${href}">${label} ${arrow}</a>`;
 const lines = text => text.map(e).join('<br>');
 
-function languagePicker() {
-  return `<label class="language-picker" translate="no"><span class="sr-only">Language / 语言</span><select data-language-select><option value="en" selected>English</option><option value="zh-CN">简体中文</option></select><span class="language-name" data-language-name aria-hidden="true">English</span><span class="language-short" data-language-short aria-hidden="true">EN</span><svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m3 4.5 3 3 3-3"/></svg></label>`;
+function languageToggle() {
+  return `<button class="language-toggle" type="button" role="switch" aria-checked="false" aria-label="Use Simplified Chinese" data-language-toggle><span class="language-toggle-labels" translate="no" aria-hidden="true"><span>EN</span><span>中</span></span></button>`;
 }
 
 function header(active) {
@@ -20,7 +20,7 @@ function header(active) {
   const row = `<div class="navigation-row">
       <a class="brand" href="${ROUTES.home}" aria-label="Arviva Therapeutics home">${img('33300796.jpg','Arviva Therapeutics','logo','eager')}</a>
       <nav id="primary-navigation" aria-label="Main navigation">${navigation.map(([label,href])=>`<a href="${href}"${primaryPages.has(href) ? ' data-mobile-primary' : ''}${active === href ? ' aria-current="page"' : ''}>${e(label)}</a>`).join('')}</nav>
-      <div class="header-actions"><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="Show more pages" data-current-section="${Boolean(active && !primaryPages.has(active))}"><span>More</span><svg class="more-chevron" viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m3 4.5 3 3 3-3"/></svg></button>${languagePicker()}<button class="login-trigger" type="button" data-login-open aria-haspopup="dialog" aria-controls="login-dialog"><span data-login-label>Log in</span></button></div>
+      <div class="header-actions"><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="Show more pages" data-current-section="${Boolean(active && !primaryPages.has(active))}"><span>More</span><svg class="more-chevron" viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m3 4.5 3 3 3-3"/></svg></button>${languageToggle()}<button class="login-trigger" type="button" data-login-open aria-label="Log in" title="Log in" aria-haspopup="dialog" aria-controls="login-dialog"><svg data-account-icon viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/></svg><span data-account-initial translate="no" aria-hidden="true" hidden></span><span class="sr-only" data-login-label>Log in</span></button></div>
       <nav class="mobile-primary-links" aria-label="Primary pages">${navigation.filter(([,href])=>primaryPages.has(href)).map(([label,href])=>`<a href="${href}"${active === href ? ' aria-current="page"' : ''}>${e(label)}</a>`).join('')}</nav>
     </div>`;
   const title = '<h1 class="company-name">Arviva Therapeutics Inc.</h1>';
@@ -70,7 +70,7 @@ function newsCard(article) {
 }
 
 function home(articles) {
-  const approach = copy.home.approach.map(item=>`<p><strong>${e(item.title)}</strong> <span>${e(item.description)}</span></p>`).join('');
+  const approach = copy.home.approach.map(item=>`<p><a class="research-topic-link" href="${ROUTES.intelligent}#research-platform"><strong>${e(item.title)}</strong></a> <span>${e(item.description)}</span></p>`).join('');
   const videos = [['parkinsons-en-sd.mp4','175297174.jpg',"A new era in Parkinson’s treatment"],['obesity-en-sd.mp4','174621906.png','Obesity and the future of treatment'],['alzheimers-en-sd.mp4','175297136.jpg',"Understanding Alzheimer’s disease"]];
   return carousel() + `<section class="section company-section"><h2 class="section-heading">${e(copy.home.companyTitle)}</h2><p class="lead">${e(copy.home.company)}</p></section>
   <section class="section pipeline-section"><h2 class="section-heading">${e(copy.home.focusTitle)}</h2><p class="lead">${e(copy.home.focus)}</p><div class="section-action">${link(e(copy.home.focusLink),ROUTES.intelligent)}</div></section>
