@@ -1,5 +1,13 @@
 # PostgreSQL 登录部署
 
+## 客户个人资料与头像菜单（2026-10-16）
+
+邮箱登录成功后，资料未完善的客户可以选择前往 `/profile` 或稍后填写，不影响登录与产品访问。个人主页使用当前已验证邮箱，收集姓名/称呼、联系电话、单位/学校、研究领域；首次填写日期由服务端生成。已登录头像展开气泡菜单，提供个人主页与退出登录。
+
+本功能必须先执行 `npm run db:migrate`，应用 `003_user_profiles.sql` 后再启动新版本。迁移仅新增 `arviva_user_profiles` 表，不改动现有用户、会话、短信登录号码或产品记录。保存时必须携带 `expectedEmail`，服务端在事务内与当前会话邮箱比较，避免其他标签页切换账号后误写旧表单。
+
+发布前备份生产数据库和私密配置；测试仍只使用独立的 `arviva_website_test`。代码回滚可保留新增资料表，旧版本会忽略它；不要为回滚代码而删除客户资料或直接恢复整库。`/profile` 页面本身可公开加载，但资料接口只允许当前已登录的邮箱账号读取或保存，匿名请求返回 401。
+
 ## 2026-10-16 已发布变更
 
 应用提交 `df5757e296fa2ce93a99a94862ae24629a75c1c0` 已推送至 `main` 并部署。`/intelligent` 两个模块仅检查有效登录。登录成功后关闭登录窗口、停留在当前页面并显示成功提示；再次点击模块才跳转。已登录用户点击 Research Platform 跳转至 `https://research.arvivatherap.com`，点击 Prediction Platform 跳转至 `https://thesis.arvivatherap.com`；本地 loopback 分别预览 `/research-demo.html` 和 `/research-demo.html?platform=prediction`。不再检查或消耗产品试用资格，无依赖或数据库迁移变化，原账号及历史数据保留。

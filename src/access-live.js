@@ -1,5 +1,6 @@
 import { PRODUCTS, getProductProductionUrl, getProductDestination } from './access-state.js';
 import { updateAccountTrigger } from './account-trigger.js';
+import { initializeAccountMenu } from './account-menu.js';
 
 const productById = new Map(PRODUCTS.map(product => [product.id, product]));
 
@@ -7,10 +8,12 @@ export function readLiveSession(raw) {
   const phone = raw?.phone === undefined ? null : raw.phone;
   const smsReady = raw?.smsReady === undefined ? false : raw.smsReady;
   const developmentSms = raw?.developmentSms === undefined ? false : raw.developmentSms;
+  const profileComplete = raw?.profileComplete === undefined ? null : raw.profileComplete;
   const emailIdentity = typeof raw?.email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw.email) && phone === null;
   const phoneIdentity = raw?.email === null && typeof phone === 'string' && /^\+861[3-9][0-9]{9}$/.test(phone);
   if (!raw || typeof raw.authenticated !== 'boolean' || typeof raw.mailReady !== 'boolean' ||
     typeof raw.developmentMail !== 'boolean' || typeof smsReady !== 'boolean' || typeof developmentSms !== 'boolean' ||
+    (profileComplete !== null && (typeof profileComplete !== 'boolean' || !raw.authenticated || !emailIdentity)) ||
     (raw.authenticated ? !emailIdentity && !phoneIdentity : raw.email !== null || phone !== null) ||
     PRODUCTS.some(({ id }) => typeof raw.products?.[id]?.trialUsed !== 'boolean' || typeof raw.products?.[id]?.paid !== 'boolean')) {
     throw new Error('The server returned an invalid session. Please try again.');
@@ -19,6 +22,7 @@ export function readLiveSession(raw) {
     authenticated: raw.authenticated,
     email: raw.email,
     phone,
+    profileComplete,
     products: Object.fromEntries(PRODUCTS.map(({ id }) => [id, {
       trialUsed: raw.products[id].trialUsed, paid: raw.products[id].paid,
     }])),
@@ -109,7 +113,7 @@ export async function openLiveProduct({ productId, baseUrl, navigate = url => wi
   return true;
 }
 
-export function initializeLiveAccess(onOpen = () => {}) {
+export function initializeLiveAccess(onOpen = () => {}, profile = {}) {
   const loginDialog = document.querySelector('[data-login-dialog]');
   const form = loginDialog?.querySelector('[data-login-form]');
   const email = form?.querySelector('input[name="email"]');
@@ -117,6 +121,7 @@ export function initializeLiveAccess(onOpen = () => {}) {
   const code = form?.querySelector('input[name="code"]');
   const sendCode = form?.querySelector('[data-login-send-code]');
   if (!loginDialog || !form || !email || !phone || !code || !sendCode) return;
+  const accountMenu = initializeAccountMenu();
 
   const ignoredCloseEvents = new Map();
   const entryErrors = new Map();
@@ -163,8 +168,9 @@ export function initializeLiveAccess(onOpen = () => {}) {
     form.setAttribute('aria-busy', String(Boolean(busy)));
     document.querySelectorAll('[data-login-open], [data-product-open]').forEach(button => { button.disabled = waiting; });
     loginDialog.querySelectorAll('[data-live-logout]').forEach(button => { button.disabled = waiting || !signedIn(); });
+    accountMenu?.setBusy(waiting, busy === 'logout');
     if (currentDialog && !waiting && document.activeElement?.closest('[hidden]')) focusDialog(currentDialog);
-    if (restoreFocusTarget && !currentDialog && !busy) {
+    if (restoreFocusTarget && !currentDialog && !busy && !refreshing) {
       if (restoreFocusTarget.isConnected && !restoreFocusTarget.disabled) restoreFocusTarget.focus();
       restoreFocusTarget = null;
     }
@@ -209,6 +215,7 @@ export function initializeLiveAccess(onOpen = () => {}) {
   function refreshPage() {
     setHidden('[data-demo-panel], [data-demo-notice], [data-storage-note]', true);
     updateAccountTrigger(document, signedIn() ? liveAccountLabel(session) : '');
+    accountMenu?.setAuthenticated(signedIn());
     const access = signedIn() ? 'ready' : session ? 'signed-out' : 'unavailable';
     const label = signedIn() ? 'Signed in' : session ? 'Sign in required' : sessionError ? 'Access unavailable' : 'Checking access…';
     for (const { id } of PRODUCTS) {
@@ -220,6 +227,7 @@ export function initializeLiveAccess(onOpen = () => {}) {
     }
     renderLogin();
     updateControls();
+    profile.onSession?.(session, { loading: !session && !sessionError });
   }
 
   async function refreshSession() {
@@ -275,6 +283,7 @@ export function initializeLiveAccess(onOpen = () => {}) {
 
   function showDialog(dialog) {
     onOpen();
+    accountMenu?.close();
     if (currentDialog && currentDialog !== dialog) closeDialog(currentDialog);
     currentDialog = dialog;
     if (!dialog.open) dialog.showModal();
@@ -283,6 +292,7 @@ export function initializeLiveAccess(onOpen = () => {}) {
 
   function dismissFlow() {
     ++flowSequence;
+    accountMenu?.close();
     const trigger = returnTarget;
     const dialog = currentDialog;
     currentDialog = null;
@@ -296,6 +306,7 @@ export function initializeLiveAccess(onOpen = () => {}) {
   function finishSignIn() {
     dismissFlow();
     announce('Signed in successfully. Choose a platform to continue.');
+    profile.onSignIn?.(session);
   }
 
   function wireDialog(dialog, closeSelector) {
@@ -349,6 +360,12 @@ export function initializeLiveAccess(onOpen = () => {}) {
   document.querySelectorAll('[data-login-open]').forEach(trigger => trigger.addEventListener('click', () => {
     if (busy) return;
     announce('');
+    if (signedIn() && accountMenu?.owns(trigger)) {
+      onOpen();
+      returnTarget = trigger;
+      accountMenu.toggle();
+      return;
+    }
     ++flowSequence;
     pendingProduct = null;
     returnTarget = trigger;
@@ -451,10 +468,12 @@ export function initializeLiveAccess(onOpen = () => {}) {
     }
   });
 
-  loginDialog.querySelector('[data-live-logout]')?.addEventListener('click', async () => {
+  document.querySelectorAll('[data-live-logout], [data-account-logout]').forEach(button => button.addEventListener('click', async () => {
     if (!signedIn() || !beginOperation('logout')) return;
+    const fromMenu = button.getAttribute('data-account-logout') !== null;
     const sequence = flowSequence;
     loginMessage('');
+    accountMenu?.setError('');
     try {
       await requestAccessApi('/api/auth/logout', { method: 'POST', body: {} });
       if (isCurrent(sequence)) {
@@ -462,12 +481,15 @@ export function initializeLiveAccess(onOpen = () => {}) {
         announce('You have been logged out.');
       }
     } catch (error) {
-      if (isCurrent(sequence)) loginMessage(error.message);
+      if (isCurrent(sequence)) {
+        if (fromMenu) { accountMenu?.setError(error.message); announce(error.message); }
+        else loginMessage(error.message);
+      }
     } finally {
       busy = null;
       await refreshSession();
     }
-  });
+  }));
 
   async function enterProduct() {
     const id = pendingProduct;
@@ -486,7 +508,7 @@ export function initializeLiveAccess(onOpen = () => {}) {
       if (!isCurrent(sequence)) return;
       if (error.status === 401) {
         announce('');
-        session = { ...session, authenticated: false, email: null, phone: null };
+        session = { ...session, authenticated: false, email: null, phone: null, profileComplete: null };
         resetLogin();
         showDialog(loginDialog);
         loginMessage('Your session expired. Please sign in to continue.');

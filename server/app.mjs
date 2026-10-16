@@ -41,7 +41,7 @@ function clientIp(req,config) {
   return remote;
 }
 export function createApp({config,auth,mailer,sms={ready:false,development:false},root}) {
-  const sessionView=state=>({...state,phone:state.phone??null,mailReady:mailer.ready,developmentMail:mailer.development,smsReady:sms.ready,developmentSms:sms.development});
+  const sessionView=state=>({...state,phone:state.phone??null,profileComplete:state.authenticated&&state.email?state.profileComplete===true:null,mailReady:mailer.ready,developmentMail:mailer.development,smsReady:sms.ready,developmentSms:sms.development});
   const protectProduct=async(req,res,product)=>{
     res.setHeader('Cache-Control','no-store');
     if(!['GET','HEAD'].includes(req.method))return json(res,405,{error:'method_not_allowed',message:'Method not allowed.'},{Allow:'GET, HEAD'});
@@ -73,13 +73,18 @@ export function createApp({config,auth,mailer,sms={ready:false,development:false
         if(req.method!=='GET')return json(res,405,{error:'method_not_allowed',message:'Method not allowed.'},{Allow:'GET'});
         return json(res,200,sessionView(await auth.getSession(tokenFrom(req))));
       }
+      if(pathname==='/api/profile'){
+        if(req.method==='GET')return json(res,200,await auth.getProfile(tokenFrom(req)));
+        if(req.method!=='POST')return json(res,405,{error:'method_not_allowed',message:'Method not allowed.'},{Allow:'GET, POST'});
+      }
       const enter=/^\/api\/products\/(module-0[12])\/enter$/.exec(pathname);
-      if(!enter&&!['/api/auth/request-code','/api/auth/verify','/api/auth/sms/request-code','/api/auth/sms/verify','/api/auth/logout'].includes(pathname))return json(res,404,{error:'not_found',message:'Not found.'});
+      if(!enter&&!['/api/profile','/api/auth/request-code','/api/auth/verify','/api/auth/sms/request-code','/api/auth/sms/verify','/api/auth/logout'].includes(pathname))return json(res,404,{error:'not_found',message:'Not found.'});
       if(req.method!=='POST')return json(res,405,{error:'method_not_allowed',message:'Method not allowed.'},{Allow:'POST'});
       if(req.headers.origin!==config.origin||req.headers['sec-fetch-site']==='cross-site')throw fail(403,'invalid_origin','This request must come from this website.');
       if(req.headers['content-type']?.split(';')[0].trim().toLowerCase()!=='application/json')throw fail(415,'invalid_content_type','Use application/json.');
       const body=await bodyFrom(req);
       const token=tokenFrom(req),ip=clientIp(req,config);
+      if(pathname==='/api/profile')return json(res,200,await auth.saveProfile(token,body));
       if(pathname==='/api/auth/request-code'){
         if(!mailer.ready)throw fail(503,'mail_unavailable','Email sign-in is not configured yet.');
         const result=await auth.requestCode(body.email,ip);
@@ -96,7 +101,7 @@ export function createApp({config,auth,mailer,sms={ready:false,development:false
         const verified=phoneLogin?await auth.verifyPhoneCode(body.phone,body.code,ip):await auth.verifyCode(body.email,body.code,ip);
         // Successful sign-in rotates the browser's previous session as well.
         if(token)await auth.logout(token);
-        return json(res,200,sessionView({authenticated:true,email:verified.email,phone:verified.phone??null,products:verified.products}),{'Set-Cookie':cookie(config,verified.token,SESSION_SECONDS)});
+        return json(res,200,sessionView({authenticated:true,email:verified.email,phone:verified.phone??null,profileComplete:verified.profileComplete,products:verified.products}),{'Set-Cookie':cookie(config,verified.token,SESSION_SECONDS)});
       }
       if(pathname==='/api/auth/logout'){
         await auth.logout(token);

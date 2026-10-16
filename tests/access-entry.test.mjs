@@ -2,17 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { initializeLiveAccess } from '../src/access-live.js';
 import { initializeAccess } from '../src/access.js';
-import { renderAccessAnnouncement } from '../src/access-view.mjs';
+import { renderAccessAnnouncement, renderAccessDialogs } from '../src/access-view.mjs';
 import { translateText } from '../src/i18n.js';
 
 const tick = () => new Promise(resolve => setImmediate(resolve));
 const signedOut = () => ({ authenticated: false, email: null, phone: null, products: {
   'module-01': { trialUsed: true, paid: false }, 'module-02': { trialUsed: false, paid: false },
-}, mailReady: true, developmentMail: true, smsReady: true, developmentSms: true });
+}, mailReady: true, developmentMail: true, smsReady: true, developmentSms: true, profileComplete: null });
 const signedIn = () => ({ ...signedOut(), authenticated: true, email: 'person@qq.com' });
 
 // Small DOM boundary fixture; execute the actual handlers and API wrapper.
-function fixture(t, { session = signedOut(), request } = {}) {
+function fixture(t, { session = signedOut(), request, accountMenu = false } = {}) {
   const all = [];
   function element(tag, attrs = {}, parent = null) {
     const handlers = new Map();
@@ -21,6 +21,9 @@ function fixture(t, { session = signedOut(), request } = {}) {
       addEventListener(name, fn) { handlers.set(name, [...(handlers.get(name) || []), fn]); },
       async dispatch(name, event = {}) { await Promise.all((handlers.get(name) || []).map(fn => fn({ preventDefault() {}, ...event }))); },
       setAttribute(name, value) { this.attrs[name] = value; },
+      getAttribute(name) { return this.attrs[name] ?? null; },
+      removeAttribute(name) { delete this.attrs[name]; },
+      contains(child) { for (let p = child; p; p = p.parent) if (p === this) return true; return false; },
       toggleAttribute(name, enabled) { if (enabled) this.attrs[name] = ''; else delete this.attrs[name]; },
       querySelectorAll(selector) {
         const descendants = all.filter(child => { for (let p = child.parent; p; p = p.parent) if (p === this) return true; return false; });
@@ -65,7 +68,15 @@ function fixture(t, { session = signedOut(), request } = {}) {
   const productStatuses = ['module-01', 'module-02'].map(id => element('p', { 'data-product-status': id }, doc));
   const productErrors = ['module-01', 'module-02'].map(id => element('p', { 'data-product-error': id }, doc));
   const triggers = ['module-01', 'module-02'].map(id => element('button', { 'data-product-open': id }, doc));
-  const account = element('button', { 'data-login-open': '' }, doc);
+  const accountRoot = accountMenu ? element('div', { 'data-account-menu-root': '' }, doc) : doc;
+  const account = element('button', { 'data-login-open': '', ...(accountMenu ? {'data-account-trigger': ''} : {}) }, accountRoot);
+  let menu, menuLogout, menuProfile, menuStatus;
+  if (accountMenu) {
+    menu = element('div', { 'data-account-menu': '', id: 'account-menu' }, accountRoot); menu.hidden = true;
+    menuProfile = element('a', { 'data-account-profile': '', href: '/profile', role: 'menuitem' }, menu);
+    menuLogout = element('button', { 'data-account-logout': '', role: 'menuitem' }, menu);
+    menuStatus = element('p', { 'data-account-status': '' }, menu); menuStatus.hidden = true;
+  }
   const values = new Map(); const destinations = []; const calls = [];
   const browser = element('window');
   browser.location = { hostname: 'localhost', href: 'http://localhost:3000/intelligent', assign: url => destinations.push(url) };
@@ -78,7 +89,7 @@ function fixture(t, { session = signedOut(), request } = {}) {
     return new Response(JSON.stringify(result?.errorBody ?? result), { status: result?.errorStatus ?? 200 });
   } });
   t.after(() => Object.assign(globalThis, original));
-  return { announcement, login, close, form, email, phone, code, send, channels, status, access, triggers, account, productStatuses, productErrors, values, destinations, calls, browser };
+  return { root: doc, announcement, login, close, form, email, phone, code, send, channels, status, access, triggers, account, menu, menuLogout, menuProfile, menuStatus, productStatuses, productErrors, values, destinations, calls, browser };
 }
 
 test('live email login stays on the current page with a visible success notice until another product click', async t => {
@@ -285,4 +296,213 @@ test('success status markup is visible, hidden when empty and translated without
   assert.match(status, /role="status"/);
   assert.match(status, /aria-live="polite"/);
   assert.equal(translateText('Signed in successfully. Choose a platform to continue.', 'zh-CN'), '登录成功，请选择功能模块继续。');
+});
+
+for (const profileComplete of [false, true]) {
+  test(`live profile hooks receive ${profileComplete ? 'complete' : 'incomplete'} email sessions after login without navigating`, async t => {
+    let current = signedOut();
+    const ui = fixture(t, { request: url => {
+      if (url.endsWith('/verify')) current = { ...signedIn(), profileComplete };
+      return current;
+    } });
+    const sessions = []; const signIns = [];
+    initializeLiveAccess(undefined, {
+      onSession(session) {
+        sessions.push(session);
+        assert.equal(ui.form.hidden, Boolean(session?.authenticated), 'login is rendered before the session hook');
+      },
+      onSignIn(session) {
+        signIns.push(session);
+        assert.equal(ui.login.open, false, 'login closes before the profile prompt can open');
+        assert.equal(ui.announcement.hidden, false, 'success notice is shown before the profile prompt');
+      },
+    });
+    await tick();
+    assert.equal(sessions[0], null);
+    assert.deepEqual(sessions.at(-1), signedOut());
+    await ui.triggers[0].dispatch('click'); await tick();
+    ui.email.value = 'person@qq.com'; ui.code.value = '123456';
+    await ui.form.dispatch('submit'); await tick();
+    assert.deepEqual(signIns, [{ ...signedIn(), profileComplete }]);
+    assert.deepEqual(sessions.at(-1), { ...signedIn(), profileComplete });
+    assert.deepEqual(ui.destinations, []);
+    assert.equal(ui.calls.filter(([url]) => url.endsWith('/enter')).length, 0);
+    await ui.browser.dispatch('focus'); await tick();
+    assert.equal(signIns.length, 1, 'session refresh does not trigger another login prompt');
+  });
+}
+
+test('a failed live session refresh clears the profile session hook', async t => {
+  let fail = false;
+  const ui = fixture(t, { request: () => {
+    if (fail) throw new TypeError('Network error');
+    return { ...signedIn(), profileComplete: true };
+  } });
+  const sessions = []; const states = [];
+  initializeLiveAccess(undefined, { onSession: (session, state) => {sessions.push(session);states.push(state);} }); await tick();
+  assert.deepEqual(states[0], {loading:true});
+  assert.deepEqual(states.at(-1), {loading:false});
+  assert.equal(sessions.at(-1)?.profileComplete, true);
+  fail = true; await ui.browser.dispatch('focus'); await tick();
+  assert.equal(sessions.at(-1), null);
+  assert.deepEqual(states.at(-1), {loading:false}, 'network failures are not presented as initial loading');
+  assert.equal(ui.form.hidden, false);
+});
+
+test('cancelled live verification updates profile session state without opening a completion prompt', async t => {
+  let finish;
+  const ui = fixture(t, { request: url => url.endsWith('/verify') ? new Promise(resolve => { finish = resolve; }) : signedOut() });
+  const sessions = []; const signIns = [];
+  initializeLiveAccess(undefined, { onSession: session => sessions.push(session), onSignIn: session => signIns.push(session) });
+  await tick(); await ui.triggers[0].dispatch('click'); await tick();
+  ui.email.value = 'person@qq.com'; ui.code.value = '123456';
+  const verifying = ui.form.dispatch('submit'); await tick();
+  await ui.close.dispatch('click'); finish({ ...signedIn(), profileComplete: false }); await verifying; await tick();
+  assert.ok(sessions.some(session => session?.authenticated && session.profileComplete === false));
+  assert.deepEqual(signIns, []);
+  assert.deepEqual(ui.destinations, []);
+  assert.equal(ui.announcement.hidden, true);
+});
+
+test('SMS sign-in passes its phone session without adding profile state or automatic navigation', async t => {
+  const phoneSession = { ...signedIn(), email: null, phone: '+8613800138000', profileComplete: null };
+  let current = signedOut();
+  const ui = fixture(t, { request: url => {
+    if (url === '/api/auth/sms/verify') current = phoneSession;
+    return current;
+  } });
+  const signIns = [];
+  initializeLiveAccess(undefined, { onSignIn: session => signIns.push(session) }); await tick();
+  await ui.triggers[1].dispatch('click'); await tick();
+  await ui.channels[1].dispatch('click'); ui.phone.value = '13800138000'; ui.code.value = '123456';
+  await ui.form.dispatch('submit'); await tick();
+  assert.deepEqual(signIns, [phoneSession]);
+  assert.deepEqual(ui.destinations, []);
+  assert.equal(ui.calls.filter(([url]) => url.endsWith('/enter')).length, 0);
+});
+
+test('an expired product session clears profile completion for the now anonymous account', async t => {
+  const ui = fixture(t, { request: url => url.endsWith('/enter')
+    ? { errorStatus: 401, errorBody: { message: 'Sign in required.' } }
+    : { ...signedIn(), profileComplete: true } });
+  const sessions = [];
+  initializeLiveAccess(undefined, { onSession: session => sessions.push(session) }); await tick();
+  await ui.triggers[0].dispatch('click'); await tick();
+  assert.equal(sessions.at(-1)?.authenticated, false);
+  assert.equal(sessions.at(-1)?.profileComplete, null);
+});
+
+test('preview profile hooks capture the normalized login email without changing the access storage shape', async t => {
+  const ui = fixture(t);
+  const sessions = []; const signIns = [];
+  initializeAccess(undefined, {
+    onSession(session) {
+      sessions.push(session);
+      assert.equal(ui.form.hidden, session.authenticated);
+    },
+    onSignIn(session) {
+      signIns.push(session);
+      assert.equal(ui.login.open, false);
+      assert.equal(ui.email.value, '', 'email is captured before dismissing and clearing the login form');
+      assert.equal(ui.announcement.hidden, false);
+    },
+  });
+  assert.deepEqual(sessions, [{ authenticated: false }]);
+  await ui.triggers[0].dispatch('click');
+  ui.email.value = ' Person@QQ.COM '; await ui.send.dispatch('click'); ui.code.value = '123456';
+  await ui.form.dispatch('submit');
+  assert.deepEqual(signIns, [{ authenticated: true, email: 'person@qq.com', profileComplete: false }]);
+  assert.deepEqual(sessions.at(-1), { authenticated: true });
+  assert.deepEqual(ui.destinations, []);
+  assert.deepEqual([...ui.values.keys()], ['arviva-access-preview-v1']);
+  assert.deepEqual(Object.keys(JSON.parse(ui.values.get('arviva-access-preview-v1'))).sort(), ['products', 'signedIn', 'version']);
+  await ui.login.querySelector('[data-demo-logout]').dispatch('click');
+  assert.deepEqual(sessions.at(-1), { authenticated: false });
+  assert.equal(signIns.length, 1);
+});
+
+test('signed-in account markup includes a hidden profile link and retains logout', () => {
+  const html = renderAccessDialogs();
+  assert.match(html, /data-login-session[^>]*>[\s\S]*<a[^>]*href="\/profile"[^>]*data-profile-link[^>]*hidden[^>]*>Personal profile<\/a>/);
+  assert.match(html, /data-demo-logout data-live-logout>Log out<\/button>/);
+});
+
+test('signed-in header avatar opens the live account dropdown, not the login dialog', async t => {
+  const ui = fixture(t, { session: signedIn(), accountMenu: true });
+  initializeLiveAccess(); await tick();
+  await ui.account.dispatch('click'); await tick();
+  assert.equal(ui.menu.hidden, false);
+  assert.equal(ui.login.open, false);
+  assert.equal(ui.account.getAttribute('aria-expanded'), 'true');
+  assert.equal(ui.account.getAttribute('aria-controls'), 'account-menu');
+  assert.equal(ui.menuProfile.getAttribute('href'), '/profile');
+  await ui.account.dispatch('click');
+  assert.equal(ui.menu.hidden, true);
+  assert.deepEqual(ui.destinations, []);
+});
+
+test('signed-out header avatar retains email login and its profile reminder hook', async t => {
+  const ui = fixture(t, { accountMenu: true }); const signIns = [];
+  initializeLiveAccess(undefined, { onSignIn: session => signIns.push(session) }); await tick();
+  await ui.account.dispatch('click'); await tick();
+  assert.equal(ui.menu.hidden, true); assert.equal(ui.login.open, true);
+  assert.equal(ui.account.getAttribute('aria-haspopup'), 'dialog');
+  ui.email.value = 'person@qq.com'; ui.code.value = '123456';
+  await ui.form.dispatch('submit'); await tick();
+  assert.equal(signIns.length, 1);
+  assert.equal(ui.login.open, false);
+  assert.equal(ui.menu.hidden, true, 'successful sign-in does not automatically open the account dropdown');
+});
+
+test('phone accounts retain the dropdown profile entry', async t => {
+  const ui = fixture(t, { accountMenu: true, session: {...signedIn(), email:null, phone:'+8613800138000'} });
+  initializeLiveAccess(); await tick(); await ui.account.dispatch('click');
+  assert.equal(ui.menu.hidden, false);
+  assert.equal(ui.menuProfile.hidden, false);
+  assert.equal(ui.login.open, false);
+});
+
+test('live dropdown logout is single-flight and updates the account without opening a modal', async t => {
+  let current = signedIn(); let finish;
+  const ui = fixture(t, { accountMenu: true, request: url => {
+    if (url === '/api/auth/logout') return new Promise(resolve => { finish = () => {current = signedOut();resolve({ok:true});}; });
+    return current;
+  } });
+  initializeLiveAccess(); await tick(); await ui.account.dispatch('click');
+  const logout = ui.menuLogout.dispatch('click'); await tick();
+  assert.equal(ui.menuLogout.disabled, true);
+  await ui.menuLogout.dispatch('click');
+  assert.equal(ui.calls.filter(([url]) => url === '/api/auth/logout').length, 1);
+  finish(); await logout; await tick();
+  assert.equal(ui.menu.hidden, true); assert.equal(ui.login.open, false);
+  assert.equal(ui.account.getAttribute('aria-haspopup'), 'dialog');
+  assert.equal(ui.announcement.textContent, 'You have been logged out.');
+  assert.equal(ui.root.activeElement, ui.account, 'successful logout restores focus after the session refresh enables the avatar');
+  await ui.account.dispatch('click'); await tick();
+  assert.equal(ui.login.open, true);
+});
+
+test('failed dropdown logout keeps the account signed in and displays an actionable error', async t => {
+  const ui = fixture(t, { accountMenu: true, request: url => {
+    if (url === '/api/auth/logout') throw new TypeError('Network error');
+    return signedIn();
+  } });
+  initializeLiveAccess(); await tick(); await ui.account.dispatch('click');
+  await ui.menuLogout.dispatch('click'); await tick();
+  assert.equal(ui.menu.hidden, false); assert.equal(ui.login.open, false);
+  assert.equal(ui.menuLogout.disabled, false);
+  assert.equal(ui.menuStatus.hidden, false);
+  assert.equal(ui.menuStatus.textContent, 'Unable to reach the server. Please try again.');
+});
+
+test('preview header dropdown logs out while preserving product history and returning to ordinary login', async t => {
+  const ui = fixture(t, { accountMenu: true });
+  const history = {version:1,signedIn:true,products:signedIn().products};
+  ui.values.set('arviva-access-preview-v1', JSON.stringify(history));
+  initializeAccess(); await ui.account.dispatch('click');
+  assert.equal(ui.menu.hidden, false); assert.equal(ui.login.open, false);
+  await ui.menuLogout.dispatch('click');
+  assert.equal(ui.menu.hidden, true);
+  assert.deepEqual(JSON.parse(ui.values.get('arviva-access-preview-v1')), {...history,signedIn:false});
+  await ui.account.dispatch('click'); assert.equal(ui.login.open, true);
 });

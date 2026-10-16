@@ -6,6 +6,7 @@ const serverSession = () => ({
   authenticated: true,
   email: 'person@example.com',
   phone: null,
+  profileComplete: null,
   products: {
     'module-01': { trialUsed: false, paid: false },
     'module-02': { trialUsed: true, paid: true },
@@ -28,12 +29,31 @@ test('sessions accept legacy email metadata but reject ambiguous or missing iden
   delete legacy.phone;
   delete legacy.smsReady;
   delete legacy.developmentSms;
-  assert.deepEqual(live.readLiveSession(legacy), { ...legacy, phone: null, smsReady: false, developmentSms: false });
+  delete legacy.profileComplete;
+  assert.deepEqual(live.readLiveSession(legacy), { ...legacy, phone: null, smsReady: false, developmentSms: false, profileComplete: null });
   for (const changes of [
     { email: null, phone: null }, { phone: '+8613800138000' }, { email: null, phone: '13800138000' },
     { email: null, phone: '+12125550100' }, { email: 'not-an-email' }, { smsReady: 'true' },
     { developmentSms: 'true' }, { authenticated: false, phone: '+8613800138000', email: null },
   ]) assert.throws(() => live.readLiveSession({ ...serverSession(), ...changes }), /session/i);
+});
+
+test('profile completion accepts only boolean or unknown status for authenticated email accounts', () => {
+  for (const profileComplete of [true, false, null]) {
+    assert.equal(live.readLiveSession({ ...serverSession(), profileComplete }).profileComplete, profileComplete);
+  }
+  for (const profileComplete of ['true', 'false', 0, 1, {}, []]) {
+    assert.throws(() => live.readLiveSession({ ...serverSession(), profileComplete }), /session/i);
+  }
+  for (const identity of [
+    { authenticated: false, email: null, phone: null },
+    { authenticated: true, email: null, phone: '+8613800138000' },
+  ]) {
+    assert.equal(live.readLiveSession({ ...serverSession(), ...identity, profileComplete: null }).profileComplete, null);
+    for (const profileComplete of [true, false]) {
+      assert.throws(() => live.readLiveSession({ ...serverSession(), ...identity, profileComplete }), /session/i);
+    }
+  }
 });
 
 test('login target normalization accepts mainland mobile numbers and QQ or other email providers', () => {

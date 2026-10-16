@@ -21,6 +21,8 @@ export const ARTICLE_ROUTES = Object.freeze([
 ].map(Object.freeze));
 
 const redirects = new Map();
+redirects.set('/profile/', '/profile');
+redirects.set('/profile/index.html', '/profile');
 for (const section of SECTIONS) {
   for (const alias of [section.legacy, section.legacy+'/', section.legacy+'/index.html', section.path+'/', section.path+'/index.html']) {
     redirects.set(alias, section.path);

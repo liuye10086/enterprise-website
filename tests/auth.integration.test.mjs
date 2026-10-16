@@ -130,7 +130,7 @@ test('PostgreSQL authentication and product authorization', { skip }, async (t) 
         'module-01': { trialUsed: false, paid: false },
         'module-02': { trialUsed: false, paid: false },
       });
-      assert.deepEqual(await f.service.getSession(login.token), { authenticated: true, email: f.email, phone: null, products: login.products });
+      assert.deepEqual(await f.service.getSession(login.token), { authenticated: true, email: f.email, phone: null, profileComplete: false, products: login.products });
       const stored = await pool.query('SELECT code_digest FROM arviva_verification_challenges WHERE email = $1', [f.email]);
       assert.match(stored.rows[0].code_digest, /^[a-f0-9]{64}$/);
       assert.notEqual(stored.rows[0].code_digest, f.deliveries[0].code);
@@ -329,7 +329,7 @@ test('PostgreSQL authentication and product authorization', { skip }, async (t) 
 
     await t.test('rejects missing sessions and revokes access on logout or session expiration', async () => {
       const f = fixture();
-      const signedOut = { authenticated: false, email: null, phone: null, products: { 'module-01': { trialUsed: false, paid: false }, 'module-02': { trialUsed: false, paid: false } } };
+      const signedOut = { authenticated: false, email: null, phone: null, profileComplete: null, products: { 'module-01': { trialUsed: false, paid: false }, 'module-02': { trialUsed: false, paid: false } } };
       assert.deepEqual(await f.service.getSession(), signedOut);
       assert.deepEqual(await f.service.getSession('untrusted-token'), signedOut);
       assert.equal(await f.service.canViewProduct(null, 'module-01'), false);
@@ -412,7 +412,7 @@ test('PostgreSQL authentication and product authorization', { skip }, async (t) 
       assert.equal(login.email, null);
       assert.equal(login.phone, f.phone);
       assert.match(login.token, /^[a-f0-9]{64}$/);
-      assert.deepEqual(await f.service.getSession(login.token), { authenticated: true, email: null, phone: f.phone, products: login.products });
+      assert.deepEqual(await f.service.getSession(login.token), { authenticated: true, email: null, phone: f.phone, profileComplete: null, products: login.products });
       const challenge = (await pool.query('SELECT * FROM arviva_phone_verification_challenges WHERE phone = $1', [f.phone])).rows[0];
       assert.equal(challenge.status, 'consumed');
       assert.match(challenge.code_digest, /^[a-f0-9]{64}$/);
@@ -614,7 +614,7 @@ test('PostgreSQL authentication and product authorization', { skip }, async (t) 
       await pool.query('UPDATE arviva_product_entitlements SET paid = true WHERE user_id = (SELECT id FROM arviva_users WHERE phone = $1) AND product_id = $2', [f.phone, 'module-02']);
       assert.equal(await f.service.canViewProduct(renewed.token, 'module-02'), true);
       await f.service.logout(renewed.token);
-      assert.deepEqual(await f.service.getSession(renewed.token), { authenticated: false, email: null, phone: null, products: { 'module-01': { trialUsed: false, paid: false }, 'module-02': { trialUsed: false, paid: false } } });
+      assert.deepEqual(await f.service.getSession(renewed.token), { authenticated: false, email: null, phone: null, profileComplete: null, products: { 'module-01': { trialUsed: false, paid: false }, 'module-02': { trialUsed: false, paid: false } } });
       f.advance(7 * 24 * 60 * 60_000);
       assert.equal((await f.service.getSession(phoneLogin.token)).authenticated, false);
     });

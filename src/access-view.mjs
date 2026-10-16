@@ -24,7 +24,7 @@ export function renderAccessDialogs() {
       <p class="login-status" data-login-status role="status" aria-live="polite"></p>
       <button class="primary-button login-submit" type="submit">Log in ${arrow}</button>
     </form>
-    <div class="login-session" data-login-session hidden><p data-login-email>You are signed in to the demo account.</p><p class="login-status" data-session-status role="status" aria-live="polite"></p><button class="secondary-button" type="button" data-demo-logout data-live-logout>Log out</button></div>
+    <div class="login-session" data-login-session hidden><p data-login-email>You are signed in to the demo account.</p><p class="login-status" data-session-status role="status" aria-live="polite"></p><a class="primary-button" href="/profile" data-profile-link hidden>Personal profile</a><button class="secondary-button" type="button" data-demo-logout data-live-logout>Log out</button></div>
     <p id="login-availability" class="login-availability">Email sign-in is coming soon.<br>Verification emails are not available yet.</p>
   </dialog>`;
 }

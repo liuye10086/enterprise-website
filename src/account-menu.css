@@ -1,0 +1,9 @@
+.account-menu-root{position:relative;display:flex;align-items:center;flex-shrink:0}
+.account-menu{position:absolute;top:calc(100% + 12px);right:0;z-index:30;width:min(230px,calc(100vw - 32px));padding:7px;border:1px solid #d8e2ce;border-radius:12px;background:#fff;color:#29452c;box-shadow:0 12px 36px #23371e26}
+.account-menu::before{content:"";position:absolute;top:-6px;right:20px;width:10px;height:10px;border-top:1px solid #d8e2ce;border-left:1px solid #d8e2ce;background:#fff;transform:rotate(45deg);pointer-events:none}
+.account-menu[hidden]{display:none!important}
+.account-menu-action{display:flex;align-items:center;width:100%;min-height:46px;margin:0;padding:12px 15px;border:0;border-radius:7px;background:transparent;color:#355d37;font:inherit;font-size:15px;font-weight:600;line-height:1.5;text-align:left;text-decoration:none;cursor:pointer}
+.account-menu-action:hover,.account-menu-action:focus-visible{background:#eef4e5;color:#355d37}
+.account-menu-action:focus-visible{outline:2px solid #88ad50;outline-offset:-2px}
+.account-menu-action:disabled{opacity:.55;cursor:wait}
+.account-menu-status{margin:6px 9px 9px;padding-top:10px;border-top:1px solid #e4e9df;color:#a34e2b;font-size:13px;line-height:1.6;overflow-wrap:anywhere}

@@ -6,6 +6,7 @@ import { SITE_COPY as copy } from './site-copy.mjs';
 import { SITE_ZH } from './locale-site-zh.mjs';
 import { DRUG_DESIGN_COPY as designCopy } from './drug-design-copy.mjs';
 import { renderCheckoutPage } from './checkout-view.mjs';
+import { renderProfilePage, renderProfilePrompt } from './profile-view.mjs';
 
 const navigation = SECTIONS.map(section => [section.key === 'news' ? copy.newsTitle : section.label, section.path]);
 const img = (name, alt, className = '', loading = 'lazy') => `<img src="/assets/images/${e(name)}" alt="${e(alt)}" class="${className}" loading="${loading}" decoding="async">`;
@@ -22,7 +23,7 @@ function header(active) {
   const row = `<div class="navigation-row">
       <a class="brand" href="${ROUTES.home}" aria-label="Arviva Therapeutics home">${img('33300796.jpg','Arviva Therapeutics','logo','eager')}</a>
       <nav id="primary-navigation" aria-label="Main navigation">${navigation.map(([label,href])=>`<a href="${href}"${primaryPages.has(href) ? ' data-mobile-primary' : ''}${active === href ? ' aria-current="page"' : ''}>${e(label)}</a>`).join('')}</nav>
-      <div class="header-actions"><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="Show more pages" data-current-section="${Boolean(active && !primaryPages.has(active))}"><span>More</span><svg class="more-chevron" viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m3 4.5 3 3 3-3"/></svg></button>${languageToggle()}<button class="login-trigger" type="button" data-login-open aria-label="Log in" title="Log in" aria-haspopup="dialog" aria-controls="login-dialog"><svg data-account-icon viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/></svg><span data-account-initial translate="no" aria-hidden="true" hidden></span><span class="sr-only" data-login-label>Log in</span></button></div>
+      <div class="header-actions"><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="Show more pages" data-current-section="${Boolean(active && !primaryPages.has(active))}"><span>More</span><svg class="more-chevron" viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m3 4.5 3 3 3-3"/></svg></button>${languageToggle()}<div class="account-menu-root" data-account-menu-root><button class="login-trigger" type="button" data-login-open data-account-trigger aria-label="Log in" title="Log in" aria-haspopup="dialog" aria-controls="login-dialog" aria-expanded="false"><svg data-account-icon viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/></svg><span data-account-initial translate="no" aria-hidden="true" hidden></span><span class="sr-only" data-login-label>Log in</span></button><div class="account-menu" id="account-menu" role="menu" aria-label="Account menu" data-account-menu hidden><a class="account-menu-action" href="/profile" role="menuitem" data-account-profile>Personal profile</a><button class="account-menu-action" type="button" role="menuitem" data-account-logout>Log out</button><p class="account-menu-status" data-account-status role="status" aria-live="polite" hidden></p></div></div></div>
       <nav class="mobile-primary-links" aria-label="Primary pages">${navigation.filter(([,href])=>primaryPages.has(href)).map(([label,href])=>`<a href="${href}"${active === href ? ' aria-current="page"' : ''}>${e(label)}</a>`).join('')}</nav>
     </div>`;
   const title = '<h1 class="company-name">Arviva Therapeutics Inc.</h1>';
@@ -37,8 +38,8 @@ function footer() {
 
 function shell(title, active, body, description=copy.description, extraHead='') {
   const isHome = active === ROUTES.home;
-  const theme = '<link rel="stylesheet" href="/brand-theme.css">' + extraHead + (isHome ? '<link rel="preload" as="image" href="/assets/images/ai-biomed-hero-v1.png">' : '');
-  return `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${e(title)} | Arviva Therapeutics</title><meta name="description" content="${e(description)}"><link rel="icon" href="/assets/images/33300796.jpg"><link rel="stylesheet" href="/styles.css">${theme}<script type="module" src="/main.js"></script></head><body id="top" class="brand-theme${isHome ? ' home-page' : ''}">${header(active)}<main id="main-content" class="wrap">${body}</main>${footer()}${renderAccessDialogs()}</body></html>`;
+  const theme = '<link rel="stylesheet" href="/brand-theme.css"><link rel="stylesheet" href="/profile.css"><link rel="stylesheet" href="/account-menu.css">' + extraHead + (isHome ? '<link rel="preload" as="image" href="/assets/images/ai-biomed-hero-v1.png">' : '');
+  return `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${e(title)} | Arviva Therapeutics</title><meta name="description" content="${e(description)}"><link rel="icon" href="/assets/images/33300796.jpg"><link rel="stylesheet" href="/styles.css">${theme}<script type="module" src="/main.js"></script></head><body id="top" class="brand-theme${isHome ? ' home-page' : ''}">${header(active)}<main id="main-content" class="wrap">${body}</main>${footer()}${renderAccessDialogs()}${renderProfilePrompt()}</body></html>`;
 }
 
 function carousel() {
@@ -128,6 +129,7 @@ export async function renderPages({articles}) {
     pages.set(product.url,shell(product.name,ROUTES.intelligent,platformPlaceholder(product)));
   }
   pages.set('/plans', shell('Plans & payment', ROUTES.intelligent, renderCheckoutPage(), 'Preview monthly plans and payment options for Arviva Therapeutics platforms.', '<link rel="stylesheet" href="/checkout.css"><meta name="robots" content="noindex">'));
+  pages.set('/profile', shell('Personal profile', '', renderProfilePage(), 'View and update your personal profile.', '<meta name="robots" content="noindex">'));
   for (const article of sorted) {
     pages.set(article.href,shell(article.title,ROUTES.news,`<article class="article-page"><a class="article-back" href="${ROUTES.news}">← ${e(copy.newsTitle)}</a><h2 class="article-title">${e(article.title)}</h2>${renderArticleBody(article)}<div class="article-end">${link('All news',ROUTES.news)}</div></article>`,article.excerpt));
   }

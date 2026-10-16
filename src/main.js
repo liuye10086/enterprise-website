@@ -4,6 +4,7 @@ import { mode } from './runtime-config.js';
 import { initializeLanguage } from './i18n.js';
 import { initializeModuleHighlight } from './module-highlight.js';
 import { initializeCheckout } from './checkout.js';
+import { initializeProfile } from './profile.js';
 export { initializeModuleHighlight } from './module-highlight.js';
 
 export function createEmailDraft(values) {
@@ -88,7 +89,8 @@ function initialize() {
   initializeLanguage();
   const setMenu = initializeNavigation();
   document.querySelector('[data-language-toggle]')?.addEventListener('click',()=>setMenu(false));
-  (mode === 'live' ? initializeLiveAccess : initializeAccess)(()=>setMenu(false));
+  const profile = initializeProfile({mode});
+  (mode === 'live' ? initializeLiveAccess : initializeAccess)(()=>setMenu(false), profile);
   initializeCarousel();
   initializeModuleHighlight();
   initializeCheckout();

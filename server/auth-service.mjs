@@ -43,7 +43,36 @@ function freshProducts() {
 }
 
 function signedOut() {
-  return { authenticated: false, email: null, phone: null, products: freshProducts() };
+  return { authenticated: false, email: null, phone: null, profileComplete: null, products: freshProducts() };
+}
+
+function normalizeProfile(raw) {
+  const editable = ['fullName', 'contactPhone', 'organization', 'researchArea'];
+  const allowed = [...editable, 'expectedEmail'];
+  const invalid = () => authError(400, 'invalid_profile', 'Enter your name and a valid contact phone number. Check the length of each field.');
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || Object.keys(raw).some(key => !allowed.includes(key))) throw invalid();
+  const result = {};
+  for (const field of editable) {
+    const value = raw[field] ?? '';
+    if (typeof value !== 'string' || /[\u0000-\u001f\u007f\u2028\u2029]/.test(value)) throw invalid();
+    result[field] = value.trim();
+    const limit = field === 'fullName' ? 100 : field === 'contactPhone' ? 32 : 200;
+    if ([...result[field]].length > limit) throw invalid();
+  }
+  const digits = result.contactPhone.replace(/\D/g, '').length;
+  if (!result.fullName || !/^\+?[0-9 ()-]+$/.test(result.contactPhone) || digits < 7 || digits > 15) throw invalid();
+  return result;
+}
+
+function profileView(email, row) {
+  return {
+    profile: {
+      fullName: row?.full_name ?? '', email, contactPhone: row?.contact_phone ?? '',
+      organization: row?.organization ?? '', researchArea: row?.research_area ?? '',
+      submittedAt: row?.submitted_at ? new Date(row.submitted_at).toISOString() : null,
+    },
+    complete: Boolean(row?.full_name && row?.contact_phone),
+  };
 }
 
 function sessionDigest(token) {
@@ -110,6 +139,12 @@ export function createAuthService({ pool, secret, sendCode, sendSmsCode, smsDail
       if (Object.hasOwn(products, row.product_id)) products[row.product_id] = { trialUsed: row.trial_used_at !== null, paid: row.paid };
     }
     return products;
+  }
+
+  async function profileCompleteFor(client, user) {
+    if (!user.email) return null;
+    const result = await client.query('SELECT 1 FROM arviva_user_profiles WHERE user_id = $1', [user.id ?? user.user_id]);
+    return result.rowCount > 0;
   }
 
   async function recordEvent(client, kind, channel, identityDigest, ipDigest, at) {
@@ -210,7 +245,7 @@ export function createAuthService({ pool, secret, sendCode, sendSmsCode, smsDail
       }
       const token = randomBytes(32).toString('hex');
       await client.query('INSERT INTO arviva_sessions (token_digest, user_id, created_at, expires_at) VALUES ($1, $2, $3, $4)', [sessionDigest(token), user.id, at, new Date(at.getTime() + SESSION_LIFETIME)]);
-      return { token, email: user.email, phone: user.phone, products: await productsFor(client, user.id) };
+      return { token, email: user.email, phone: user.phone, profileComplete: await profileCompleteFor(client, user), products: await productsFor(client, user.id) };
     });
   }
 
@@ -237,7 +272,49 @@ export function createAuthService({ pool, secret, sendCode, sendSmsCode, smsDail
       SELECT s.user_id, u.email, u.phone FROM arviva_sessions s JOIN arviva_users u ON u.id = s.user_id
       WHERE s.token_digest = $1 AND s.revoked_at IS NULL AND s.expires_at > $2
     `, [digest, timestamp()])).rows[0];
-    return session ? { authenticated: true, email: session.email, phone: session.phone, products: await productsFor(pool, session.user_id) } : signedOut();
+    return session ? { authenticated: true, email: session.email, phone: session.phone, profileComplete: await profileCompleteFor(pool, session), products: await productsFor(pool, session.user_id) } : signedOut();
+  }
+
+  async function profileAccount(client, token, lock = false) {
+    const digest = sessionDigest(token);
+    if (!digest) throw authError(401, 'AUTH_REQUIRED', 'Sign in to view your personal information.');
+    const account = (await client.query(`
+      SELECT s.user_id, s.expires_at, u.email FROM arviva_sessions s
+      JOIN arviva_users u ON u.id = s.user_id
+      WHERE s.token_digest = $1 AND s.revoked_at IS NULL
+      ${lock ? 'FOR UPDATE OF s' : ''}
+    `, [digest])).rows[0];
+    // Check after acquiring the row lock so an expired session cannot save while waiting.
+    if (!account || new Date(account.expires_at).getTime() <= timestamp().getTime()) throw authError(401, 'AUTH_REQUIRED', 'Sign in to view your personal information.');
+    if (!account.email) throw authError(403, 'email_account_required', 'Personal information is available for email accounts.');
+    return account;
+  }
+
+  async function getProfile(token) {
+    const account = await profileAccount(pool, token);
+    const row = (await pool.query('SELECT * FROM arviva_user_profiles WHERE user_id = $1', [account.user_id])).rows[0];
+    return profileView(account.email, row);
+  }
+
+  async function saveProfile(token, raw) {
+    return transaction(async client => {
+      const account = await profileAccount(client, token, true);
+      if (raw?.expectedEmail !== account.email) {
+        throw authError(409, 'profile_account_changed', 'Your sign-in account has changed. Reload this page before saving your profile.');
+      }
+      const profile = normalizeProfile(raw);
+      const at = timestamp();
+      const row = (await client.query(`
+        INSERT INTO arviva_user_profiles (user_id, full_name, contact_phone, organization, research_area, submitted_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $6)
+        ON CONFLICT (user_id) DO UPDATE SET
+          full_name = EXCLUDED.full_name, contact_phone = EXCLUDED.contact_phone,
+          organization = EXCLUDED.organization, research_area = EXCLUDED.research_area,
+          updated_at = EXCLUDED.updated_at
+        RETURNING *
+      `, [account.user_id, profile.fullName, profile.contactPhone, profile.organization, profile.researchArea, at])).rows[0];
+      return profileView(account.email, row);
+    });
   }
 
   async function logout(token) {
@@ -274,5 +351,5 @@ export function createAuthService({ pool, secret, sendCode, sendSmsCode, smsDail
     return result.rowCount > 0;
   }
 
-  return { requestCode, verifyCode, requestPhoneCode, verifyPhoneCode, getSession, logout, enterProduct, canViewProduct };
+  return { requestCode, verifyCode, requestPhoneCode, verifyPhoneCode, getSession, getProfile, saveProfile, logout, enterProduct, canViewProduct };
 }

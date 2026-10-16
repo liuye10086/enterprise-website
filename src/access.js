@@ -8,18 +8,20 @@ import {
   getProductDestination,
 } from './access-state.js';
 import { updateAccountTrigger } from './account-trigger.js';
+import { initializeAccountMenu } from './account-menu.js';
 
 const STORAGE_KEY = 'arviva-access-preview-v1';
 const DEMO_CODE = '123456';
 const DEMO_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 
-export function initializeAccess(onOpen = () => {}) {
+export function initializeAccess(onOpen = () => {}, profile = {}) {
   const loginDialog = document.querySelector('[data-login-dialog]');
   const form = loginDialog?.querySelector('[data-login-form]');
   const email = form?.querySelector('input[name="email"]');
   const code = form?.querySelector('input[name="code"]');
   const loginStatus = loginDialog?.querySelector('[data-login-status]');
   if (!loginDialog || !form || !email || !code || !loginStatus) return;
+  const accountMenu = initializeAccountMenu();
 
   const demoEnabled = DEMO_HOSTS.has(window.location.hostname);
   const productById = new Map(PRODUCTS.map(product => [product.id, product]));
@@ -93,6 +95,8 @@ export function initializeAccess(onOpen = () => {}) {
   function refreshPage() {
     const authenticated = signedIn();
     updateAccountTrigger(document, authenticated ? 'Demo account' : '');
+    accountMenu?.setAuthenticated(authenticated);
+    accountMenu?.setBusy(false);
     setHidden('[data-demo-panel]', true);
     setHidden('[data-demo-notice]', !demoEnabled);
     setHidden('[data-storage-note]', !demoEnabled || storageAvailable);
@@ -107,6 +111,7 @@ export function initializeAccess(onOpen = () => {}) {
       setText(`[data-product-cta="${product.id}"]`, authenticated ? 'Open product' : 'Log in to continue');
     }
     renderLogin();
+    profile.onSession?.({ authenticated });
   }
 
   function resetLogin() {
@@ -146,6 +151,7 @@ export function initializeAccess(onOpen = () => {}) {
 
   function showDialog(dialog) {
     onOpen();
+    accountMenu?.close();
     if (currentDialog && currentDialog !== dialog) closeDialog(currentDialog);
     currentDialog = dialog;
     if (!dialog.open) dialog.showModal();
@@ -153,6 +159,7 @@ export function initializeAccess(onOpen = () => {}) {
   }
 
   function dismissFlow() {
+    accountMenu?.close();
     const trigger = returnTarget;
     const closingDialog = currentDialog;
     currentDialog = null;
@@ -239,6 +246,12 @@ export function initializeAccess(onOpen = () => {}) {
   wireDialog(loginDialog, '[data-login-close]');
   document.querySelectorAll('[data-login-open]').forEach(trigger => trigger.addEventListener('click', () => {
     announce('');
+    if (signedIn() && accountMenu?.owns(trigger)) {
+      onOpen();
+      returnTarget = trigger;
+      accountMenu.toggle();
+      return;
+    }
     pendingProduct = null;
     returnTarget = trigger;
     resetLogin();
@@ -287,12 +300,14 @@ export function initializeAccess(onOpen = () => {}) {
       loginStatus.textContent = 'Enter the demo code shown after selecting Send code.';
       return;
     }
+    const loginEmail = email.value.trim().toLowerCase();
     updateState(signInDemo(state));
     dismissFlow();
     announce('Signed in successfully. Choose a platform to continue.');
+    profile.onSignIn?.({ authenticated: true, email: loginEmail, profileComplete: false });
   });
 
-  document.querySelectorAll('[data-demo-logout]').forEach(button => button.addEventListener('click', () => {
+  document.querySelectorAll('[data-demo-logout], [data-account-logout]').forEach(button => button.addEventListener('click', () => {
     if (!demoEnabled) return;
     updateState(signOutDemo(state));
     dismissFlow();
