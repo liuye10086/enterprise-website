@@ -478,10 +478,14 @@ export function initializeLiveAccess(onOpen = () => {}) {
       const opened = await openLiveProduct({
         productId: id, baseUrl: window.location.href, isCurrent: () => isCurrent(sequence),
       });
-      if (opened && isCurrent(sequence)) dismissFlow();
+      if (opened && isCurrent(sequence)) {
+        announce('');
+        dismissFlow();
+      }
     } catch (error) {
       if (!isCurrent(sequence)) return;
       if (error.status === 401) {
+        announce('');
         session = { ...session, authenticated: false, email: null, phone: null };
         resetLogin();
         showDialog(loginDialog);
@@ -499,12 +503,17 @@ export function initializeLiveAccess(onOpen = () => {}) {
 
   const startResendTimer = () => { if (!resendTimer) resendTimer = window.setInterval(updateControls, 1000); };
   window.addEventListener('pagehide', () => {
+    announce('');
     dismissFlow();
     ++sessionSequence;
     window.clearInterval(resendTimer);
     resendTimer = null;
   });
-  window.addEventListener('pageshow', () => { startResendTimer(); void refreshSession(); });
+  window.addEventListener('pageshow', event => {
+    if (event.persisted) announce('');
+    startResendTimer();
+    void refreshSession();
+  });
   window.addEventListener('focus', () => { void refreshSession(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') void refreshSession(); });
   startResendTimer();

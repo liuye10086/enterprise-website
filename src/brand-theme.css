@@ -117,6 +117,9 @@ html:has(.brand-theme) { scroll-padding-top: 130px; }
 
 .brand-theme .section-heading { color: #243a2d; border-left-color: #91b84a; }
 .brand-theme .lead { color: #526050; }
+.brand-theme .research-topic-link { color: #567d1f; }
+.brand-theme .research-topic-link:hover,
+.brand-theme .research-topic-link:focus-visible { color: #436318; }
 .brand-theme .text-link { color: #355d37; }
 .brand-theme .text-link span {
   color: #9e5426;

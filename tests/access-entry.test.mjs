@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { initializeLiveAccess } from '../src/access-live.js';
 import { initializeAccess } from '../src/access.js';
-import { renderAccessDialogs } from '../src/access-view.mjs';
+import { renderAccessAnnouncement } from '../src/access-view.mjs';
 import { translateText } from '../src/i18n.js';
 
 const tick = () => new Promise(resolve => setImmediate(resolve));
@@ -124,6 +124,12 @@ test('signed-in users with used unpaid trials enter directly and repeated clicks
   assert.equal(ui.calls.filter(([url]) => url.endsWith('/enter')).length, 1);
   finish({ url: 'https://research.arvivatherap.com' }); await entering; await tick();
   assert.equal(ui.destinations.length, 1);
+  assert.equal(ui.announcement.textContent, '');
+  assert.equal(ui.announcement.hidden, true);
+  await ui.browser.dispatch('pagehide');
+  await ui.browser.dispatch('pageshow', { persisted: true }); await tick();
+  assert.equal(ui.announcement.textContent, '');
+  assert.equal(ui.announcement.hidden, true);
 });
 
 test('expired session login stays on the current page and entry requires a second module click', async t => {
@@ -149,6 +155,8 @@ test('expired session login stays on the current page and entry requires a secon
   initializeLiveAccess(); await tick(); await ui.triggers[0].dispatch('click'); await tick();
   assert.equal(ui.login.open, true); assert.deepEqual(ui.destinations, []);
   assert.equal(ui.status.textContent, 'Your session expired. Please sign in to continue.');
+  assert.equal(ui.announcement.textContent, '');
+  assert.equal(ui.announcement.hidden, true);
   ui.email.value = 'person@qq.com'; await ui.send.dispatch('click'); await tick();
   ui.code.value = '123456'; await ui.form.dispatch('submit'); await tick();
   assert.deepEqual(ui.destinations, []);
@@ -175,6 +183,8 @@ test('network failure stays visible at the module and a repeated attempt can suc
   initializeLiveAccess(); await tick(); await ui.triggers[0].dispatch('click');
   assert.equal(ui.productErrors[0].textContent, 'Unable to reach the server. Please try again.');
   assert.equal(ui.productErrors[0].hidden, false);
+  assert.equal(ui.announcement.textContent, 'Unable to reach the server. Please try again.');
+  assert.equal(ui.announcement.hidden, false);
   assert.deepEqual(ui.destinations, []);
   assert.equal(ui.triggers[0].disabled, false);
   fail = false; await ui.triggers[0].dispatch('click');
@@ -186,8 +196,34 @@ test('leaving the page while an explicitly clicked product entry is pending supp
   const ui = fixture(t, { request: url => url.endsWith('/enter') ? new Promise(resolve => { finish = resolve; }) : signedIn() });
   initializeLiveAccess(); await tick();
   const entering = ui.triggers[0].dispatch('click'); await tick();
-  await ui.browser.dispatch('pagehide'); finish({ url: 'https://research.arvivatherap.com' });
+  assert.equal(ui.announcement.textContent, 'Opening your product…');
+  assert.equal(ui.announcement.hidden, false);
+  await ui.browser.dispatch('pagehide');
+  const hiddenAfterPagehide = ui.announcement.hidden;
+  const textAfterPagehide = ui.announcement.textContent;
+  finish({ url: 'https://research.arvivatherap.com' });
   await entering; await tick();
+  assert.equal(textAfterPagehide, '');
+  assert.equal(hiddenAfterPagehide, true);
+  await ui.browser.dispatch('pageshow', { persisted: true }); await tick();
+  assert.deepEqual(ui.destinations, []);
+  assert.equal(ui.announcement.textContent, '');
+  assert.equal(ui.announcement.hidden, true);
+});
+
+test('restoring a cached live page clears its saved transient notification', async t => {
+  const ui = fixture(t); initializeLiveAccess(); await tick();
+  await ui.account.dispatch('click'); await tick();
+  ui.email.value = 'person@qq.com'; ui.code.value = '123456';
+  await ui.form.dispatch('submit'); await tick();
+  assert.equal(ui.announcement.textContent, 'Signed in successfully. Choose a platform to continue.');
+  assert.equal(ui.announcement.hidden, false);
+  await ui.browser.dispatch('pageshow', { persisted: false }); await tick();
+  assert.equal(ui.announcement.textContent, 'Signed in successfully. Choose a platform to continue.');
+  assert.equal(ui.announcement.hidden, false);
+  await ui.browser.dispatch('pageshow', { persisted: true }); await tick();
+  assert.equal(ui.announcement.textContent, '');
+  assert.equal(ui.announcement.hidden, true);
   assert.deepEqual(ui.destinations, []);
 });
 
@@ -241,7 +277,7 @@ test('cancelling static login clears the selected product before account sign-in
 });
 
 test('success status markup is visible, hidden when empty and translated without alerts', () => {
-  const html = renderAccessDialogs();
+  const html = renderAccessAnnouncement();
   const status = html.match(/<p[^>]*data-access-announcement[^>]*>/)?.[0];
   assert.ok(status);
   assert.doesNotMatch(status, /sr-only/);

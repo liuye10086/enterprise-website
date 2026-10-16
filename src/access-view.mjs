@@ -4,6 +4,10 @@ import { escapeHtml as e } from './content.mjs';
 
 const arrow = '<span aria-hidden="true">→</span>';
 
+export function renderAccessAnnouncement() {
+  return '<p class="access-announcement" data-access-announcement role="status" aria-live="polite" hidden></p>';
+}
+
 export function renderAccessDialogs() {
   return `<dialog id="login-dialog" class="login-dialog" data-login-dialog aria-labelledby="login-title" aria-describedby="login-description login-availability">
     <button class="login-close" type="button" data-login-close aria-label="Close login">×</button>
@@ -22,8 +26,7 @@ export function renderAccessDialogs() {
     </form>
     <div class="login-session" data-login-session hidden><p data-login-email>You are signed in to the demo account.</p><p class="login-status" data-session-status role="status" aria-live="polite"></p><button class="secondary-button" type="button" data-demo-logout data-live-logout>Log out</button></div>
     <p id="login-availability" class="login-availability">Email sign-in is coming soon.<br>Verification emails are not available yet.</p>
-  </dialog>
-  <p class="access-announcement" data-access-announcement role="status" aria-live="polite" hidden></p>`;
+  </dialog>`;
 }
 
 export function medicineModules() {

@@ -1,5 +1,5 @@
 import { escapeHtml as e, renderArticleBody } from './content.mjs';
-import { renderAccessDialogs, medicineModules } from './access-view.mjs';
+import { renderAccessDialogs, renderAccessAnnouncement, medicineModules } from './access-view.mjs';
 import { PRODUCTS } from './access-state.js';
 import { SECTIONS, ROUTES, ARTICLE_ROUTES } from './routes.mjs';
 import { SITE_COPY as copy } from './site-copy.mjs';
@@ -26,7 +26,7 @@ function header(active) {
     </div>`;
   const title = '<h1 class="company-name">Arviva Therapeutics Inc.</h1>';
   // Keep the title in its original place while the navigation stays at the top.
-  const content = `<header class="site-header${active === ROUTES.home ? ' home-header' : ''}"><div class="wrap">${row}</div></header><div class="wrap">${title}</div>`;
+  const content = `<header class="site-header${active === ROUTES.home ? ' home-header' : ''}"><div class="wrap">${row}${renderAccessAnnouncement()}</div></header><div class="wrap">${title}</div>`;
   return `<a class="skip-link" href="#main-content">Skip to content</a>${content}`;
 }
 
