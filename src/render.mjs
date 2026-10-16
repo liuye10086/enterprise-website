@@ -3,6 +3,7 @@ import { renderAccessDialogs, renderAccessAnnouncement, medicineModules } from '
 import { PRODUCTS } from './access-state.js';
 import { SECTIONS, ROUTES, ARTICLE_ROUTES } from './routes.mjs';
 import { SITE_COPY as copy } from './site-copy.mjs';
+import { SITE_ZH } from './locale-site-zh.mjs';
 import { DRUG_DESIGN_COPY as designCopy } from './drug-design-copy.mjs';
 import { renderCheckoutPage } from './checkout-view.mjs';
 
@@ -71,10 +72,18 @@ function newsCard(article) {
 }
 
 function home(articles) {
+  // Keep each complete localized sentence intact when adding inline disease links.
+  const diseases = /(Alzheimer’s disease|type 2 diabetes|obesity|depression|anxiety|阿尔茨海默病|2 型糖尿病|肥胖症|抑郁症|焦虑症)/;
+  const focus = [['en', copy.home.focus], ['zh-CN', SITE_ZH[copy.home.focus]]].map(([locale, text]) => {
+    const content = text.split(diseases).map((part, index) => index % 2
+      ? `<a class="research-topic-link" href="${ROUTES.drugDesign}"><strong>${e(part)}</strong></a>`
+      : e(part)).join('');
+    return `<p class="lead research-focus-copy" lang="${locale}" data-no-translate>${content}</p>`;
+  }).join('');
   const approach = copy.home.approach.map(item=>`<p><a class="research-topic-link" href="${ROUTES.intelligent}#research-platform"><strong>${e(item.title)}</strong></a> <span>${e(item.description)}</span></p>`).join('');
   const videos = [['parkinsons-en-sd.mp4','175297174.jpg',"A new era in Parkinson’s treatment"],['obesity-en-sd.mp4','174621906.png','Obesity and the future of treatment'],['alzheimers-en-sd.mp4','175297136.jpg',"Understanding Alzheimer’s disease"]];
   return carousel() + `<section class="section company-section"><h2 class="section-heading">${e(copy.home.companyTitle)}</h2><p class="lead">${e(copy.home.company)}</p></section>
-  <section class="section pipeline-section"><h2 class="section-heading">${e(copy.home.focusTitle)}</h2><p class="lead">${e(copy.home.focus)}</p><div class="section-action">${link(e(copy.home.focusLink),ROUTES.intelligent)}</div></section>
+  <section class="section pipeline-section"><h2 class="section-heading">${e(copy.home.focusTitle)}</h2>${focus}<div class="section-action">${link(e(copy.home.focusLink),ROUTES.intelligent)}</div></section>
   <section class="section patent-section"><h2 class="section-heading">${e(copy.home.approachTitle)}</h2><div class="prose lead">${approach}</div><div class="section-action">${link(e(copy.home.approachLink),ROUTES.intelligent)}</div></section>
   <section class="section advantages-section"><h2 class="section-heading">${e(copy.home.strengthsTitle)}</h2><div class="advantages-grid"><article class="advantage talent"><h3>${e(copy.home.expertiseTitle)}</h3>${copy.home.expertise.map(p=>`<p>${e(p)}</p>`).join('')}</article><div class="advantage-image">${img('33316489.png','Talent, technology and market working together')}</div><article class="advantage market"><h3>${e(copy.home.purposeTitle)}</h3>${copy.home.purpose.map(p=>`<p>${e(p)}</p>`).join('')}</article><article class="advantage technology"><h3>${e(copy.home.technologyTitle)}</h3>${copy.home.technology.map(p=>`<p>${e(p)}</p>`).join('')}</article></div></section>
   <section class="section news-section"><div class="section-heading-row"><h2 class="section-heading">${e(copy.home.newsTitle)}</h2>${link('View all news',ROUTES.news)}</div><div class="video-grid">${videos.map(([file,poster,title])=>`<figure class="video-card"><video controls playsinline preload="metadata" poster="/assets/images/${poster}" aria-label="${e(title)}"><source src="/assets/videos/${file}" type="video/mp4">Your browser does not support video. <a href="/assets/videos/${file}">Download video</a></video><figcaption>${e(title)}</figcaption></figure>`).join('')}</div><div class="news-grid">${articles.slice(0,4).map(newsCard).join('')}</div></section>

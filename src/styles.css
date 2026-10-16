@@ -53,6 +53,9 @@ input,textarea{transition:border-color .18s,background-color .18s,box-shadow .18
 
 .research-topic-link{border-radius:3px;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:4px;text-decoration-thickness:1px}
 .research-topic-link:hover,.research-topic-link:focus-visible{color:var(--blue);text-decoration-color:currentColor}
+.research-focus-copy[lang="zh-CN"]{display:none}
+html[lang="zh-CN"] .research-focus-copy[lang="en"]{display:none}
+html[lang="zh-CN"] .research-focus-copy[lang="zh-CN"]{display:block}
 
 /* Existing mission imagery, calmer type, and generous native carousel controls. */
 .hero{position:relative;height:380px;overflow:hidden;background:#edf5f2;border:1px solid #dce9e4;border-radius:var(--radius-lg)}

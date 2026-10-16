@@ -50,6 +50,59 @@
     .back { display:inline-flex; gap:10px; align-items:center; font-size:13px; color:var(--green); }
     .back:hover { text-decoration:underline; text-underline-offset:4px; }
     .footer-note { font-size:11px; color:#7c8677; letter-spacing:.2px; }
+    .tour-launch { display:inline-flex; align-items:center; gap:12px; margin-top:24px; padding:11px 16px; border:1px solid #cbd9bc; border-radius:6px; background:#f4f7ed; color:#355b3b; font:inherit; font-size:13px; cursor:pointer; }
+    .tour-launch:hover { background:#eaf0df; }
+    .project-tour { width:min(1100px,calc(100% - 48px)); max-height:calc(100dvh - 48px); margin:auto; padding:0; overflow-y:auto; overscroll-behavior:contain; border:1px solid #dce3d2; border-radius:18px; color:var(--ink); background:#fdfefb; box-shadow:0 30px 100px #10221940; }
+    .project-tour::backdrop { background:#18302199; backdrop-filter:blur(7px); }
+    .tour-top { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:21px 30px; border-bottom:1px solid var(--line); }
+    .tour-top-title { display:flex; align-items:center; gap:12px; }
+    .tour-top h2 { margin:0; font-size:14px; letter-spacing:0; font-weight:600; }
+    .tour-top .status { font-size:10px; }
+    .tour-top-actions { display:flex; flex-shrink:0; align-items:center; gap:20px; }
+    .tour-top-actions .language { white-space:nowrap; }
+    .tour-close { display:grid; place-items:center; width:32px; height:32px; border:1px solid var(--line); border-radius:50%; background:transparent; color:#52624c; font:inherit; font-size:21px; cursor:pointer; }
+    .tour-slide { position:relative; isolation:isolate; min-height:460px; overflow:hidden; background:#f0f4e9; }
+    .tour-copy { position:relative; z-index:1; display:flex; flex-direction:column; justify-content:center; width:48%; min-height:460px; padding:45px 36px 42px 40px; background:#fdfefbf5; }
+    .tour-chapter { display:flex; align-items:center; gap:10px; margin:0 0 24px; font-size:10px; font-weight:600; letter-spacing:1.8px; color:#647c4b; text-transform:uppercase; }
+    .tour-chapter span:first-child { display:inline-grid; place-items:center; width:28px; height:28px; border:1px solid #d8e3ca; border-radius:50%; letter-spacing:0; }
+    .tour-copy h3 { margin:0 0 20px; font-size:clamp(27px,3.3vw,38px); line-height:1.27; letter-spacing:-1.3px; font-weight:500; text-wrap:balance; }
+    .tour-copy>p:not(.tour-chapter) { margin:0; color:#62705e; font-size:14px; line-height:1.95; }
+    .tour-keywords { display:flex; flex-wrap:wrap; gap:8px; margin-top:24px; }
+    .tour-keywords span { padding:5px 9px; border:1px solid #e0e7d7; border-radius:4px; color:#6b7c5a; font-size:10px; line-height:1.4; }
+    .tour-visual { position:absolute; z-index:0; inset:0 0 0 auto; width:56%; display:flex; flex-direction:column; justify-content:center; align-items:center; margin:0; padding:36px 28px 30px 52px; overflow:hidden; background:#eaf1df; }
+    .tour-slide:nth-of-type(2) .tour-visual { background:#edf3e7; }
+    .tour-slide:nth-of-type(3) .tour-visual { background:#e6eedc; }
+    .tour-slide:nth-of-type(4) .tour-visual { background:#f1f3e7; }
+    .tour-slide:nth-of-type(5) .tour-visual { background:#e8eedf; }
+    .tour-slide:nth-of-type(6) .tour-visual { background:#e5eddb; }
+    .tour-visual>svg { width:100%; max-width:460px; height:auto; flex-shrink:0; }
+    .tour-caption { margin:17px 0 0; color:#7a896d; font-size:10px; letter-spacing:.3px; text-align:center; line-height:1.65; }
+    .tour-paper { width:78%; max-width:280px; background:#fdfefb; padding:26px 26px 28px; border:1px solid #d9e1ce; border-radius:2px; box-shadow:12px 14px 0 #dae3cc70,0 8px 24px #3d543412; transform:rotate(-3deg); }
+    .tour-paper .paper-kicker { color:#7c9266; font-size:8px; letter-spacing:1.4px; margin-bottom:14px; }
+    .paper-heading { margin:0 0 13px; color:#35533b; font:600 15px/1.4 Georgia,"SimSun",serif; }
+    .paper-line { height:3px; background:#dce4d2; margin:7px 0; border-radius:2px; }
+    .paper-line.short { width:67%; }
+    .paper-figure { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:13px 0; }
+    .paper-figure svg { background:#f0f4e9; padding:7px; border:1px solid #e3e9db; }
+    .paper-divider { width:26px; height:2px; margin:16px 0 12px; background:#91aa72; }
+    .thesis-paper { transform:rotate(2deg); padding-top:28px; }
+    .thesis-paper .paper-heading { text-align:center; margin:20px 0; font-size:18px; }
+    .thesis-paper .paper-kicker { text-align:center; }
+    .thesis-rules { display:flex; justify-content:space-between; margin-top:20px; padding-top:10px; border-top:1px solid #dfe6d6; color:#7d8a72; font-size:8px; }
+    .tour-endnote { margin:0 30px; padding:14px 0; border-top:1px solid var(--line); color:#7b8574; font-size:10px; line-height:1.7; }
+    .tour-bottom { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:15px 30px 22px; }
+    .tour-pagination { display:flex; align-items:center; gap:18px; }
+    .tour-counter { min-width:36px; font-size:11px; color:#6b795d; font-variant-numeric:tabular-nums; }
+    .tour-dots { display:flex; gap:2px; }
+    .tour-dot { display:grid; place-items:center; width:24px; height:28px; padding:0; border:0; background:transparent; cursor:pointer; }
+    .tour-dot::after { content:""; width:6px; height:6px; border-radius:50%; background:#d2dcc6; }
+    .tour-dot[aria-current="step"]::after { width:20px; border-radius:6px; background:#6e8d4d; }
+    .tour-navigation { display:flex; gap:8px; }
+    .tour-navigation button { min-width:92px; padding:10px 17px; border:1px solid #d8e1ce; border-radius:5px; background:transparent; color:#506446; font:inherit; font-size:12px; cursor:pointer; }
+    .tour-navigation button:disabled { color:#a8b19f; cursor:default; }
+    .tour-navigation #tour-next { min-width:110px; color:#fff; background:#355c3b; border-color:#355c3b; }
+    .tour-navigation #tour-next:hover { background:#244c2e; }
+    @media(max-width:750px) { .project-tour { width:calc(100% - 24px); max-height:calc(100dvh - 24px); border-radius:12px; } .tour-top { padding:16px 20px; gap:10px; } .tour-top-title { gap:8px; flex-wrap:wrap; } .tour-top h2 { font-size:12px; } .tour-top-actions { gap:12px; } .tour-close { width:30px; height:30px; flex-shrink:0; } .tour-slide { min-height:0; } .tour-copy { width:100%; min-height:0; padding:28px 24px 25px; background:#fdfefb; } .tour-chapter { margin-bottom:18px; } .tour-copy h3 { font-size:29px; letter-spacing:-.7px; margin-bottom:15px; } .tour-copy>p:not(.tour-chapter) { font-size:13px; line-height:1.85; } .tour-keywords { margin-top:18px; } .tour-visual { position:relative; inset:auto; width:100%; padding:23px 24px; min-height:250px; } .tour-visual>svg { max-width:300px; } .tour-paper { width:210px; padding:20px; } .tour-endnote { margin:0 22px; font-size:10px; } .tour-bottom { padding:12px 20px 20px; flex-wrap:wrap; gap:14px; } .tour-navigation { margin-left:auto; } .tour-navigation button { min-width:78px; padding:10px 12px; } .tour-navigation #tour-next { min-width:98px; } }
     @media(min-width:1400px) { main { padding-top:96px; padding-bottom:80px; } }
     @media(max-width:650px) { .shell { width:calc(100% - 36px); } .header-inner { min-height:78px; gap:12px; } .brand { gap:8px; } .brand-name { font-size:17px; } .brand-icon { width:29px; height:29px; } .header-actions { gap:12px; } .demo { padding:4px 6px; font-size:9px; } main { padding:46px 0 40px; } h1 { font-size:38px; letter-spacing:-1.5px; } .intro { font-size:14px; } .workspace { margin-top:30px; } .platform { grid-template-columns:1fr; } .art { height:170px; border-right:0; border-bottom:1px solid var(--line); } .card-content { padding:23px; } h2 { font-size:23px; } .platform p { min-height:0; } .footer-inner { padding:24px 0; align-items:flex-start; flex-direction:column; gap:14px; } }
     @media(prefers-reduced-motion:no-preference) { a,button { transition:color .15s ease; } }
@@ -90,8 +143,50 @@
       </article>
     </section>
     <p class="preview-note"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7.5" stroke="currentColor"/><path d="M10 9v5m0-8v.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span data-en="This demo is a visual preview. Platform access is not yet available." data-zh="当前 Demo 仅供界面预览，平台暂未开放使用。">This demo is a visual preview. Platform access is not yet available.</span></p>
+    <button class="tour-launch" id="tour-open" type="button" hidden><span data-en="View project introduction" data-zh="查看项目介绍">View project introduction</span><span aria-hidden="true">↗</span></button>
   </main>
   <footer><div class="shell footer-inner"><a class="back" href="https://new.arvivatherap.com/intelligent"><span aria-hidden="true">←</span><span data-en="Back to Arviva Therapeutics" data-zh="返回 Arviva Therapeutics 官网">Back to Arviva Therapeutics</span></a><span class="footer-note"><span id="footer-product">Arviva Research</span> <span aria-hidden="true">/</span> <span data-en="Workspace preview" data-zh="工作台预览">Workspace preview</span></span></div></footer>
+  <dialog class="project-tour" id="project-tour" aria-labelledby="tour-title" aria-describedby="tour-purpose">
+    <div class="tour-top">
+      <div class="tour-top-title"><h2 id="tour-title" data-en="Research Platform · Project introduction" data-zh="Research Platform · 项目介绍">Research Platform · Project introduction</h2><span class="status" data-en="In development" data-zh="功能开发中">In development</span></div>
+      <div class="tour-top-actions"><button class="language" id="tour-language" type="button" data-en="中文" data-zh="EN">中文</button><button class="tour-close" id="tour-close" type="button" aria-label="Close introduction" autofocus>×</button></div>
+    </div>
+    <div id="tour-purpose" hidden data-en="Six slides introduce planned research analysis, SCI manuscript and thesis workflows. These features are in development." data-zh="六页介绍规划中的科研数据分析、SCI论文与毕业论文流程，相关功能正在开发中。">Six slides introduce planned research analysis, SCI manuscript and thesis workflows. These features are in development.</div>
+    <section class="tour-slide" data-tour-slide aria-labelledby="tour-heading-1">
+      <div class="tour-copy">
+        <p class="tour-chapter"><span>01</span><span data-en="Research data analysis" data-zh="科研数据分析">Research data analysis</span></p>
+        <h3 id="tour-heading-1" data-en="From raw data to research discovery." data-zh="从原始数据，到科研发现。">From raw data to research discovery.</h3>
+        <p data-en="Designed for biomedical and pharmaceutical research: bring raw research data into an organized workflow for preparation, analysis and interpretation." data-zh="面向生物医学与药学研究，计划将原始科研数据的整理、分析与解读串联为清晰的工作流程。">Designed for biomedical and pharmaceutical research: bring raw research data into an organized workflow for preparation, analysis and interpretation.</p>
+        <div class="tour-keywords"><span data-en="Biomedical research" data-zh="生物医学">Biomedical research</span><span data-en="Pharmaceutical research" data-zh="药学研究">Pharmaceutical research</span><span data-en="Data preparation" data-zh="数据整理">Data preparation</span></div>
+      </div>
+      <figure class="tour-visual">
+        <svg viewBox="0 0 390 260" fill="none" aria-hidden="true"><rect x="22" y="47" width="130" height="166" rx="7" fill="#fdfefb" stroke="#cbd9ba"/><path d="M22 81h130M57 81v132m31-132v132m32-132v132M22 113h130M22 146h130M22 180h130" stroke="#e0e8d6"/><rect x="35" y="60" width="65" height="5" rx="2" fill="#799c5e"/><g fill="#d6e2c7"><rect x="31" y="90" width="17" height="15" rx="2"/><rect x="65" y="123" width="15" height="15" rx="2"/><rect x="97" y="156" width="15" height="15" rx="2"/><rect x="129" y="189" width="14" height="15" rx="2"/></g><path d="M164 130h34m-7-6 7 6-7 6" stroke="#8fa875" stroke-width="1.5"/><circle cx="281" cy="130" r="71" fill="#e4ecd9" stroke="#c9d8b8"/><circle cx="281" cy="130" r="45" stroke="#c0d1ac" stroke-dasharray="3 5"/><path d="m248 148 21-48 34 11 13 46-35 14-33-23Z" stroke="#799a5d" stroke-width="1.5"/><path d="m248 148 55-37-22 60-12-71" stroke="#a5bb8c"/><circle cx="269" cy="100" r="7" fill="#476e42"/><circle cx="303" cy="111" r="6" fill="#96b571"/><circle cx="248" cy="148" r="5" fill="#96b571"/><circle cx="316" cy="157" r="7" fill="#fdfefb" stroke="#6c8e51"/><circle cx="281" cy="171" r="4" fill="#476e42"/></svg>
+        <figcaption class="tour-caption" data-en="Illustrative workflow · Data → analysis → insight" data-zh="流程示意 · 原始数据 → 分析 → 研究洞察">Illustrative workflow · Data → analysis → insight</figcaption>
+      </figure>
+    </section>
+    <section class="tour-slide" data-tour-slide aria-labelledby="tour-heading-2" hidden>
+      <div class="tour-copy"><p class="tour-chapter"><span>02</span><span data-en="Research data analysis" data-zh="科研数据分析">Research data analysis</span></p><h3 id="tour-heading-2" data-en="Turn analysis into clear result figures." data-zh="把分析，变成结果图表。">Turn analysis into clear result figures.</h3><p data-en="Planned tools will organize analysis outputs into readable figures and tables, ready for researchers to review and use in scientific writing." data-zh="计划将分析输出整理为清晰的结果图表，帮助研究者核验发现，并衔接后续科研写作。">Planned tools will organize analysis outputs into readable figures and tables, ready for researchers to review and use in scientific writing.</p><div class="tour-keywords"><span data-en="Analysis outputs" data-zh="分析结果">Analysis outputs</span><span data-en="Figures & tables" data-zh="结果图表">Figures & tables</span><span data-en="Researcher review" data-zh="研究者核验">Researcher review</span></div></div>
+      <figure class="tour-visual"><svg viewBox="0 0 390 260" fill="none" aria-hidden="true"><rect x="20" y="22" width="350" height="215" rx="7" fill="#fdfefb" stroke="#cfdbc1"/><path d="M20 56h350" stroke="#e0e7d6"/><circle cx="36" cy="39" r="3" fill="#92aa76"/><rect x="49" y="37" width="75" height="4" rx="2" fill="#d3dfc6"/><path d="M48 184h128M48 184V83m0 50h128M48 83h128" stroke="#dce5d1"/><rect x="64" y="139" width="20" height="45" rx="2" fill="#bbcda4"/><rect x="99" y="111" width="20" height="73" rx="2" fill="#90ad6f"/><rect x="134" y="91" width="20" height="93" rx="2" fill="#52784a"/><path d="M212 184h130M212 184V83" stroke="#dce5d1"/><path d="m224 163 24-12 22 4 27-37 29-19" stroke="#62864d" stroke-width="2"/><g fill="#91ad6f"><circle cx="224" cy="163" r="4"/><circle cx="248" cy="151" r="4"/><circle cx="270" cy="155" r="4"/><circle cx="297" cy="118" r="4"/><circle cx="326" cy="99" r="4"/></g><rect x="48" y="205" width="85" height="4" rx="2" fill="#d8e2cd"/><rect x="212" y="205" width="85" height="4" rx="2" fill="#d8e2cd"/></svg><figcaption class="tour-caption" data-en="Illustrative figures · Not actual research results" data-zh="图表仅为示意，不代表真实研究结果">Illustrative figures · Not actual research results</figcaption></figure>
+    </section>
+    <section class="tour-slide" data-tour-slide aria-labelledby="tour-heading-3" hidden>
+      <div class="tour-copy"><p class="tour-chapter"><span>03</span><span data-en="SCI manuscript support" data-zh="SCI论文支持">SCI manuscript support</span></p><h3 id="tour-heading-3" data-en="From result figures to an SCI first draft." data-zh="从结果图表，到SCI论文初稿。">From result figures to an SCI first draft.</h3><p data-en="Use reviewed figures, research context and methods to help structure a first manuscript draft." data-zh="计划结合经核验的结果图表、研究背景与方法，辅助组织SCI论文初稿。">Use reviewed figures, research context and methods to help structure a first manuscript draft.</p><div class="tour-keywords"><span data-en="Result figures" data-zh="结果图表">Result figures</span><span data-en="Manuscript structure" data-zh="论文结构">Manuscript structure</span><span data-en="First draft" data-zh="论文初稿">First draft</span></div></div>
+      <figure class="tour-visual"><div class="tour-paper" aria-hidden="true"><div class="paper-kicker">MANUSCRIPT / DRAFT</div><div class="paper-heading" data-en="A research story, built on evidence." data-zh="以研究证据， 组织科学叙事。">A research story, built on evidence.</div><div class="paper-divider"></div><div class="paper-line"></div><div class="paper-line"></div><div class="paper-line short"></div><div class="paper-figure"><svg viewBox="0 0 80 50" fill="none"><path d="M5 44h70M5 44V5" stroke="#c8d7b7"/><path d="m12 37 15-11 15 4 17-19 14-5" stroke="#719354" stroke-width="2"/></svg><svg viewBox="0 0 80 50" fill="none"><path d="M5 44h70" stroke="#c8d7b7"/><path d="M19 44V28m20 16V18m20 26V8" stroke="#8daa71" stroke-width="10"/></svg></div><div class="paper-line"></div><div class="paper-line"></div><div class="paper-line short"></div></div><figcaption class="tour-caption" data-en="Draft layout illustration · For author review" data-zh="初稿版式示意 · 由作者审核完善">Draft layout illustration · For author review</figcaption></figure>
+    </section>
+    <section class="tour-slide" data-tour-slide aria-labelledby="tour-heading-4" hidden>
+      <div class="tour-copy"><p class="tour-chapter"><span>04</span><span data-en="SCI manuscript support" data-zh="SCI论文支持">SCI manuscript support</span></p><h3 id="tour-heading-4" data-en="A clearer path through submission and revision." data-zh="选刊与审稿修订，形成闭环。">A clearer path through submission and revision.</h3><p data-en="Planned support spans journal suggestions, reviewer-response organization and manuscript revision throughout the publication process." data-zh="计划提供期刊建议、审稿意见梳理与返修辅助，持续支持投稿至发表的流程。">Planned support spans journal suggestions, reviewer-response organization and manuscript revision throughout the publication process.</p><div class="tour-keywords"><span data-en="Journal suggestions" data-zh="期刊建议">Journal suggestions</span><span data-en="Reviewer responses" data-zh="审稿回复">Reviewer responses</span><span data-en="Manuscript revision" data-zh="论文返修">Manuscript revision</span></div></div>
+      <figure class="tour-visual"><svg viewBox="0 0 390 260" fill="none" aria-hidden="true"><rect x="25" y="30" width="145" height="80" rx="7" fill="#fdfefb" stroke="#c9d8b8"/><rect x="220" y="30" width="145" height="80" rx="7" fill="#fdfefb" stroke="#c9d8b8"/><rect x="220" y="155" width="145" height="80" rx="7" fill="#e3ecd7" stroke="#b8cca3"/><rect x="25" y="155" width="145" height="80" rx="7" fill="#fdfefb" stroke="#c9d8b8"/><path d="M181 70h27m-6-5 6 5-6 5m91 44v26m-5-6 5 6 5-6M209 195h-27m6-5-6 5 6 5M97 144v-25m-5 6 5-6 5 6" stroke="#7d9b61" stroke-width="1.5"/><g stroke="#789860" stroke-width="1.7"><path d="M46 52h20v27H46zM50 59h12m-12 6h12m-12 6h8M243 54h24v18h-12l-7 6v-6h-5zM242 181h22m-22 7h22m-22 7h13M47 185l6 6 12-14"/></g><g fill="#48683d" font-family="Arial,Microsoft YaHei,sans-serif" font-size="11"><text x="80" y="75" data-en="Journal fit" data-zh="期刊匹配">Journal fit</text><text x="280" y="75" data-en="Peer review" data-zh="审稿意见">Peer review</text><text x="278" y="201" data-en="Revision" data-zh="回复与返修">Revision</text><text x="80" y="201" data-en="Resubmission" data-zh="再次提交">Resubmission</text></g></svg><figcaption class="tour-caption" data-en="Journal fit → review → revision" data-zh="流程示意 · 选刊 → 审稿 → 返修">Journal fit → review → revision</figcaption></figure>
+    </section>
+    <section class="tour-slide" data-tour-slide aria-labelledby="tour-heading-5" hidden>
+      <div class="tour-copy"><p class="tour-chapter"><span>05</span><span data-en="Thesis support" data-zh="毕业论文支持">Thesis support</span></p><h3 id="tour-heading-5" data-en="A thesis first draft shaped by your school’s requirements." data-zh="依据学校规范，生成学位论文初稿。">A thesis first draft shaped by your school’s requirements.</h3><p data-en="Combine reviewed result figures with your institution’s format requirements to help organize a thesis draft, from chapter structure to figure placement and formatting." data-zh="计划结合结果图表与学校格式要求，辅助形成学位论文初稿，衔接章节组织、图表编排与格式规范。">Combine reviewed result figures with your institution’s format requirements to help organize a thesis draft, from chapter structure to figure placement and formatting.</p><div class="tour-keywords"><span data-en="School requirements" data-zh="学校格式">School requirements</span><span data-en="Research figures" data-zh="研究图表">Research figures</span><span data-en="Thesis draft" data-zh="学位论文初稿">Thesis draft</span></div></div>
+      <figure class="tour-visual"><div class="tour-paper thesis-paper" aria-hidden="true"><div class="paper-kicker">THESIS / DRAFT</div><div class="paper-heading" data-en="A foundation for your thesis." data-zh="让研究成果， 有章可循。">A foundation for your thesis.</div><div class="paper-divider"></div><div class="paper-line"></div><div class="paper-line short"></div><div class="paper-line"></div><div class="paper-line"></div><div class="paper-line short"></div><div class="thesis-rules"><span data-en="Chapters" data-zh="章节结构">Chapters</span><span data-en="Figures" data-zh="图表编排">Figures</span><span data-en="Format" data-zh="格式规范">Format</span></div></div><figcaption class="tour-caption" data-en="Layout illustration · Adapted to institutional guidance" data-zh="版式示意 · 以学校实际要求为准">Layout illustration · Adapted to institutional guidance</figcaption></figure>
+    </section>
+    <section class="tour-slide" data-tour-slide aria-labelledby="tour-heading-6" hidden>
+      <div class="tour-copy"><p class="tour-chapter"><span>06</span><span data-en="Thesis support" data-zh="毕业论文支持">Thesis support</span></p><h3 id="tour-heading-6" data-en="Refine through review. Aim for a stronger thesis." data-zh="以评审驱动完善，向优秀迈进。">Refine through review. Aim for a stronger thesis.</h3><p data-en="Planned support will help organize review feedback and guide revisions to logic, presentation and formatting. Aim for excellent work while respecting academic integrity and independent assessment." data-zh="计划根据评审意见，辅助完善论证逻辑、表达与格式，持续打磨论文质量、力争优秀，同时遵守学术规范与学校独立评审要求。">Planned support will help organize review feedback and guide revisions to logic, presentation and formatting. Aim for excellent work while respecting academic integrity and independent assessment.</p><div class="tour-keywords"><span data-en="Review feedback" data-zh="评审意见">Review feedback</span><span data-en="Guided revision" data-zh="修改完善">Guided revision</span><span data-en="Quality improvement" data-zh="质量提升">Quality improvement</span></div></div>
+      <figure class="tour-visual"><svg viewBox="0 0 390 260" fill="none" aria-hidden="true"><circle cx="195" cy="130" r="95" stroke="#d4dfc7"/><path d="M193 35a95 95 0 0 1 90 61m-6-11 6 11 5-12M290 135a95 95 0 0 1-76 88m12-7-12 7 13 3M182 224a95 95 0 0 1-80-76m-3 13 3-13 7 10" stroke="#91aa74" stroke-width="1.5"/><rect x="141" y="65" width="108" height="133" rx="5" fill="#fdfefb" stroke="#c5d5b3"/><path d="m159 95 4 4 8-9m-12 34 4 4 8-9m-12 34 4 4 8-9" stroke="#70964f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M185 96h43m-43 29h43m-43 29h43" stroke="#c9d9b9" stroke-width="4" stroke-linecap="round"/><rect x="169" y="174" width="54" height="4" rx="2" fill="#e0e8d7"/><circle cx="117" cy="67" r="17" fill="#e0ead3" stroke="#c8d8b7"/><path d="M109 64h16m-16 5h11" stroke="#739355"/><circle cx="280" cy="194" r="17" fill="#456d40"/><path d="m273 194 5 5 9-11" stroke="#fdfefb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><figcaption class="tour-caption" data-en="Review → revise → improve" data-zh="评审 → 修改 → 完善">Review → revise → improve</figcaption></figure>
+    </section>
+    <p class="tour-endnote" data-en="Concept preview · Features are in development. Analyses and manuscripts require researcher verification." data-zh="项目预览 · 功能开发中。分析结果与论文稿件均需研究者核验。">Concept preview · Features are in development. Analyses and manuscripts require researcher verification.</p>
+    <div class="tour-bottom"><div class="tour-pagination"><span class="tour-counter" id="tour-counter" aria-live="polite" aria-atomic="true">1 / 6</span><nav class="tour-dots" aria-label="Introduction slides"><button class="tour-dot" type="button" data-tour-go="0" aria-label="Go to slide 1" aria-current="step"></button><button class="tour-dot" type="button" data-tour-go="1" aria-label="Go to slide 2"></button><button class="tour-dot" type="button" data-tour-go="2" aria-label="Go to slide 3"></button><button class="tour-dot" type="button" data-tour-go="3" aria-label="Go to slide 4"></button><button class="tour-dot" type="button" data-tour-go="4" aria-label="Go to slide 5"></button><button class="tour-dot" type="button" data-tour-go="5" aria-label="Go to slide 6"></button></nav></div><div class="tour-navigation"><button id="tour-prev" type="button" disabled>Previous</button><button id="tour-next" type="button">Next →</button></div></div>
+  </dialog>
   <script>
     (() => {
       const prediction = location.hostname === 'thesis.arvivatherap.com' || new URLSearchParams(location.search).get('platform') === 'prediction';
@@ -123,16 +218,84 @@
         document.getElementById('platforms').setAttribute('aria-label', product);
         toggle.textContent = chinese ? 'EN' : '中文';
         toggle.setAttribute('aria-label', chinese ? 'Switch to English' : '切换到中文');
+        document.getElementById('tour-language').setAttribute('aria-label', chinese ? 'Switch to English' : '切换到中文');
+        document.querySelector('.tour-dots').setAttribute('aria-label', chinese ? '项目介绍分页' : 'Introduction slides');
+        document.dispatchEvent(new CustomEvent('research-language-change'));
       }
-      toggle.addEventListener('click', () => {
+      function switchLanguage() {
         locale = locale === 'en' ? 'zh-CN' : 'en';
         try { localStorage.setItem('arviva.language', locale); } catch {}
         apply();
-      });
+      }
+      toggle.addEventListener('click', switchLanguage);
+      document.getElementById('tour-language').addEventListener('click', switchLanguage);
       window.addEventListener('storage', event => {
         if (event.key === 'arviva.language' || event.key === null) { locale = event.newValue === 'zh-CN' ? 'zh-CN' : 'en'; apply(); }
       });
       apply();
+    })();
+  </script>
+  <script id="research-tour-script">
+    (() => {
+      const dialog = document.getElementById('project-tour');
+      const reopen = document.getElementById('tour-open');
+      const prediction = location.hostname === 'thesis.arvivatherap.com' || new URLSearchParams(location.search).get('platform') === 'prediction';
+      if (prediction) { reopen.hidden = true; return; }
+      const slides = [...document.querySelectorAll('[data-tour-slide]')];
+      const dots = [...document.querySelectorAll('[data-tour-go]')];
+      const prev = document.getElementById('tour-prev');
+      const next = document.getElementById('tour-next');
+      const close = document.getElementById('tour-close');
+      const counter = document.getElementById('tour-counter');
+      let index = 0;
+      let previousFocus;
+      let previousOverflow = '';
+      let locked = false;
+      function render() {
+        const zh = document.documentElement.lang === 'zh-CN';
+        slides.forEach((slide, i) => { slide.hidden = i !== index; });
+        dots.forEach((dot, i) => {
+          if (i === index) dot.setAttribute('aria-current', 'step');
+          else dot.removeAttribute('aria-current');
+          dot.setAttribute('aria-label', zh ? '查看第' + (i + 1) + '页' : 'Go to slide ' + (i + 1));
+        });
+        counter.textContent = (index + 1) + ' / ' + slides.length;
+        prev.disabled = index === 0;
+        prev.textContent = zh ? '上一页' : 'Previous';
+        prev.setAttribute('aria-label', zh ? '上一页' : 'Previous slide');
+        next.textContent = index === slides.length - 1 ? (zh ? '结束介绍' : 'Finish tour') : (zh ? '下一页 →' : 'Next →');
+        next.setAttribute('aria-label', index === slides.length - 1 ? (zh ? '结束介绍，返回工作台' : 'Finish introduction and return to workspace') : (zh ? '下一页' : 'Next slide'));
+        close.setAttribute('aria-label', zh ? '关闭项目介绍' : 'Close introduction');
+        reopen.setAttribute('aria-label', zh ? '重新查看项目介绍' : 'View project introduction again');
+        dialog.scrollTop = 0;
+      }
+      function restore() {
+        if (!locked) return;
+        document.body.style.overflow = previousOverflow;
+        locked = false;
+        if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+      }
+      function open() {
+        if (dialog.open) return;
+        previousFocus = document.activeElement;
+        previousOverflow = document.body.style.overflow;
+        index = 0;
+        render();
+        document.body.style.overflow = 'hidden';
+        locked = true;
+        dialog.showModal();
+        close.focus();
+      }
+      prev.addEventListener('click', () => { if (index > 0) { index -= 1; render(); } });
+      next.addEventListener('click', () => { if (index < slides.length - 1) { index += 1; render(); } else dialog.close(); });
+      dots.forEach(dot => dot.addEventListener('click', () => { index = Number(dot.dataset.tourGo); render(); }));
+      close.addEventListener('click', () => dialog.close());
+      dialog.addEventListener('cancel', event => { event.preventDefault(); dialog.close(); });
+      dialog.addEventListener('close', restore);
+      reopen.addEventListener('click', open);
+      document.addEventListener('research-language-change', render);
+      reopen.hidden = false;
+      open();
     })();
   </script>
 </body>
