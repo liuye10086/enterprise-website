@@ -1,15 +1,21 @@
 # PostgreSQL 登录部署
 
-真实登录依赖 Node.js、PostgreSQL 与同源后端。`npm start` 默认监听本机 `127.0.0.1:4174`；`npm run dev` 的 `4173` 是旧静态演示，不用于正式登录。**不能仅上传 `dist/`，也不能让 Nginx 直接公开平台 HTML 来绕过 Node。**
+## 2026-10-16 已发布变更
 
-## 当前部署（2026-10-12）
+应用提交 `df5757e296fa2ce93a99a94862ae24629a75c1c0` 已推送至 `main` 并部署。`/intelligent` 两个模块仅检查有效登录。登录成功后关闭登录窗口、停留在当前页面并显示成功提示；再次点击模块才跳转。已登录用户点击 Research Platform 跳转至 `https://research.arvivatherap.com`，点击 Prediction Platform 跳转至 `https://thesis.arvivatherap.com`；本地 loopback 分别预览 `/research-demo.html` 和 `/research-demo.html?platform=prediction`。不再检查或消耗产品试用资格，无依赖或数据库迁移变化，原账号及历史数据保留。
 
-- 新版地址：<https://new.arvivatherap.com/home>；旧版 <https://arvivatherap.com/sy> 继续运行于原平台。仅新增 `new` 的 A 记录，原根域 CNAME、MX 及邮箱客户端记录未修改。
+阿里云新增的 `research` 和 `thesis` 两条 A 记录均指向 `47.82.97.195`（默认线路、TTL 600 秒、启用），两个产品站已通过 HTTPS 上线。独立 Nginx 配置为 `/etc/nginx/sites-available/arviva-products`，由 `sites-enabled/arviva-products` 链接启用；公开目录只包含 `/var/www/arviva-products/index.html`，来自 `src/research-demo.html`，按 hostname 区分产品。产品 HTTPS 只开放 `/` 和 `/index.html`，其他路径返回 404；HTTP 保留 ACME 验证路径，其余请求跳转 HTTPS。原有 Nginx 文件和链接快照、私密配置校验和保持不变。
+
+产品站当前为公开静态 demo，没有跨域单点登录，也不接收官网会话令牌；未来产品服务需另行接入身份校验。真实官网登录依赖 Node.js、PostgreSQL 与同源后端。`npm start` 默认监听本机 `127.0.0.1:4174`；`npm run dev` 的 `4173` 是本机静态演示，不用于正式登录。**官网不能仅上传 `dist/`，旧产品入口仍必须经过 Node 登录校验。** 下方历史发布记录中的试用资格和旧产品页说明反映当时版本，不作为当前访问规则。
+
+## 当前部署（2026-10-16）
+
+- 新版地址：<https://new.arvivatherap.com/home>；产品演示站为 <https://research.arvivatherap.com> 和 <https://thesis.arvivatherap.com>。旧版 <https://arvivatherap.com/sy> 继续运行于原平台，原根域 CNAME、MX 及邮箱客户端记录未修改。
 - 阿里云香港 Ubuntu 24.04，Node.js 24.21.0、PostgreSQL 16、Nginx 1.24。应用目录 `/srv/arviva`，以 `arviva` 系统用户和 `arviva.service` 运行并开机启动。
 - 生产应用库 `arviva_website` 与测试库 `arviva_website_test` 使用不同的非管理员数据库角色和密码。本机用户数据未迁移。`.env`、`.env.test` 均为 `600` 权限，不进入 Git。
 - `APP_ORIGIN=https://new.arvivatherap.com`，`NODE_ENV=production`，`MAIL_MODE=smtp`，`TRUST_PROXY=loopback`。Node `4174` 与 PostgreSQL `5432` 仅监听 `127.0.0.1`。
-- HTTPS 证书由 Certbot 管理，`certbot.timer` 自动续期，续期部署钩子会校验并重载 Nginx。HTTP 自动跳转 HTTPS；ACME 验证目录单独保留。`certbot renew --dry-run --run-deploy-hooks` 演练通过。
-- 应用版本 `6f21fae` 已发布，服务器全量测试 127 项通过，无跳过；新主题、双语切换、手机导航和首页自动轮播已上线。已核对未登录访问两个产品的普通地址、尾斜线、`index.html` 均受保护。2026-10-10 用户已确认新版线上短信送达并登录成功；本次保留原认证配置，没有额外发送验证码或消耗产品试用。
+- HTTPS 证书由 Certbot 管理，沿用 `certbot.timer` 和校验、重载 Nginx 的续期部署钩子；ACME webroot 为 `/var/www/arviva-acme`。产品证书位于 `/etc/letsencrypt/live/arviva-products`，SAN 包含两个产品域名，到期时间为 `2027-01-14 03:04:45 UTC`。旧官网证书和新增产品证书均已通过续期演练；本次运行 `certbot renew --cert-name arviva-products --dry-run --run-deploy-hooks --no-random-sleep-on-renew` 成功，部署钩子通过 Nginx 校验并重载，`certbot.timer` 保持 active。
+- 当前应用版本为 `df5757e`。本机和服务器各 152 项测试通过，服务器无失败、无跳过；公网 19 项检查通过。`arviva`、`nginx`、`postgresql` 均为 active；`.env`、`.env.test` 校验和及原有 Nginx 文件／链接快照不变。生产 session 显示 `mailReady`、`smsReady` 为 true，两个 development 标志为 false。本次未发送 OTP，未重新验证真实邮箱或短信收信。
 - 生产已配置 `SMS_MODE=aliyun-pnvs` 与专用 RAM 凭据，`SMS_DAILY_LIMIT=10`。生产与本机限额分别计算，共用短信套餐；阿里云签名、模板及权限沿用已经开通的配置。
 
 以下为重建新环境时的步骤；现有服务器已经配置完成，不要重复建库或覆盖 `.env`。本机开发库仍为 `arviva_website_dev`，与服务器独立。
@@ -170,11 +176,11 @@ server {
 }
 ```
 
-执行 `sudo nginx -t`，通过后执行 `sudo systemctl reload nginx`。不要再配置指向 `dist/` 的 `root`、`alias`、`try_files` 或单独静态站点，以免 `/research-platform`、`/prediction-platform` 及其尾斜线、`index.html` 形式绕过鉴权。公网只需开放 HTTPS/HTTP 和受控的管理入口，4174 与 5432 留在本机。
+执行 `sudo nginx -t`，通过后执行 `sudo systemctl reload nginx`，随后等待各域名严格 TLS 与内容检查通过；reload 返回不代表新 worker 已就绪。`new.arvivatherap.com` 不应增加指向 `dist/` 的 `root`、`alias` 或 `try_files`，旧 `/research-platform`、`/prediction-platform` 及其尾斜线、`index.html` 形式仍交给 Node 鉴权。两个产品子域名使用前述独立静态目录，不暴露仓库或 `dist/`。公网只需开放 HTTPS/HTTP 和受控的管理入口，4174 与 5432 留在本机。
 
 ## 6. 上线验证与限制
 
-验证新邮箱随机验证码收信、首次注册、退出后会话撤销，以及每个产品独立的一次试用。未登录直接访问平台应被拒绝；平台获准进入后，同一会话可在 15 分钟内刷新。另测 `/research-platform/`、`/research-platform/index.html` 和 Prediction Platform 对应地址，确认没有静态旁路。
+需要实测登录时，验证随机验证码收信、首次注册和退出后会话撤销，并确认登录成功后关闭弹窗、留在当前页面显示提示，再次点击模块才进入正确子域名。当前产品入口不检查付费、不扣试用。未登录访问旧 `/research-platform`、`/prediction-platform` 及其尾斜线、`index.html` 共 6 个地址应返回 302 至 `/intelligent`；两个 `/api/products/module-0[12]/enter` 的匿名 POST 应返回 401。公开产品子域名仅展示静态 demo，不代表产品服务已建立登录会话。
 
 自动认证测试必须使用专用测试库。当前服务器单独保存 `.env.test`，运行全量测试时显式加载它，避免测试被跳过：
 
@@ -187,6 +193,18 @@ sudo -u arviva bash -c 'cd /srv/arviva && npm run build && node --env-file=.env 
 当前没有在线支付、公开开通权限接口或完整产品功能。邮箱与短信登录、两个产品的占位页面属于发布范围。
 
 ## 7. 日常更新与备份
+
+### 2026-10-16：登录入口调整与两个产品子域名上线
+
+提交 `df5757e296fa2ce93a99a94862ae24629a75c1c0` 已推送并部署。发布前备份位于 `/var/backups/arviva/releases/20261016-df5757e`，包含 `before.dump`、原 `.env` / `.env.test`、旧 `dist/`、Nginx 配置与原提交号。本次没有依赖或数据库迁移变化；新增独立 `arviva-products` 配置和证书，既有配置及私密环境文件保持不变。
+
+首次执行成功签发产品证书，但 Nginx reload 后立即进行的首次 HTTPS 请求仍收到旧证书，触发主机名不匹配；脚本已验证回滚，尚未更新官网代码。恢复时确认磁盘证书 SAN 正确；首次严格本机 SNI 检查仍出现一次 curl 60，间隔 1 秒重试后通过，随后公网验证正常，确认问题来自 reload 生效时序。全程没有绕过 TLS 校验；产品 HTTPS 验证通过后才更新官网、构建、测试和重启。
+
+本机和服务器各 152 项测试通过，服务器 0 失败、0 跳过。外网脚本 `tmp/verify-products-public-20261016.mjs` 的 19 项检查全部通过：官网、JS/CSS 与两个产品 HTML 经 LF 归一后的源码哈希一致；生产邮箱和短信配置就绪且未启用 development 模式；旧产品的 6 个路径匿名访问均返回 302 至 `/intelligent`，两个进入接口匿名 POST 均返回 401；旧官网 `/sy` 仍返回 200。服务均为 active。此次未发送真实 OTP，不把配置健康检查作为真实收信验证；新增产品证书续期 dry-run 与部署钩子演练已通过，日志保存在备份目录的 `renewal-dry-run.txt`。
+
+浏览器实测两个 HTTPS demo 分别按 hostname 显示 Research / Prediction，返回官网 `/intelligent` 正常；未登录点击模块直接出现邮箱／短信登录窗口，没有试用或套餐弹窗。
+
+以下保留历史发布记录，版本号、测试数量及试用规则均对应各次发布时的状态。
 
 ### 2026-10-12：AI 生物医药主题与双语发布
 
