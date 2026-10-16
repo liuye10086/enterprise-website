@@ -1,11 +1,10 @@
 import { createHash, createHmac, randomBytes, randomInt, randomUUID, timingSafeEqual } from 'node:crypto';
-import { PRODUCTS } from '../src/access-state.js';
+import { PRODUCTS, getProductProductionUrl } from '../src/access-state.js';
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const CODE_LIFETIME = 10 * MINUTE;
 const SESSION_LIFETIME = 7 * 24 * HOUR;
-const GRANT_LIFETIME = 15 * MINUTE;
 const PRODUCT_IDS = PRODUCTS.map(({ id }) => id);
 // SQL identifiers below come only from this internal, fixed channel map.
 const CHANNELS = {
@@ -258,18 +257,10 @@ export function createAuthService({ pool, secret, sendCode, sendSmsCode, smsDail
         WHERE token_digest = $1 AND revoked_at IS NULL FOR UPDATE
       `, [digest])).rows[0];
       if (!session) return authError(401, 'AUTH_REQUIRED', 'Sign in to access this product.');
-      const entitlement = (await client.query('SELECT trial_used_at, paid FROM arviva_product_entitlements WHERE user_id = $1 AND product_id = $2 FOR UPDATE', [session.user_id, productId])).rows[0];
-      const at = timestamp();
-      if (new Date(session.expires_at).getTime() <= at.getTime()) return authError(401, 'AUTH_REQUIRED', 'Sign in to access this product.');
-      if (!entitlement) return authError(403, 'ACCESS_DENIED', 'This product is not available for this account.');
-      if (entitlement.paid) return { url: product.url };
-      if (entitlement.trial_used_at !== null) return authError(403, 'TRIAL_USED', 'Your free trial for this product has already been used.');
-      await client.query('UPDATE arviva_product_entitlements SET trial_used_at = $3 WHERE user_id = $1 AND product_id = $2', [session.user_id, productId, at]);
-      await client.query(`
-        INSERT INTO arviva_product_grants (token_digest, product_id, created_at, expires_at) VALUES ($1, $2, $3, $4)
-        ON CONFLICT (token_digest, product_id) DO UPDATE SET created_at = EXCLUDED.created_at, expires_at = EXCLUDED.expires_at
-      `, [digest, productId, at, new Date(at.getTime() + GRANT_LIFETIME)]);
-      return { url: product.url };
+      // Expiration is checked after the lock. Historical eligibility records
+      // are never consumed, created or changed by product entry.
+      if (new Date(session.expires_at).getTime() <= timestamp().getTime()) return authError(401, 'AUTH_REQUIRED', 'Sign in to access this product.');
+      return { url: getProductProductionUrl(productId) };
     });
   }
 
@@ -278,11 +269,8 @@ export function createAuthService({ pool, secret, sendCode, sendSmsCode, smsDail
     if (!digest || !PRODUCT_IDS.includes(productId)) return false;
     const result = await pool.query(`
       SELECT 1 FROM arviva_sessions s
-      JOIN arviva_product_entitlements e ON e.user_id = s.user_id AND e.product_id = $2
-      LEFT JOIN arviva_product_grants g ON g.token_digest = s.token_digest AND g.product_id = e.product_id
-      WHERE s.token_digest = $1 AND s.revoked_at IS NULL AND s.expires_at > $3
-        AND (e.paid = true OR g.expires_at > $3)
-    `, [digest, productId, timestamp()]);
+      WHERE s.token_digest = $1 AND s.revoked_at IS NULL AND s.expires_at > $2
+    `, [digest, timestamp()]);
     return result.rowCount > 0;
   }
 

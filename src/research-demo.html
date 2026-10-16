@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="A preview of the Arviva Research product workspace. Platforms are in development.">
+  <meta name="theme-color" content="#f6f8f2">
+  <title>Arviva Research — Workspace Preview</title>
+  <style>
+    :root { color-scheme: light; --ink:#22362b; --muted:#626e64; --green:#2f6140; --line:#e0e6dc; --paper:#fdfefb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:Inter,Arial,"Microsoft YaHei",sans-serif; -webkit-font-smoothing:antialiased; }
+    button,a { -webkit-tap-highlight-color:transparent; }
+    a { color:inherit; text-decoration:none; }
+    a:focus-visible,button:focus-visible { outline:3px solid #7ea934; outline-offset:5px; }
+    .shell { width:min(1120px,calc(100% - 64px)); margin:auto; }
+    header { border-top:3px solid #7ea934; border-bottom:1px solid var(--line); }
+    .header-inner { min-height:92px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
+    .brand { display:flex; align-items:center; gap:13px; }
+    .brand-icon { width:36px; height:36px; color:var(--green); flex-shrink:0; }
+    .brand-name { font-size:21px; font-weight:650; letter-spacing:-.6px; }
+    .brand-name span { font-weight:400; }
+    .header-actions { display:flex; align-items:center; gap:24px; }
+    .demo { padding:5px 9px; border:1px solid #dce5ce; border-radius:5px; color:#5a7040; background:#f2f6ea; font-size:11px; letter-spacing:1px; font-weight:600; }
+    .language { border:0; background:none; padding:8px 0; color:var(--muted); cursor:pointer; font:inherit; font-size:13px; }
+    main { padding:76px 0 64px; }
+    .eyebrow { display:flex; align-items:center; gap:10px; color:#647850; font-size:11px; letter-spacing:2px; font-weight:600; text-transform:uppercase; }
+    .eyebrow::before { content:""; width:24px; height:1px; background:#7ea934; }
+    h1 { margin:18px 0; max-width:800px; font-size:clamp(36px,5vw,57px); line-height:1.16; letter-spacing:-2.3px; font-weight:500; }
+    .intro { margin:0; max-width:680px; font-size:16px; line-height:1.8; color:var(--muted); }
+    .workspace { margin-top:48px; }
+    .platform { display:grid; grid-template-columns:1fr 1.15fr; align-items:center; overflow:hidden; border:1px solid var(--line); border-radius:14px; background:white; }
+    [hidden] { display:none !important; }
+    .art { position:relative; height:258px; display:grid; place-items:center; overflow:hidden; border-right:1px solid var(--line); background-color:#f4f7ef; background-image:radial-gradient(#9aad802b 1px,transparent 1px); background-size:18px 18px; }
+    .art::before { content:""; position:absolute; width:220px; height:220px; border-radius:50%; background:radial-gradient(circle,#dce9c884,transparent 70%); }
+    .prediction .art { background-color:#f8f8f1; }
+    .art svg { position:relative; width:252px; height:160px; overflow:visible; }
+    .card-content { padding:28px 30px 30px; }
+    .card-label { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+    .index { color:#8a9585; font-size:11px; font-variant-numeric:tabular-nums; letter-spacing:1px; }
+    .status { display:inline-flex; align-items:center; gap:7px; font-size:11px; color:#67765e; padding:5px 9px; border:1px solid #e4e9dc; background:#f7f9f3; border-radius:30px; }
+    .status::before { content:""; width:5px; height:5px; border-radius:50%; background:#91a87b; }
+    h2 { margin:0 0 12px; font-size:24px; letter-spacing:-.6px; font-weight:500; }
+    .platform p { min-height:48px; margin:0; font-size:14px; line-height:1.75; color:var(--muted); }
+    .preview-note { margin:26px 0 0; display:flex; align-items:flex-start; gap:9px; color:#788171; font-size:12px; line-height:1.7; }
+    .preview-note svg { flex:none; width:15px; height:15px; margin-top:2px; }
+    footer { border-top:1px solid var(--line); }
+    .footer-inner { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:18px; min-height:90px; }
+    .back { display:inline-flex; gap:10px; align-items:center; font-size:13px; color:var(--green); }
+    .back:hover { text-decoration:underline; text-underline-offset:4px; }
+    .footer-note { font-size:11px; color:#7c8677; letter-spacing:.2px; }
+    @media(min-width:1400px) { main { padding-top:96px; padding-bottom:80px; } }
+    @media(max-width:650px) { .shell { width:calc(100% - 36px); } .header-inner { min-height:78px; gap:12px; } .brand { gap:8px; } .brand-name { font-size:17px; } .brand-icon { width:29px; height:29px; } .header-actions { gap:12px; } .demo { padding:4px 6px; font-size:9px; } main { padding:46px 0 40px; } h1 { font-size:38px; letter-spacing:-1.5px; } .intro { font-size:14px; } .workspace { margin-top:30px; } .platform { grid-template-columns:1fr; } .art { height:170px; border-right:0; border-bottom:1px solid var(--line); } .card-content { padding:23px; } h2 { font-size:23px; } .platform p { min-height:0; } .footer-inner { padding:24px 0; align-items:flex-start; flex-direction:column; gap:14px; } }
+    @media(prefers-reduced-motion:no-preference) { a,button { transition:color .15s ease; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell header-inner">
+      <div class="brand" aria-label="Arviva Research">
+        <svg class="brand-icon" viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M8 30 19 8a2 2 0 0 1 3.5 0L33 30M13 22h15" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20.5" cy="30" r="3.5" fill="#7ea934"/></svg>
+        <div class="brand-name">Arviva <span>Research</span></div>
+      </div>
+      <div class="header-actions"><span class="demo">DEMO</span><button class="language" id="language" type="button" aria-label="切换到中文">中文</button></div>
+    </div>
+  </header>
+  <main class="shell">
+    <div class="eyebrow" data-en="Arviva Research" data-zh="Arviva Research">Arviva Research</div>
+    <h1 data-en="Research Platform" data-zh="科研工作台">Research Platform</h1>
+    <p class="intro" data-en="A dedicated workspace for research exploration. Research Platform is in development." data-zh="为科研探索打造的专属工作空间。Research Platform 正在研发中。">A dedicated workspace for research exploration. Research Platform is in development.</p>
+    <section class="workspace" aria-label="Research platforms" id="platforms">
+      <article class="platform research">
+        <div class="art" aria-hidden="true">
+          <svg viewBox="0 0 252 160" fill="none"><circle cx="126" cy="80" r="62" stroke="#dce5d1"/><circle cx="126" cy="80" r="39" stroke="#dce5d1"/><path d="m70 100 32-50 49 11 32 47-57 23-56-31Z" stroke="#93ac77" stroke-width="1.4"/><path d="m102 50 24 81 25-70-81 39 113 8" stroke="#b4c59e" stroke-width="1.2"/><circle cx="70" cy="100" r="8" fill="#fff" stroke="#729454" stroke-width="1.5"/><circle cx="102" cy="50" r="10" fill="#3f6845"/><circle cx="151" cy="61" r="7" fill="#8bae57"/><circle cx="183" cy="108" r="9" fill="#fff" stroke="#729454" stroke-width="1.5"/><circle cx="126" cy="131" r="6" fill="#8bae57"/><circle cx="126" cy="80" r="5" fill="#f7f9f2" stroke="#a8bd8b"/></svg>
+        </div>
+        <div class="card-content"><div class="card-label"><span class="index">01 / RESEARCH</span><span class="status" data-en="Coming soon" data-zh="即将推出">Coming soon</span></div>
+          <h2>Research Platform</h2>
+          <p data-en="A dedicated space for research exploration and scientific discovery." data-zh="为科研探索与科学发现打造的专属空间。">A dedicated space for research exploration and scientific discovery.</p>
+        </div>
+      </article>
+      <article class="platform prediction" hidden>
+        <div class="art" aria-hidden="true">
+          <svg viewBox="0 0 252 160" fill="none"><path d="M49 124h157M49 124V35" stroke="#d2ddc7" stroke-width="1.2"/><path d="M49 94h157M49 64h157M88 35v89m39-89v89m39-89v89m39-89v89" stroke="#e2e8d9"/><path d="m60 106 32-17 31 5 32-36 35-16v29l-35 6-32 32-31-4-32 18Z" fill="#c5d9a5" fill-opacity=".45"/><path d="m60 113 32-16 31 5 32-35 35-12" stroke="#567a43" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="92" cy="97" r="4" fill="#f8f8f1" stroke="#567a43" stroke-width="1.5"/><circle cx="155" cy="67" r="4" fill="#f8f8f1" stroke="#567a43" stroke-width="1.5"/><circle cx="190" cy="55" r="6" fill="#8bae57"/></svg>
+        </div>
+        <div class="card-content"><div class="card-label"><span class="index">02 / PREDICTION</span><span class="status" data-en="Coming soon" data-zh="即将推出">Coming soon</span></div>
+          <h2>Prediction Platform</h2>
+          <p data-en="A focused environment for predictive modeling and insight exploration." data-zh="聚焦预测建模与洞察探索的研究环境。">A focused environment for predictive modeling and insight exploration.</p>
+        </div>
+      </article>
+    </section>
+    <p class="preview-note"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7.5" stroke="currentColor"/><path d="M10 9v5m0-8v.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span data-en="This demo is a visual preview. Platform access is not yet available." data-zh="当前 Demo 仅供界面预览，平台暂未开放使用。">This demo is a visual preview. Platform access is not yet available.</span></p>
+  </main>
+  <footer><div class="shell footer-inner"><a class="back" href="https://new.arvivatherap.com/intelligent"><span aria-hidden="true">←</span><span data-en="Back to Arviva Therapeutics" data-zh="返回 Arviva Therapeutics 官网">Back to Arviva Therapeutics</span></a><span class="footer-note"><span id="footer-product">Arviva Research</span> <span aria-hidden="true">/</span> <span data-en="Workspace preview" data-zh="工作台预览">Workspace preview</span></span></div></footer>
+  <script>
+    (() => {
+      const prediction = location.hostname === 'thesis.arvivatherap.com' || new URLSearchParams(location.search).get('platform') === 'prediction';
+      const product = prediction ? 'Prediction Platform' : 'Research Platform';
+      const brand = prediction ? 'Arviva Prediction' : 'Arviva Research';
+      document.querySelector('.research').hidden = prediction;
+      document.querySelector('.prediction').hidden = !prediction;
+      document.querySelector('.brand').setAttribute('aria-label', brand);
+      document.querySelector('.brand-name span').textContent = prediction ? 'Prediction' : 'Research';
+      document.getElementById('footer-product').textContent = brand;
+      const eyebrow = document.querySelector('.eyebrow');
+      eyebrow.dataset.en = eyebrow.dataset.zh = brand;
+      const heading = document.querySelector('h1');
+      heading.dataset.en = product;
+      heading.dataset.zh = prediction ? '预测工作台' : '科研工作台';
+      const intro = document.querySelector('.intro');
+      intro.dataset.en = prediction ? 'A focused workspace for predictive modeling and insight exploration. Prediction Platform is in development.' : 'A dedicated workspace for research exploration. Research Platform is in development.';
+      intro.dataset.zh = prediction ? '聚焦预测建模与洞察探索的工作空间。Prediction Platform 正在研发中。' : '为科研探索打造的专属工作空间。Research Platform 正在研发中。';
+      if (['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) document.querySelector('.back').href = '/intelligent';
+      let locale = 'en';
+      try { if (localStorage.getItem('arviva.language') === 'zh-CN') locale = 'zh-CN'; } catch {}
+      const toggle = document.getElementById('language');
+      function apply() {
+        const chinese = locale === 'zh-CN';
+        document.documentElement.lang = locale;
+        document.querySelectorAll('[data-en]').forEach(element => { element.textContent = element.dataset[chinese ? 'zh' : 'en']; });
+        document.title = product + (chinese ? ' — 工作台预览' : ' — Workspace Preview');
+        document.querySelector('meta[name="description"]').content = chinese ? product + ' 产品工作台预览，平台正在研发中。' : 'A preview of ' + product + '. The platform is in development.';
+        document.getElementById('platforms').setAttribute('aria-label', product);
+        toggle.textContent = chinese ? 'EN' : '中文';
+        toggle.setAttribute('aria-label', chinese ? 'Switch to English' : '切换到中文');
+      }
+      toggle.addEventListener('click', () => {
+        locale = locale === 'en' ? 'zh-CN' : 'en';
+        try { localStorage.setItem('arviva.language', locale); } catch {}
+        apply();
+      });
+      window.addEventListener('storage', event => {
+        if (event.key === 'arviva.language' || event.key === null) { locale = event.newValue === 'zh-CN' ? 'zh-CN' : 'en'; apply(); }
+      });
+      apply();
+    })();
+  </script>
+</body>
+</html>

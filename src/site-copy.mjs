@@ -66,7 +66,7 @@ export const SITE_COPY = {
       'Draft theses and dissertations (bachelor’s, master’s and doctoral)',
     ],
     prediction: 'Exploring AI tools for disease diagnosis, and prediction of disease progression.',
-    note: 'Platforms are in development. Each product has a separate trial and access plan.',
+    note: 'Sign in to continue to the Research or Prediction Platform.',
     status: 'Platform in development',
   },
   investors: {

@@ -1,6 +1,5 @@
-import { PRODUCTS } from './access-state.js';
+import { PRODUCTS, getProductProductionUrl, getProductDestination } from './access-state.js';
 import { updateAccountTrigger } from './account-trigger.js';
-import { getCheckoutUrl } from './checkout.js';
 
 const productById = new Map(PRODUCTS.map(product => [product.id, product]));
 
@@ -92,44 +91,26 @@ export async function requestAccessApi(path, { method = 'GET', body, fetcher = f
 }
 
 export function validateProductUrl(value, baseUrl, productId) {
-  const product = productById.get(productId);
-  const base = new URL(baseUrl);
-  const url = typeof value === 'string' ? new URL(value, base) : null;
-  if (!product || !url || !['http:', 'https:'].includes(url.protocol) || url.origin !== base.origin ||
-    url.username || url.password || url.pathname !== product.url || url.search || url.hash) {
+  // Accept only the fixed destination; API data never becomes an arbitrary URL.
+  const expected = getProductProductionUrl(productId);
+  if (value !== expected && value !== `${expected}/`) {
     throw new Error('The server returned an invalid product destination. Please try again.');
   }
-  return url.href;
+  return getProductDestination(productId, baseUrl);
 }
 
-function closeTab(target) {
-  try { target?.close(); } catch { /* The user may already have closed the tab. */ }
-}
-
-export async function openLiveProduct({ productId, baseUrl, openWindow = (...args) => window.open(...args),
-  request = requestAccessApi, isCurrent = () => true, onWindow = () => {} }) {
+export async function openLiveProduct({ productId, baseUrl, navigate = url => window.location.assign(url),
+  request = requestAccessApi, isCurrent = () => true }) {
   if (!productById.has(productId)) throw new Error('Unknown product.');
-  let target;
-  try {
-    // This happens in the click handler before any await or trial-consuming request.
-    target = openWindow('about:blank', '_blank');
-    if (!target) throw new Error('Allow pop-ups and try again. Your free trial has not been used.');
-    target.opener = null;
-    onWindow(target);
-    if (!isCurrent() || target.closed) { closeTab(target); return false; }
-    const result = await request(`/api/products/${productId}/enter`, { method: 'POST', body: {} });
-    if (!isCurrent() || target.closed) { closeTab(target); return false; }
-    target.location.replace(validateProductUrl(result?.url, baseUrl, productId));
-    return true;
-  } catch (error) {
-    closeTab(target);
-    throw error;
-  }
+  if (!isCurrent()) return false;
+  const result = await request(`/api/products/${productId}/enter`, { method: 'POST', body: {} });
+  if (!isCurrent()) return false;
+  navigate(validateProductUrl(result?.url, baseUrl, productId));
+  return true;
 }
 
 export function initializeLiveAccess(onOpen = () => {}) {
   const loginDialog = document.querySelector('[data-login-dialog]');
-  const accessDialog = document.querySelector('[data-access-dialog]');
   const form = loginDialog?.querySelector('[data-login-form]');
   const email = form?.querySelector('input[name="email"]');
   const phone = form?.querySelector('input[name="phone"]');
@@ -138,6 +119,7 @@ export function initializeLiveAccess(onOpen = () => {}) {
   if (!loginDialog || !form || !email || !phone || !code || !sendCode) return;
 
   const ignoredCloseEvents = new Map();
+  const entryErrors = new Map();
   const loginFlow = createLoginFlow();
   let session = null;
   let sessionError = '';
@@ -149,26 +131,20 @@ export function initializeLiveAccess(onOpen = () => {}) {
   let returnTarget = null;
   let restoreFocusTarget = null;
   let pendingProduct = null;
-  let pendingTab = null;
   let resendTimer = null;
 
   const signedIn = () => session?.authenticated === true;
   const targetInput = () => loginFlow.channel === 'sms' ? phone : email;
   const channelReady = () => loginFlow.channel === 'sms' ? session?.smsReady : session?.mailReady;
   const syncLoginTarget = () => loginFlow.setTarget(loginFlow.channel, targetInput().value);
-  const isCurrent = sequence => sequence === flowSequence && currentDialog?.open;
+  const isCurrent = sequence => sequence === flowSequence;
   const setText = (selector, value, root = document) => root.querySelectorAll(selector).forEach(element => { element.textContent = value; });
   const setHidden = (selector, hidden, root = document) => root.querySelectorAll(selector).forEach(element => { element.hidden = hidden; });
-  const announce = message => setText('[data-access-announcement]', message);
+  const announce = message => {
+    setText('[data-access-announcement]', message);
+    setHidden('[data-access-announcement]', !message);
+  };
   const loginMessage = message => setText('[data-login-status], [data-session-status]', message, loginDialog);
-  const accessMessage = message => accessDialog && setText('[data-access-status]', message, accessDialog);
-
-  function productAccess(id) {
-    if (!session) return 'unavailable';
-    if (!signedIn()) return 'signed-out';
-    if (session.products[id].paid) return 'paid';
-    return session.products[id].trialUsed ? 'trial-used' : 'trial-available';
-  }
 
   function updateControls() {
     const waiting = Boolean(busy) || refreshing;
@@ -185,9 +161,8 @@ export function initializeLiveAccess(onOpen = () => {}) {
     code.disabled = Boolean(busy);
     form.querySelector('[type="submit"]').disabled = waiting || !channelReady() || signedIn();
     form.setAttribute('aria-busy', String(Boolean(busy)));
-    document.querySelectorAll('[data-login-open], [data-product-open]').forEach(button => { button.disabled = Boolean(busy); });
+    document.querySelectorAll('[data-login-open], [data-product-open]').forEach(button => { button.disabled = waiting; });
     loginDialog.querySelectorAll('[data-live-logout]').forEach(button => { button.disabled = waiting || !signedIn(); });
-    accessDialog?.querySelectorAll('section button').forEach(button => { button.disabled = waiting || !session; });
     if (currentDialog && !waiting && document.activeElement?.closest('[hidden]')) focusDialog(currentDialog);
     if (restoreFocusTarget && !currentDialog && !busy) {
       if (restoreFocusTarget.isConnected && !restoreFocusTarget.disabled) restoreFocusTarget.focus();
@@ -208,7 +183,7 @@ export function initializeLiveAccess(onOpen = () => {}) {
     });
     setText('#login-title', signedIn() ? 'Your account' : 'Welcome back', loginDialog);
     setText('#login-description', signedIn()
-      ? 'Each product has its own free trial and access status.'
+      ? 'You are signed in. Open either platform to continue.'
       : `Log in with your ${sms ? 'mobile number' : 'email'}. Your first sign-in creates an account automatically. No password needed.`, loginDialog);
     setText('[data-login-email]', signedIn() ? `Signed in as ${liveAccountLabel(session)}` : '', loginDialog);
     setText('[data-login-identity-note]', sms
@@ -231,49 +206,19 @@ export function initializeLiveAccess(onOpen = () => {}) {
           : 'A verification code will be sent to your email. Codes expire after 10 minutes.', loginDialog);
   }
 
-  function renderAccess() {
-    const product = productById.get(pendingProduct);
-    if (!accessDialog || !product) return;
-    const access = productAccess(product.id);
-    const section = !signedIn() ? 'signed-out' : access === 'paid' ? 'ready' : 'options';
-    for (const name of ['signed-out', 'options', 'ready']) setHidden(`[data-access-${name}]`, name !== section, accessDialog);
-    setText('[data-access-eyebrow]', `PLATFORM ${product.number} · PRODUCT ACCESS`, accessDialog);
-    setText('#access-title', product.name, accessDialog);
-    setText('[data-access-login]', 'Go to login', accessDialog);
-    const descriptions = {
-      'signed-out': session ? 'Log in to check your free trial or full access for this product.' : sessionError || 'Checking your product access…',
-      options: access === 'trial-used' ? 'Your free trial for this product has been used. Explore the monthly plans for this product.' : 'Try this product once for free. Each product has its own trial.',
-      ready: `Your account has full access. Continue to open ${product.name} in a new tab.`,
-    };
-    setText('#access-description', descriptions[section], accessDialog);
-    setHidden('[data-access-trial]', access !== 'trial-available', accessDialog);
-    setText('[data-trial-allowance]', access === 'trial-used' ? '0 uses left' : '1 free use', accessDialog);
-    setText('[data-trial-label]', access === 'trial-used' ? 'TRIAL COMPLETED' : 'TRY IT FIRST', accessDialog);
-    setText('[data-trial-description]', access === 'trial-used'
-      ? 'Trial used. This product has no free uses remaining.'
-      : `One free use per account. Opens ${product.name} in a new tab.`, accessDialog);
-    setText('.access-success p', 'Your account has access to this product.', accessDialog);
-    setHidden('[data-access-demo-note]', true, accessDialog);
-  }
-
   function refreshPage() {
     setHidden('[data-demo-panel], [data-demo-notice], [data-storage-note]', true);
     updateAccountTrigger(document, signedIn() ? liveAccountLabel(session) : '');
-    const labels = {
-      unavailable: [sessionError ? 'Access unavailable' : 'Checking access…', 'Check access'],
-      'signed-out': ['Sign in required', 'Check access'],
-      'trial-available': ['1 free trial', 'Try product'],
-      'trial-used': ['Trial used', 'Upgrade access'],
-      paid: ['Full access', 'Open product'],
-    };
+    const access = signedIn() ? 'ready' : session ? 'signed-out' : 'unavailable';
+    const label = signedIn() ? 'Signed in' : session ? 'Sign in required' : sessionError ? 'Access unavailable' : 'Checking access…';
     for (const { id } of PRODUCTS) {
-      const access = productAccess(id);
-      setText(`[data-product-status="${id}"]`, labels[access][0]);
+      setText(`[data-product-status="${id}"]`, label);
       document.querySelectorAll(`[data-product-status="${id}"]`).forEach(element => { element.dataset.state = access; });
-      setText(`[data-product-cta="${id}"]`, labels[access][1]);
+      setText(`[data-product-cta="${id}"]`, signedIn() ? 'Open product' : 'Log in to continue');
+      setText(`[data-product-error="${id}"]`, entryErrors.get(id) || '');
+      setHidden(`[data-product-error="${id}"]`, !entryErrors.has(id));
     }
     renderLogin();
-    renderAccess();
     updateControls();
   }
 
@@ -343,11 +288,14 @@ export function initializeLiveAccess(onOpen = () => {}) {
     currentDialog = null;
     pendingProduct = null;
     returnTarget = null;
-    closeTab(pendingTab);
-    pendingTab = null;
     closeDialog(dialog);
     restoreFocusTarget = trigger;
     resetLogin();
+  }
+
+  function finishSignIn() {
+    dismissFlow();
+    announce('Signed in successfully. Choose a platform to continue.');
   }
 
   function wireDialog(dialog, closeSelector) {
@@ -398,9 +346,9 @@ export function initializeLiveAccess(onOpen = () => {}) {
   }
 
   wireDialog(loginDialog, '[data-login-close]');
-  wireDialog(accessDialog, '[data-access-close]');
   document.querySelectorAll('[data-login-open]').forEach(trigger => trigger.addEventListener('click', () => {
     if (busy) return;
+    announce('');
     ++flowSequence;
     pendingProduct = null;
     returnTarget = trigger;
@@ -409,22 +357,21 @@ export function initializeLiveAccess(onOpen = () => {}) {
     showDialog(loginDialog);
     void refreshSession();
   }));
-  document.querySelectorAll('[data-product-open]').forEach(trigger => trigger.addEventListener('click', () => {
-    if (busy || !accessDialog || !productById.has(trigger.dataset.productOpen)) return;
+  document.querySelectorAll('[data-product-open]').forEach(trigger => trigger.addEventListener('click', async () => {
+    if (busy || refreshing || !productById.has(trigger.dataset.productOpen)) return;
+    announce('');
     ++flowSequence;
     pendingProduct = trigger.dataset.productOpen;
+    entryErrors.delete(pendingProduct);
     returnTarget = trigger;
-    accessMessage('');
-    renderAccess();
-    showDialog(accessDialog);
-    void refreshSession();
-  }));
-  accessDialog?.querySelector('[data-access-login]')?.addEventListener('click', () => {
-    if (busy || refreshing) return;
+    if (signedIn()) { await enterProduct(); return; }
     resetLogin();
     renderLogin();
     showDialog(loginDialog);
-  });
+    await refreshSession();
+    // Another tab may have signed in. Stay here and require a fresh module click.
+    if (pendingProduct && signedIn() && currentDialog === loginDialog) finishSignIn();
+  }));
 
   form.querySelectorAll('[data-login-channel]').forEach(button => button.addEventListener('click', () => {
     if (button.disabled || button.dataset.loginChannel === loginFlow.channel) return;
@@ -494,12 +441,7 @@ export function initializeLiveAccess(onOpen = () => {}) {
       sessionError = '';
       refreshPage();
       if (!isCurrent(sequence)) return;
-      announce(`Signed in as ${liveAccountLabel(session)}.`);
-      resetLogin();
-      if (pendingProduct && accessDialog) {
-        renderAccess();
-        showDialog(accessDialog);
-      } else dismissFlow();
+      finishSignIn();
     } catch (error) {
       if (isCurrent(sequence)) loginMessage(error.message);
     } finally {
@@ -529,36 +471,31 @@ export function initializeLiveAccess(onOpen = () => {}) {
 
   async function enterProduct() {
     const id = pendingProduct;
-    if (!id || !['trial-available', 'paid'].includes(productAccess(id)) || !beginOperation('enter')) return;
+    if (!id || !signedIn() || !beginOperation('enter')) return;
     const sequence = flowSequence;
-    accessMessage('Opening your product…');
+    announce('Opening your product…');
     try {
       const opened = await openLiveProduct({
-        productId: id, baseUrl: window.location.href,
-        isCurrent: () => isCurrent(sequence), onWindow: target => { pendingTab = target; },
+        productId: id, baseUrl: window.location.href, isCurrent: () => isCurrent(sequence),
       });
-      pendingTab = null;
-      if (!isCurrent(sequence)) return;
-      if (opened) {
-        dismissFlow();
-        announce(`${productById.get(id).name} opened in a new tab.`);
-      } else accessMessage('The product tab was closed before loading. Your access will be checked again.');
+      if (opened && isCurrent(sequence)) dismissFlow();
     } catch (error) {
-      pendingTab = null;
-      if (isCurrent(sequence)) accessMessage(error.message);
+      if (!isCurrent(sequence)) return;
+      if (error.status === 401) {
+        session = { ...session, authenticated: false, email: null, phone: null };
+        resetLogin();
+        showDialog(loginDialog);
+        loginMessage('Your session expired. Please sign in to continue.');
+      } else {
+        if (currentDialog === loginDialog) loginMessage(error.message);
+        entryErrors.set(id, error.message);
+        announce(error.message);
+      }
     } finally {
       busy = null;
-      await refreshSession();
+      refreshPage();
     }
   }
-
-  accessDialog?.querySelector('[data-access-trial]')?.addEventListener('click', enterProduct);
-  accessDialog?.querySelector('[data-access-continue]')?.addEventListener('click', enterProduct);
-  accessDialog?.querySelector('[data-access-upgrade]')?.addEventListener('click', () => {
-    if (busy || refreshing || !signedIn()) return;
-    const destination = getCheckoutUrl(pendingProduct);
-    if (destination) window.location.assign(destination);
-  });
 
   const startResendTimer = () => { if (!resendTimer) resendTimer = window.setInterval(updateControls, 1000); };
   window.addEventListener('pagehide', () => {

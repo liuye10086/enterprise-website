@@ -5,11 +5,9 @@ import {
   getProductAccess,
   signInDemo,
   signOutDemo,
-  consumeTrial,
-  activateDemoProduct,
+  getProductDestination,
 } from './access-state.js';
 import { updateAccountTrigger } from './account-trigger.js';
-import { getCheckoutUrl } from './checkout.js';
 
 const STORAGE_KEY = 'arviva-access-preview-v1';
 const DEMO_CODE = '123456';
@@ -17,7 +15,6 @@ const DEMO_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 
 export function initializeAccess(onOpen = () => {}) {
   const loginDialog = document.querySelector('[data-login-dialog]');
-  const accessDialog = document.querySelector('[data-access-dialog]');
   const form = loginDialog?.querySelector('[data-login-form]');
   const email = form?.querySelector('input[name="email"]');
   const code = form?.querySelector('input[name="code"]');
@@ -75,6 +72,7 @@ export function initializeAccess(onOpen = () => {}) {
 
   function announce(message) {
     setText('[data-access-announcement]', message);
+    setHidden('[data-access-announcement]', !message);
   }
 
   function persistState() {
@@ -95,26 +93,18 @@ export function initializeAccess(onOpen = () => {}) {
   function refreshPage() {
     const authenticated = signedIn();
     updateAccountTrigger(document, authenticated ? 'Demo account' : '');
-    setHidden('[data-demo-panel]', !demoEnabled);
+    setHidden('[data-demo-panel]', true);
     setHidden('[data-demo-notice]', !demoEnabled);
     setHidden('[data-storage-note]', !demoEnabled || storageAvailable);
     if (demoEnabled && !storageAvailable) {
       setText('[data-storage-note]', 'Preview storage is unavailable. This page will keep your demo progress in memory; refreshing or changing pages will reset it.');
     }
     setText('[data-demo-session]', authenticated ? 'Signed in to the demo account.' : 'Signed out. Log in to simulate product access.');
-    document.querySelectorAll('[data-demo-grant]').forEach(button => { button.disabled = !authenticated; });
     for (const product of PRODUCTS) {
-      const access = demoEnabled ? getProductAccess(state, product.id) : 'unavailable';
-      const labels = {
-        'signed-out': ['Sign in required', 'Check access'],
-        'trial-available': ['1 free trial', 'Try product'],
-        'trial-used': ['Trial used', 'Upgrade access'],
-        paid: ['Full access', 'Open product'],
-        unavailable: ['Access unavailable', 'View access details'],
-      };
-      setText(`[data-product-status="${product.id}"]`, labels[access][0]);
+      const access = !demoEnabled ? 'unavailable' : authenticated ? 'ready' : 'signed-out';
+      setText(`[data-product-status="${product.id}"]`, authenticated ? 'Signed in' : demoEnabled ? 'Sign in required' : 'Access unavailable');
       document.querySelectorAll(`[data-product-status="${product.id}"]`).forEach(element => { element.dataset.state = access; });
-      setText(`[data-product-cta="${product.id}"]`, labels[access][1]);
+      setText(`[data-product-cta="${product.id}"]`, authenticated ? 'Open product' : 'Log in to continue');
     }
     renderLogin();
   }
@@ -133,44 +123,12 @@ export function initializeAccess(onOpen = () => {}) {
     setHidden('[data-login-demo]', !demoEnabled || authenticated, loginDialog);
     setText('#login-title', authenticated ? 'Demo account' : demoEnabled ? 'Preview sign-in' : 'Welcome back', loginDialog);
     setText('#login-description', authenticated
-      ? 'You are signed in to the local preview. Each product has its own trial and full-access status.'
+      ? 'You are signed in to the local preview. Open either platform to continue.'
       : demoEnabled ? 'Use your email and the demo code to preview the product access flow.'
         : 'Log in with your email. No password needed.', loginDialog);
     setText('#login-availability', demoEnabled
       ? `Demo only. No real account, verification email or payment is created.${storageAvailable ? '' : ' Preview storage is unavailable; refreshing or changing pages resets this session.'}`
       : 'Email sign-in is not available yet. No verification emails can be sent.', loginDialog);
-  }
-
-  function renderAccess() {
-    const product = productById.get(pendingProduct);
-    if (!accessDialog || !product) return;
-    const access = demoEnabled ? getProductAccess(state, product.id) : 'signed-out';
-    const section = access === 'signed-out' ? 'signed-out' : access === 'paid' ? 'ready' : 'options';
-    for (const name of ['signed-out', 'options', 'ready']) {
-      setHidden(`[data-access-${name}]`, name !== section, accessDialog);
-    }
-    setHidden('[data-access-demo-note]', !demoEnabled, accessDialog);
-    setText('[data-access-eyebrow]', `PLATFORM ${product.number} · ${demoEnabled ? 'ACCESS PREVIEW' : 'PRODUCT ACCESS'}`, accessDialog);
-    setText('#access-title', product.name, accessDialog);
-    setText('[data-access-status]', '', accessDialog);
-    setText('[data-access-login]', demoEnabled ? 'Go to login' : 'View login status', accessDialog);
-    if (section === 'signed-out') {
-      setText('#access-description', demoEnabled
-        ? 'Log in to check your free trial or full access for this product.'
-        : 'Product sign-in and access are not available yet. Please check back when the service launches.', accessDialog);
-    } else if (section === 'ready') {
-      setText('#access-description', `Demo full access is active for this product. Continue to open ${product.destination} in a new tab.`, accessDialog);
-    } else {
-      setText('#access-description', access === 'trial-used'
-        ? 'Your free trial for this product has been used. Upgrade access to continue.'
-        : 'Try this product once for free, or preview full access.', accessDialog);
-      setHidden('[data-access-trial]', access !== 'trial-available', accessDialog);
-      setText('[data-trial-allowance]', access === 'trial-used' ? '0 uses left' : '1 free use', accessDialog);
-      setText('[data-trial-label]', access === 'trial-used' ? 'TRIAL COMPLETED' : 'TRY IT FIRST', accessDialog);
-      setText('[data-trial-description]', access === 'trial-used'
-        ? 'Trial used. This product has no free uses remaining.'
-        : `One free preview use. Opens ${product.destination} in a new tab.`, accessDialog);
-    }
   }
 
   function closeDialog(dialog) {
@@ -206,35 +164,22 @@ export function initializeAccess(onOpen = () => {}) {
   }
 
   function openProduct(product) {
-    let target = null;
-    try {
-      target = window.open('about:blank', '_blank');
-      if (!target) return false;
-      target.opener = null;
-      target.location.replace(new URL(product.url, window.location.href).href);
-      return true;
-    } catch {
-      try { target?.close(); } catch { /* The new tab may already be unavailable. */ }
-      return false;
-    }
+    if (!demoEnabled || !signedIn()) return;
+    const destination = getProductDestination(product.id, window.location.href);
+    dismissFlow();
+    window.location.assign(destination);
   }
 
   function openAccess(productId, trigger) {
     const product = productById.get(productId);
-    if (!product || !accessDialog) return;
+    if (!product) return;
+    announce('');
     pendingProduct = productId;
     returnTarget = trigger;
-    if (demoEnabled && getProductAccess(state, productId) === 'paid' && openProduct(product)) {
-      pendingProduct = null;
-      returnTarget = null;
-      announce(`${product.name} opened in a new tab.`);
-      return;
-    }
-    renderAccess();
-    showDialog(accessDialog);
-    if (demoEnabled && getProductAccess(state, productId) === 'paid') {
-      setText('[data-access-status]', 'The new tab could not be opened. Allow pop-ups and select Continue to product to try again.', accessDialog);
-    }
+    if (signedIn()) { openProduct(product); return; }
+    resetLogin();
+    renderLogin();
+    showDialog(loginDialog);
   }
 
   function wireDialog(dialog, closeSelector) {
@@ -292,8 +237,8 @@ export function initializeAccess(onOpen = () => {}) {
   }
 
   wireDialog(loginDialog, '[data-login-close]');
-  wireDialog(accessDialog, '[data-access-close]');
   document.querySelectorAll('[data-login-open]').forEach(trigger => trigger.addEventListener('click', () => {
+    announce('');
     pendingProduct = null;
     returnTarget = trigger;
     resetLogin();
@@ -303,12 +248,6 @@ export function initializeAccess(onOpen = () => {}) {
   document.querySelectorAll('[data-product-open]').forEach(trigger => trigger.addEventListener('click', () => {
     openAccess(trigger.dataset.productOpen, trigger);
   }));
-  accessDialog?.querySelector('[data-access-login]')?.addEventListener('click', () => {
-    resetLogin();
-    renderLogin();
-    showDialog(loginDialog);
-  });
-
   email.addEventListener('input', () => {
     loginStatus.textContent = '';
     if (issuedEmail !== null && email.value.trim() !== issuedEmail) {
@@ -349,65 +288,16 @@ export function initializeAccess(onOpen = () => {}) {
       return;
     }
     updateState(signInDemo(state));
-    resetLogin();
-    announce('Signed in to the local demo account.');
-    if (pendingProduct && accessDialog) {
-      renderAccess();
-      showDialog(accessDialog);
-    } else {
-      dismissFlow();
-    }
-  });
-
-  accessDialog?.querySelector('[data-access-trial]')?.addEventListener('click', () => {
-    if (!demoEnabled || !pendingProduct || getProductAccess(state, pendingProduct) !== 'trial-available') return;
-    const product = productById.get(pendingProduct);
-    const beforeTrial = state;
-    // Same-origin tabs inherit sessionStorage when opened, so persist the used trial first.
-    updateState(consumeTrial(state, product.id));
-    if (!openProduct(product)) {
-      updateState(beforeTrial);
-      setText('[data-access-status]', 'The new tab could not be opened. Allow pop-ups and try again. Your free trial has not been used.', accessDialog);
-      return;
-    }
     dismissFlow();
-    announce(`${product.name} opened in a new tab. Its one free trial has now been used.`);
-  });
-  accessDialog?.querySelector('[data-access-upgrade]')?.addEventListener('click', () => {
-    if (!demoEnabled || !signedIn() || !pendingProduct) return;
-    const destination = getCheckoutUrl(pendingProduct);
-    if (destination) window.location.assign(destination);
-  });
-  accessDialog?.querySelector('[data-access-continue]')?.addEventListener('click', () => {
-    if (!demoEnabled || !pendingProduct || getProductAccess(state, pendingProduct) !== 'paid') return;
-    const product = productById.get(pendingProduct);
-    if (!openProduct(product)) {
-      setText('[data-access-status]', 'The new tab could not be opened. Allow pop-ups and try again.', accessDialog);
-      return;
-    }
-    dismissFlow();
-    announce(`${product.name} opened in a new tab.`);
+    announce('Signed in successfully. Choose a platform to continue.');
   });
 
   document.querySelectorAll('[data-demo-logout]').forEach(button => button.addEventListener('click', () => {
     if (!demoEnabled) return;
     updateState(signOutDemo(state));
     dismissFlow();
-    announce('Signed out of the demo account. Your product trial and full-access status have been kept.');
+    announce('Signed out of the demo account.');
   }));
-  document.querySelectorAll('[data-demo-grant]').forEach(button => button.addEventListener('click', () => {
-    const product = productById.get(button.dataset.demoGrant);
-    if (!demoEnabled || !signedIn() || !product) return;
-    updateState(activateDemoProduct(state, product.id));
-    announce(`Demo full access activated for ${product.name}. No payment was made.`);
-  }));
-  document.querySelectorAll('[data-demo-reset]').forEach(button => button.addEventListener('click', () => {
-    if (!demoEnabled) return;
-    dismissFlow();
-    updateState(createDemoState());
-    announce('Demo reset. You are signed out and both products have one free trial available after sign-in.');
-  }));
-
   window.addEventListener('pagehide', () => { dismissFlow(); });
   window.addEventListener('pageshow', event => {
     if (!event.persisted) return;

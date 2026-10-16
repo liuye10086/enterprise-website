@@ -83,15 +83,37 @@ test('filesystem aliases cannot bypass product authorization or private cache he
     }
     allowed=true;
     for(const route of ['/research-platform',...aliases]){
-      const response=await fetch(base+route,{headers:{Cookie:'arviva_session=valid-session'}});
-      assert.equal(response.status,200,route);
-      assert.equal(await response.text(),'PRIVATE');
+      const response=await fetch(base+route,{redirect:'manual',headers:{Cookie:'arviva_session=valid-session'}});
+      assert.equal(response.status,302,route);
+      assert.equal(response.headers.get('location'),'https://research.arvivatherap.com');
       assert.equal(response.headers.get('cache-control'),'no-store');
     }
-    const head=await fetch(base+'/alternate-product',{method:'HEAD',headers:{Cookie:'arviva_session=valid-session'}});
-    assert.equal(head.status,200);assert.equal(head.headers.get('cache-control'),'no-store');
+    const head=await fetch(base+'/alternate-product',{method:'HEAD',redirect:'manual',headers:{Cookie:'arviva_session=valid-session'}});
+    assert.equal(head.status,302);assert.equal(head.headers.get('cache-control'),'no-store');
     databaseAvailable=false;
     assert.equal((await fetch(base+'/alternate-product',{redirect:'manual'})).status,503);
     assert.equal(await (await fetch(base+'/')).text(),'PUBLIC');
+  } finally {if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}await rm(root,{recursive:true,force:true});}
+});
+
+test('legacy prediction routes retain login protection and redirect signed-in users only to thesis',async()=>{
+  const root=await mkdtemp(path.join(os.tmpdir(),'arviva-prediction-route-'));
+  let server;
+  try {
+    await mkdir(path.join(root,'prediction-platform'));
+    await writeFile(path.join(root,'prediction-platform','index.html'),'PRIVATE');
+    await symlink(path.join(root,'prediction-platform'),path.join(root,'prediction-alias'),'junction');
+    server=createApp({config:{origin:'http://127.0.0.1',secureCookies:false},auth:{canViewProduct:async(token,id)=>token==='valid'&&id==='module-02'},mailer:{ready:false},root});
+    await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+    const base=`http://127.0.0.1:${server.address().port}`;
+    for(const route of ['/prediction-platform','/prediction-platform/','/prediction-platform/index.html','/prediction%2dplatform/index.html','/prediction-alias','/prediction-alias/index.html']){
+      for(const method of ['GET','HEAD']){
+        const signedOut=await fetch(base+route,{method,redirect:'manual'});
+        assert.equal(signedOut.status,302);assert.equal(signedOut.headers.get('location'),'/intelligent');
+        const signedIn=await fetch(base+route,{method,redirect:'manual',headers:{Cookie:'arviva_session=valid'}});
+        assert.equal(signedIn.status,302);assert.equal(signedIn.headers.get('location'),'https://thesis.arvivatherap.com');
+        assert.equal(signedIn.headers.get('cache-control'),'no-store');
+      }
+    }
   } finally {if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}await rm(root,{recursive:true,force:true});}
 });

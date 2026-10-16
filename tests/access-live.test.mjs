@@ -129,81 +129,64 @@ test('SMS API failures read the retryAfter response field', async () => {
   }), error => error.status === 429 && error.retryAfterSeconds === 35);
 });
 
-test('product destinations must match the requested platform on the current origin', () => {
+test('product destinations allow only the exact research origin and use a loopback-only demo', () => {
   assert.equal(typeof live.validateProductUrl, 'function');
   const base = 'http://localhost:3000/kyfw';
-  assert.equal(live.validateProductUrl('/research-platform', base, 'module-01'), 'http://localhost:3000/research-platform');
-  for (const unsafe of ['https://example.com/research-platform', '//example.com/research-platform', 'javascript:alert(1)', '/prediction-platform', '/api/session']) {
+  assert.equal(live.validateProductUrl('https://research.arvivatherap.com', base, 'module-01'), 'http://localhost:3000/research-demo.html');
+  for (const local of ['http://127.0.0.1:3000', 'http://[::1]:3000']) {
+    assert.equal(live.validateProductUrl('https://thesis.arvivatherap.com', local, 'module-02'), `${local}/research-demo.html?platform=prediction`);
+  }
+  assert.equal(live.validateProductUrl('https://thesis.arvivatherap.com', 'https://arvivatherap.com/intelligent', 'module-02'), 'https://thesis.arvivatherap.com/');
+  assert.throws(() => live.validateProductUrl('https://thesis.arvivatherap.com', base, 'module-01'));
+  assert.throws(() => live.validateProductUrl('https://research.arvivatherap.com', base, 'module-02'));
+  for (const unsafe of ['https://example.com/research-platform', '//research.arvivatherap.com', 'http://research.arvivatherap.com', 'https://research.arvivatherap.com.evil.com', 'https://research.arvivatherap.com/?token=secret', 'https://research.arvivatherap.com/#secret', 'https://person@research.arvivatherap.com', 'https://research.arvivatherap.com/path', 'javascript:alert(1)', '/prediction-platform', '/api/session']) {
     assert.throws(() => live.validateProductUrl(unsafe, base, 'module-01'));
   }
 });
 
-function productTab() {
-  return {
-    opener: {}, closed: false, destination: null,
-    close() { this.closed = true; },
-    location: { replace(url) { this.url = url; } },
-  };
-}
-
-test('blocked popups do not submit a request that could consume the trial', async () => {
+test('product navigation waits for server authentication and uses the same tab', async () => {
   assert.equal(typeof live.openLiveProduct, 'function');
-  let requestCount = 0;
-  await assert.rejects(live.openLiveProduct({
-    productId: 'module-01', baseUrl: 'http://localhost:3000/kyfw',
-    openWindow: () => null, request: async () => { requestCount += 1; },
-  }), /pop-ups/i);
-  assert.equal(requestCount, 0);
-});
-
-test('the blank tab opens synchronously before the server grants product access', async () => {
-  assert.equal(typeof live.openLiveProduct, 'function');
-  const target = productTab();
   const events = [];
   let finishRequest;
   const entering = live.openLiveProduct({
     productId: 'module-01', baseUrl: 'http://localhost:3000/kyfw',
-    openWindow: (url, where) => { events.push([url, where]); return target; },
+    navigate: url => events.push(['navigate', url]),
     request: (path, options) => {
       events.push([path, options]);
       return new Promise(resolve => { finishRequest = resolve; });
     },
   });
-  assert.deepEqual(events[0], ['about:blank', '_blank']);
-  assert.equal(events[1][0], '/api/products/module-01/enter');
-  assert.equal(events[1][1].method, 'POST');
-  assert.equal(target.opener, null);
-  assert.equal(target.location.url, undefined);
-  finishRequest({ url: '/research-platform' });
+  assert.equal(events.length, 1);
+  assert.equal(events[0][0], '/api/products/module-01/enter');
+  assert.equal(events[0][1].method, 'POST');
+  finishRequest({ url: 'https://research.arvivatherap.com' });
   assert.equal(await entering, true);
-  assert.equal(target.location.url, 'http://localhost:3000/research-platform');
+  assert.deepEqual(events[1], ['navigate', 'http://localhost:3000/research-demo.html']);
 });
 
-test('a late response after the flow closes never navigates its blank tab', async () => {
+test('a late response after cancellation never navigates', async () => {
   assert.equal(typeof live.openLiveProduct, 'function');
-  const target = productTab();
+  const destinations = [];
   let active = true;
   let finishRequest;
   const entering = live.openLiveProduct({
     productId: 'module-01', baseUrl: 'http://localhost:3000/kyfw',
-    openWindow: () => target, isCurrent: () => active,
+    navigate: url => destinations.push(url), isCurrent: () => active,
     request: () => new Promise(resolve => { finishRequest = resolve; }),
   });
   active = false;
-  finishRequest({ url: '/research-platform' });
+  finishRequest({ url: 'https://research.arvivatherap.com' });
   assert.equal(await entering, false);
-  assert.equal(target.closed, true);
-  assert.equal(target.location.url, undefined);
+  assert.deepEqual(destinations, []);
 });
 
-test('server rejection and an unsafe destination close the preopened tab', async () => {
+test('expired sessions, network errors and unsafe destinations never navigate', async () => {
   assert.equal(typeof live.openLiveProduct, 'function');
-  for (const request of [async () => { throw new Error('Trial used.'); }, async () => ({ url: 'https://example.com/' })]) {
-    const target = productTab();
+  for (const request of [async () => { throw Object.assign(new Error('Sign in required.'), { status: 401 }); }, async () => { throw new TypeError('Network error'); }, async () => ({ url: 'https://example.com/' })]) {
+    const destinations = [];
     await assert.rejects(live.openLiveProduct({
-      productId: 'module-01', baseUrl: 'http://localhost:3000/kyfw', openWindow: () => target, request,
+      productId: 'module-01', baseUrl: 'http://localhost:3000/kyfw', navigate: url => destinations.push(url), request,
     }));
-    assert.equal(target.closed, true);
-    assert.equal(target.location.url, undefined);
+    assert.deepEqual(destinations, []);
   }
 });

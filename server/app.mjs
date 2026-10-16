@@ -1,7 +1,7 @@
 import path from 'node:path';
 import {isIP} from 'node:net';
 import {createStaticServer} from '../scripts/server.mjs';
-import {PRODUCTS} from '../src/access-state.js';
+import {PRODUCTS, getProductProductionUrl} from '../src/access-state.js';
 import {ROUTES} from '../src/routes.mjs';
 
 const COOKIE='arviva_session';
@@ -48,7 +48,7 @@ export function createApp({config,auth,mailer,sms={ready:false,development:false
     try {
       if(!await auth.canViewProduct(tokenFrom(req),product.id)){res.writeHead(302,{Location:ROUTES.intelligent});res.end();return true;}
     } catch {return json(res,503,{error:'service_unavailable',message:'Product access is temporarily unavailable.'});}
-    return false;
+    res.writeHead(302,{Location:getProductProductionUrl(product.id)});res.end();return true;
   };
   const server=createStaticServer({root,beforeFile:async(req,res,{realRoot,realFile})=>{
     const resolved='/'+path.relative(realRoot,realFile).split(path.sep).join('/').toLowerCase();

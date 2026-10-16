@@ -38,6 +38,8 @@ test('medicine product entries require access checks and drug design restores ar
   assert.doesNotMatch(medicine, /功能开发中/);
   assert.match(medicine, /<button[^>]*data-product-open="module-01"/);
   assert.match(medicine, /<button[^>]*data-product-open="module-02"/);
+  assert.doesNotMatch(medicine, /data-access-dialog|data-access-trial|data-access-upgrade|data-demo-grant|1 free trial|Separate product access/);
+  assert.match(medicine, /Sign in to open the platform/);
   for (const [route, name] of [['/research-platform', 'Research Platform'], ['/prediction-platform', 'Prediction Platform']]) {
     assert.ok(medicine.includes(`<h3 id="${route === '/research-platform' ? 'module-01' : 'module-02'}-title">${name}</h3>`));
     const platform = await readFile(pageFile(route), 'utf8');
@@ -61,6 +63,10 @@ test('medicine product entries require access checks and drug design restores ar
   const all = await Promise.all(routes.map(route => readFile(pageFile(route), 'utf8')));
   assert.doesNotMatch(all.join(''), /-52791|2000000663|website\.xin|wezhan\.cn|video\.wanwang/);
   assert.doesNotMatch(all.join(''), /R &amp; D Innovation|Integration platform/);
+});
+
+test('the standalone local demo is copied unchanged into the build', async () => {
+  assert.equal(await readFile(path.join(root, 'research-demo.html'), 'utf8'), await readFile('src/research-demo.html', 'utf8'));
 });
 
 test('every rendered internal link and media reference resolves locally', async () => {

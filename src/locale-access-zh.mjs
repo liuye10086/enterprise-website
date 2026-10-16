@@ -1,6 +1,15 @@
 // Exact display-copy translations only. Account identifiers and verification
 // codes remain untouched; authentication and product access stay server-owned.
 export const ACCESS_ZH = {
+  'Signed in successfully. Choose a platform to continue.': '登录成功，请选择功能模块继续。',
+  'Sign in to open the platform': '登录后进入平台',
+  'Sign in to continue to the Research or Prediction Platform.': '登录后继续进入研究平台或预测平台。',
+  'Local sign-in preview. No email is sent.': '本地登录流程预览，不会发送邮件。',
+  'Signed in': '已登录',
+  'You are signed in. Open either platform to continue.': '您已登录，选择任一平台即可继续。',
+  'You are signed in to the local preview. Open either platform to continue.': '您已登录本地预览，选择任一平台即可继续。',
+  'Your session expired. Please sign in to continue.': '登录已过期，请重新登录后继续。',
+  'Signed out of the demo account.': '已退出演示账户。',
   'Your free trial for this product has been used. Explore the monthly plans for this product.': '本产品的免费试用已使用，您可以查看本产品的月度套餐。',
   'Research Platform': '研究平台',
   'Prediction Platform': '预测平台',

@@ -273,49 +273,48 @@ test('PostgreSQL authentication and product authorization', { skip }, async (t) 
       });
     }
 
-    await t.test('consumes one trial under concurrency and isolates other products and users', async () => {
+    await t.test('opens both products repeatedly without consuming trials or creating grants', async () => {
       const f = fixture();
       const login = await f.login();
-      const entries = await Promise.allSettled(Array.from({ length: 8 }, () => f.service.enterProduct(login.token, 'module-01')));
-      assert.equal(entries.filter((entry) => entry.status === 'fulfilled').length, 1);
-      assert.equal(entries.filter((entry) => entry.status === 'rejected' && entry.reason.status === 403).length, 7);
-      assert.equal(await f.service.canViewProduct(login.token, 'module-01'), true);
-      assert.equal(await f.service.canViewProduct(login.token, 'module-02'), false);
-      assert.deepEqual((await f.service.getSession(login.token)).products, {
-        'module-01': { trialUsed: true, paid: false },
-        'module-02': { trialUsed: false, paid: false },
-      });
-      const other = fixture();
-      const otherLogin = await other.login();
-      assert.equal(await other.service.canViewProduct(otherLogin.token, 'module-01'), false);
-      assert.equal((await other.service.getSession(otherLogin.token)).products['module-01'].trialUsed, false);
-      assert.deepEqual(await f.service.enterProduct(login.token, 'module-02'), { url: '/prediction-platform' });
+      const before = await f.service.getSession(login.token);
+      const entries = await Promise.all(Array.from({ length: 8 }, () => f.service.enterProduct(login.token, 'module-01')));
+      assert.ok(entries.every(result => result.url === 'https://research.arvivatherap.com'));
+      assert.equal(await f.service.canViewProduct(login.token, 'module-02'), true);
+      assert.deepEqual(await f.service.enterProduct(login.token, 'module-02'), { url: 'https://thesis.arvivatherap.com' });
+      assert.deepEqual(await f.service.getSession(login.token), before);
+      const grants = await pool.query('SELECT count(*)::int AS count FROM arviva_product_grants WHERE token_digest = $1', [createHash('sha256').update(login.token).digest('hex')]);
+      assert.equal(grants.rows[0].count, 0);
     });
 
-    await t.test('serializes trial consumption across different sessions for one user', async () => {
+    await t.test('used unpaid trials and missing entitlements do not restrict signed-in accounts', async () => {
       const f = fixture();
-      const first = await f.login();
-      f.advance(60_000);
-      const second = await f.login();
-      const tokens = [first.token, second.token];
-      const entries = await Promise.allSettled(tokens.map((token) => f.service.enterProduct(token, 'module-01')));
-      assert.equal(entries.filter((entry) => entry.status === 'fulfilled').length, 1);
-      assert.equal(entries.filter((entry) => entry.status === 'rejected' && entry.reason.status === 403).length, 1);
-      const access = await Promise.all(tokens.map((token) => f.service.canViewProduct(token, 'module-01')));
-      assert.equal(access.filter(Boolean).length, 1);
+      const login = await f.login();
+      await pool.query('UPDATE arviva_product_entitlements SET trial_used_at = now(), paid = false WHERE user_id = (SELECT id FROM arviva_users WHERE email = $1)', [f.email]);
+      const history = await pool.query('SELECT * FROM arviva_product_entitlements WHERE user_id = (SELECT id FROM arviva_users WHERE email = $1) ORDER BY product_id', [f.email]);
+      for (const id of ['module-01', 'module-02']) {
+        assert.equal(await f.service.canViewProduct(login.token, id), true);
+        assert.deepEqual(await f.service.enterProduct(login.token, id), { url: id === 'module-01' ? 'https://research.arvivatherap.com' : 'https://thesis.arvivatherap.com' });
+      }
+      assert.deepEqual((await pool.query('SELECT * FROM arviva_product_entitlements WHERE user_id = (SELECT id FROM arviva_users WHERE email = $1) ORDER BY product_id', [f.email])).rows, history.rows);
+      await pool.query('DELETE FROM arviva_product_entitlements WHERE user_id = (SELECT id FROM arviva_users WHERE email = $1)', [f.email]);
+      for (const id of ['module-01', 'module-02']) {
+        assert.equal(await f.service.canViewProduct(login.token, id), true);
+        assert.deepEqual(await f.service.enterProduct(login.token, id), { url: id === 'module-01' ? 'https://research.arvivatherap.com' : 'https://thesis.arvivatherap.com' });
+      }
+      assert.equal((await pool.query('SELECT count(*)::int AS count FROM arviva_product_entitlements WHERE user_id = (SELECT id FROM arviva_users WHERE email = $1)', [f.email])).rows[0].count, 0);
     });
 
-    await t.test('binds a trial grant to one session and expires it after fifteen minutes', async () => {
+    await t.test('all valid sessions for the same user retain access beyond the old trial grant lifetime', async () => {
       const f = fixture();
       const first = await f.login();
-      assert.deepEqual(await f.service.enterProduct(first.token, 'module-01'), { url: '/research-platform' });
+      await f.service.enterProduct(first.token, 'module-01');
       f.advance(60_000);
       const second = await f.login();
-      assert.equal(await f.service.canViewProduct(second.token, 'module-01'), false);
-      await rejectsWith(f.service.enterProduct(second.token, 'module-01'), 403, 'TRIAL_USED');
-      assert.equal(await f.service.canViewProduct(first.token, 'module-01'), true);
-      f.advance(14 * 60_000);
-      assert.equal(await f.service.canViewProduct(first.token, 'module-01'), false);
+      f.advance(16 * 60_000);
+      for (const token of [first.token, second.token]) {
+        assert.equal(await f.service.canViewProduct(token, 'module-01'), true);
+        assert.deepEqual(await f.service.enterProduct(token, 'module-01'), { url: 'https://research.arvivatherap.com' });
+      }
     });
 
     await t.test('reads existing paid eligibility without consuming a trial', async () => {
@@ -605,13 +604,13 @@ test('PostgreSQL authentication and product authorization', { skip }, async (t) 
       assert.equal(users.rows.length, 2);
       assert.ok(users.rows.some(({ email, phone }) => email === null && phone === f.phone));
       const entries = await Promise.allSettled(Array.from({ length: 6 }, () => f.service.enterProduct(phoneLogin.token, 'module-01')));
-      assert.equal(entries.filter(({ status }) => status === 'fulfilled').length, 1);
-      assert.equal(entries.filter((entry) => entry.status === 'rejected' && entry.reason.code === 'TRIAL_USED').length, 5);
+      assert.equal(entries.filter(({ status }) => status === 'fulfilled').length, 6);
+      assert.equal(entries.filter((entry) => entry.status === 'rejected').length, 0);
       assert.equal((await f.service.getSession(emailLogin.token)).products['module-01'].trialUsed, false);
       f.advance(60_000);
       const renewed = await f.phoneLogin();
-      assert.equal((await f.service.getSession(renewed.token)).products['module-01'].trialUsed, true);
-      await rejectsWith(f.service.enterProduct(renewed.token, 'module-01'), 403, 'TRIAL_USED');
+      assert.equal((await f.service.getSession(renewed.token)).products['module-01'].trialUsed, false);
+      assert.deepEqual(await f.service.enterProduct(renewed.token, 'module-01'), { url: 'https://research.arvivatherap.com' });
       await pool.query('UPDATE arviva_product_entitlements SET paid = true WHERE user_id = (SELECT id FROM arviva_users WHERE phone = $1) AND product_id = $2', [f.phone, 'module-02']);
       assert.equal(await f.service.canViewProduct(renewed.token, 'module-02'), true);
       await f.service.logout(renewed.token);

@@ -15,6 +15,27 @@ export const PRODUCTS = Object.freeze([
   }),
 ]);
 
+export const RESEARCH_URL = 'https://research.arvivatherap.com';
+export const PRODUCT_DESTINATIONS = Object.freeze({
+  'module-01': RESEARCH_URL,
+  'module-02': 'https://thesis.arvivatherap.com',
+});
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+export function getProductProductionUrl(productId) {
+  requireProduct(productId);
+  return PRODUCT_DESTINATIONS[productId];
+}
+
+// Legacy product URLs remain local route identifiers, independent of navigation.
+export function getProductDestination(productId, baseUrl) {
+  requireProduct(productId);
+  const base = new URL(baseUrl);
+  return LOOPBACK_HOSTS.has(base.hostname)
+    ? new URL(`/research-demo.html${productId === 'module-02' ? '?platform=prediction' : ''}`, base).href
+    : `${getProductProductionUrl(productId)}/`;
+}
+
 export function createDemoState() {
   return {
     version: 1,
