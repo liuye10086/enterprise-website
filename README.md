@@ -32,15 +32,19 @@ npm start
 
 可选的 `MAIL_MODE=development` 使用随机六位验证码：点击 **Send code** 后，验证码保存在 `tmp/dev-mail/<规范化邮箱的 SHA-256>.json`，文件中的 `email` 可用于确认收件地址。**这是本地测试投递，没有发送真实邮件**，不能使用固定演示码代替。该模式只允许本机开发，生产环境禁用；`MAIL_MODE=disabled` 不发送验证码。
 
-当前本机已启用 **QQ 邮箱通过 SMTP 发送验证码**：`MAIL_MODE=smtp`、`SMTP_HOST=smtp.qq.com`、`SMTP_PORT=465`（SSL/TLS），`SMTP_USER` 和 `SMTP_FROM` 均填写完整 QQ 邮箱地址，`SMTP_PASSWORD` 填写开启 SMTP 后生成的 QQ 邮箱授权码，**不是 QQ 登录密码**。2026-10-10 已验证 TLS 连接、SMTP 认证及网站验证码接口发送；用户随后确认收信并成功登录。具体步骤见 [部署说明](docs/postgresql-deployment.md)。
+**邮箱配置（2026-10-19）：** 官网验证码发件人配置为阿里云企业邮箱 `BD@arvivatherap.com`，使用 `MAIL_MODE=smtp`、`SMTP_HOST=smtp.qiye.aliyun.com`、`SMTP_PORT=465`（SSL/TLS），`SMTP_USER` 和 `SMTP_FROM` 均为 `BD@arvivatherap.com`。`SMTP_PASSWORD` 使用该邮箱生成的三方客户端安全密码，只保存在本机或服务器的私密配置中，不进入 Git、聊天或日志；本机先填入被 Git 忽略的 `.env.smtp-update`，验证后再合并到 `.env`。服务地址参考 [阿里邮箱官方客户端配置](https://help.aliyun.com/zh/document_detail/36576.html)。
 
-该 QQ 邮箱只负责发信，不是唯一允许登录的账号。收件人来自访客在登录框输入的邮箱，其他 QQ 邮箱及其他格式有效的邮箱都可以申请验证码；实际投递结果仍取决于发信服务和收件方。
+本地已通过阿里邮箱 TLS 与 SMTP 认证，并将六项邮件配置合并到私密 `.env`，206 项测试通过；本次未发送邮件，真实收信待验证。发布按本地验证、commit/push、服务器拉取同一提交、单独更新邮件私密配置并验证重启的顺序执行，线上切换结果以实际部署验收为准。完整步骤和失败恢复见 [部署说明](docs/postgresql-deployment.md)。仓库只同步代码与配置模板，不会把本机密码同步到服务器。
+
+历史验证记录（QQ 邮箱）：2026-10-10 已验证本机 QQ SMTP TLS 连接、认证及网站验证码接口发送，用户随后确认收信并成功登录；该记录不代表阿里邮箱已通过验证。
+
+配置的邮箱只负责发信，不是唯一允许登录的账号。收件人来自访客在登录框输入的邮箱，其他 QQ 邮箱及其他格式有效的邮箱都可以申请验证码；实际投递结果仍取决于发信服务和收件方。
 
 本机与香港服务器均使用 `SMS_MODE=aliyun-pnvs` 发送真实短信，用户于 2026-10-10 分别确认收信并登录成功；两套环境的每日发送尝试上限各为 10，共用网站专用 RAM 凭据与短信套餐。真实短信配置见 [短信登录说明](docs/sms-login.md)。
 
 需要离线开发时，可手动切换为 `SMS_MODE=development` 并重启：登录框切换 **Phone / SMS**，输入中国大陆 11 位手机号，点击 **Send code**，再到 `tmp/dev-sms/` 中找到对应 `phone` 的 JSON 文件，将其中的 `code` 填回页面。此模式生成随机验证码，10 分钟有效，**不发送真实短信**。文件名为标准 `+86` 手机号的 SHA-256；生产环境和非本机访问都禁止使用此模式，未配置时默认为 `disabled`。
 
-以后换阿里云邮件推送（DirectMail）时，只需完成该服务的发信域名认证，更新 `SMTP_HOST`、`SMTP_PORT`、`SMTP_USER`、`SMTP_PASSWORD`、`SMTP_FROM` 并重启服务；数据库、已注册账号与前端登录流程不用改。
+本次使用现有的阿里云企业邮箱 SMTP。邮件配置不绑定服务商，切换只涉及 `MAIL_MODE` 和 `SMTP_HOST`、`SMTP_PORT`、`SMTP_USER`、`SMTP_PASSWORD`、`SMTP_FROM`；数据库、已注册账号与前端登录流程无需修改。
 
 旧版静态演示单独保留：
 
@@ -115,4 +119,4 @@ npm run test:auth
 
 联系表单仍会打开访客的邮件应用并生成草稿，需访客确认发送；验证码邮件服务不替代联系表单。目前没有服务端联系表单收件、后台管理或原平台表单服务。
 
-历史首次部署记录（2026-10-10）：网站部署到阿里云香港服务器，使用独立的 `new.arvivatherap.com` 子域名和 HTTPS，当时仅新增 `new` 的 A 记录。服务器使用独立的 PostgreSQL 应用库与测试库，本机账号数据未导入；当时服务器 71 项测试通过，用户确认新版验证码收信及登录成功。后续版本和测试结果以上方当前说明及 [部署记录](docs/postgresql-deployment.md) 为准。原官网及企业邮箱记录保持原样；以后切换 DirectMail 时再配置该服务的发信域名认证。
+历史首次部署记录（2026-10-10）：网站部署到阿里云香港服务器，使用独立的 `new.arvivatherap.com` 子域名和 HTTPS，当时仅新增 `new` 的 A 记录。服务器使用独立的 PostgreSQL 应用库与测试库，本机账号数据未导入；当时服务器 71 项测试通过，用户确认新版验证码收信及登录成功。后续版本和测试结果以上方当前说明及 [部署记录](docs/postgresql-deployment.md) 为准。当时原官网及企业邮箱记录保持原样。

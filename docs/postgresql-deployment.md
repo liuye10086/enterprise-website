@@ -28,6 +28,8 @@
 
 以下为重建新环境时的步骤；现有服务器已经配置完成，不要重复建库或覆盖 `.env`。本机开发库仍为 `arviva_website_dev`，与服务器独立。
 
+邮箱迁移验证记录（2026-10-19）：本地已通过 `smtp.qiye.aliyun.com:465` 的 TLS 与 SMTP 认证，六项邮件配置已合并到私密 `.env`，206 项测试通过。服务器预检已通过同一端点的 TLS 连接及 EHLO；生产配置须在本地提交推送后单独更新并重新认证。上述检查均未发送邮件，不代表真实邮件已送达。下方推荐模板为阿里云企业邮箱 `BD@arvivatherap.com`，发布按第 3 节执行，线上配置与验收结果需实际核对。
+
 ## 1. 安装运行环境与数据库
 
 安装 Node.js 22 或以上版本与 npm，并检查 `node --version`、`npm --version`。随后安装 Ubuntu 的 PostgreSQL 和 Nginx 软件包；版本来源可参考 [PostgreSQL Ubuntu 安装说明](https://www.postgresql.org/download/linux/ubuntu/)。
@@ -81,8 +83,10 @@ HOST=127.0.0.1
 PORT=4174
 APP_ORIGIN=https://new.arvivatherap.com
 MAIL_MODE=smtp
-SMTP_HOST=smtp.qq.com
+SMTP_HOST=smtp.qiye.aliyun.com
 SMTP_PORT=465
+SMTP_USER=BD@arvivatherap.com
+SMTP_FROM=BD@arvivatherap.com
 TRUST_PROXY=loopback
 ```
 
@@ -92,20 +96,31 @@ TRUST_PROXY=loopback
 | --- | --- |
 | `DATABASE_URL` | 指向本机 `arviva_website` 数据库的专用角色连接串；密码中的特殊字符需 URL 编码 |
 | `AUTH_SECRET` | 至少 32 个字符的独立高强度随机密钥，妥善保存 |
-| `SMTP_HOST` | 当前使用 `smtp.qq.com` |
-| `SMTP_USER` | 完整 QQ 邮箱地址，如 `your-account@qq.com` |
-| `SMTP_PASSWORD` | QQ 邮箱开启 SMTP 后生成的授权码，不是 QQ 登录密码 |
-| `SMTP_FROM` | 与 `SMTP_USER` 相同的完整 QQ 邮箱地址 |
+| `SMTP_HOST` | 阿里邮箱通用 SMTP 地址 `smtp.qiye.aliyun.com` |
+| `SMTP_PORT` | `465`，本项目在该端口启用 SSL/TLS |
+| `SMTP_USER` | 完整阿里云企业邮箱地址 `BD@arvivatherap.com` |
+| `SMTP_PASSWORD` | 该邮箱生成的三方客户端安全密码，仅保存在私密 `.env` |
+| `SMTP_FROM` | 与 `SMTP_USER` 相同，为 `BD@arvivatherap.com` |
 
 `APP_ORIGIN` 必须与浏览器访问的 HTTPS 来源完全一致，包含非默认端口时也要一致，不带路径。生产会话使用 Secure、HttpOnly、SameSite=Lax Cookie。只有本机 Nginx 覆盖 `X-Real-IP` 且 Node 不对公网监听时，才使用 `TRUST_PROXY=loopback`；直接本机开发使用 `none`。
 
-## 3. QQ 邮箱发信与以后切换服务
+## 3. 阿里云企业邮箱 SMTP 与迁移
 
-当前先使用 **QQ 邮箱 SMTP**。在 QQ 邮箱设置中开启 SMTP 服务，按页面提示完成验证并取得授权码；在项目私密 `.env` 中填写上述配置。使用 `smtp.qq.com:465`，本项目会启用 SSL/TLS。授权码与服务器设置可参考 [腾讯官方邮箱配置说明](https://main.qcloudimg.com/raw/document/product/pdf/1270_46586_cn.pdf)。
+本次目标是通过现有的 **阿里云企业邮箱** `BD@arvivatherap.com` 发送官网验证码。使用 `smtp.qiye.aliyun.com:465`（SSL/TLS），`SMTP_USER` 与 `SMTP_FROM` 均填写该完整邮箱地址，`SMTP_PASSWORD` 使用该邮箱生成的三方客户端安全密码。服务地址参考 [阿里邮箱官方客户端配置](https://help.aliyun.com/zh/document_detail/36576.html)。本次不需要改动数据库、现有用户或前端登录逻辑。
 
-`SMTP_USER` 与 `SMTP_FROM` 都填写同一个完整 QQ 邮箱地址，`SMTP_PASSWORD` 填授权码，**不要填写 QQ 登录密码，也不要把授权码发在聊天里**。新生产环境填好前使用 `MAIL_MODE=disabled`，填好后改为 `MAIL_MODE=smtp` 并重启服务，再用实际收件邮箱验证送达；`development` 仅可用于本机开发。2026-10-10 本机与香港服务器均通过 QQ SMTP TLS 连接和认证验证，用户分别确认了本机及新版线上官网的验证码收信、登录成功。
+安全密码只保存在本机或服务器的私密配置中；本机暂存于被 Git 忽略的 `.env.smtp-update`，验证后再合并到 `.env`。不要写入 `.env.example`、Git、聊天、命令参数或日志。代码与配置模板通过 Git 同步；服务器密码须单独设置，不能用本机 `.env` 整体覆盖服务器配置。新生产环境配置完成前使用 `MAIL_MODE=disabled`；现有环境在切换验收前继续保留原邮件配置。
 
-以后换 **阿里云邮件推送（DirectMail）**，数据库、现有用户与前端登录流程无需修改。完成 DirectMail 的发信域名 DNS 认证、建立发信地址并设置 SMTP 专用密码后，更新 `.env` 的 `SMTP_HOST`、`SMTP_PORT`、`SMTP_USER`、`SMTP_PASSWORD`、`SMTP_FROM`，保持 `MAIL_MODE=smtp`，重启服务并验证收信即可。DirectMail 发信地址与 SMTP 服务地域必须一致，参考 [DirectMail SMTP 服务接入点](https://www.alibabacloud.com/help/en/direct-mail/smtp-endpoints) 和 [SMTP 发信说明](https://help.aliyun.com/en/direct-mail/user-guide/send-emails-using-smtp)。
+迁移按以下顺序执行，不能把“配置存在”或“认证成功”作为真实收信结果：
+
+1. **本地准备和认证。** 在 Git 忽略的本地私密暂存文件 `.env.smtp-update` 中填写目标邮件配置和安全密码，现有 `.env` 先保持不变。使用暂存配置验证 TLS 连接及 SMTP 认证，验证过程不调用发信接口、不发送邮件，也不打印安全密码。认证成功后，在受限位置备份本机 `.env`，再仅合并 `MAIL_MODE`、`SMTP_HOST`、`SMTP_PORT`、`SMTP_USER`、`SMTP_PASSWORD`、`SMTP_FROM` 六项并重启本地服务。认证失败时保留错误类型供排查，停止后续发布。
+2. **真实收信验收。** 如需发送测试邮件，先与用户确认实际测试收件邮箱及发送安排，再通过官网请求一次验证码；由用户确认发件人为 `BD@arvivatherap.com`、邮件送达并成功登录。认证检查无法证明最终投递成功；未发送测试邮件时，明确记录“认证通过，真实收信待验证”，不能将配置发布等同于投递验收。
+3. **本地验证后提交。** 完成本地构建及相关测试，核对待提交内容不包含任何 `.env` 或密码，然后 commit/push 代码、配置模板和文档，记录已验证的提交 SHA。真实私密配置不进入提交。
+4. **服务器备份与同步。** 记录线上原提交，备份私密 `.env` 和现有构建，限制备份访问权限；再拉取本地已验证并推送的同一提交，核对 SHA。按该提交安装、构建及测试，不以服务器临时修改代替仓库提交。
+5. **仅更新服务器邮件配置。** 在服务器私密 `.env` 中仅更新上述六个邮件配置项，保留数据库、`AUTH_SECRET`、短信及其他配置。保持应用用户所有权和 `600` 权限，先以应用运行用户验证阿里邮箱 TLS 连接及 SMTP 认证，过程中不发送邮件。验证失败则恢复原邮件配置，不重启到未通过验证的配置。
+6. **重启和健康检查。** 认证通过后重启 `arviva`，确认 `arviva`、`nginx`、`postgresql` 均为 active，检查 HTTPS 首页和 `/api/session`，并确认 `mailReady=true`、邮件 development 标志为 false。该健康状态只代表配置就绪；线上真实收信及登录需要另行确认测试发送并由用户验收，在此之前记录为“认证与健康检查通过，线上收信待验证”。
+7. **失败恢复。** 配置、启动或健康检查失败时，从私密备份恢复原邮件配置项并重启；如代码更新引起故障，再恢复发布前提交和构建。重新检查服务及 HTTPS 健康状态，记录失败阶段与恢复结果。仅切换 SMTP 无需恢复数据库，不能覆盖其他配置或删除用户数据。
+
+**历史验证记录（QQ 邮箱，2026-10-10）：** 当时本机与香港服务器使用 `smtp.qq.com:465`，`SMTP_USER` 与 `SMTP_FROM` 为同一完整 QQ 邮箱地址，密码使用 QQ 邮箱 SMTP 授权码。两套环境均通过 TLS 连接和认证，用户分别确认了本机及新版线上官网的验证码收信、登录成功。该历史结果不代表阿里邮箱已经完成认证、收信或上线验证。
 
 `MAIL_MODE=disabled` 会明确禁用验证码发送。`MAIL_MODE=development` 仅用于本机开发：随机验证码写入 `tmp/dev-mail/<小写并去除首尾空格的邮箱的 SHA-256>.json`，不发送邮件，生产配置会拒绝启动。开发投递文件包含测试邮箱与验证码，应保密，不作为正式邮件方案。
 

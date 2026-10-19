@@ -26,7 +26,7 @@ try {
     'NODE_ENV=development','HOST=127.0.0.1','PORT=4174','APP_ORIGIN=http://127.0.0.1:4174',
     `DATABASE_URL=${prefix}${databases[0]}`,`TEST_DATABASE_URL=${prefix}${databases[1]}`,
     `AUTH_SECRET=${randomBytes(48).toString('hex')}`,
-    'MAIL_MODE=development','SMTP_HOST=smtp.qq.com','SMTP_PORT=465','SMTP_USER=','SMTP_PASSWORD=','SMTP_FROM=','TRUST_PROXY=none','',
+    'MAIL_MODE=development','SMTP_HOST=smtp.qiye.aliyun.com','SMTP_PORT=465','SMTP_USER=BD@arvivatherap.com','SMTP_PASSWORD=','SMTP_FROM=BD@arvivatherap.com','TRUST_PROXY=none','',
   ].join('\n'),{mode:0o600,flag:'wx'});
   console.log('Created dedicated project role, arviva_website_dev and arviva_website_test; credentials saved privately in .env.');
 } catch(error) {
