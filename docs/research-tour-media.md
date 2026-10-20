@@ -26,6 +26,7 @@
 - 第 6 页：`src/assets/research/thesis-revision.png`，评审批注、结构/表达/参考文献修改建议及修订稿，对应评审驱动的论文完善。
 - 原始生成提示词：[research-thesis-image-prompts.md](research-thesis-image-prompts.md)。原图保存在生成目录，仓库内保留完整副本；网页仅等比例缩放。
 - 替换后验证：`npm test` 261 项通过；浏览器在 1939×1090 与 390×844 CSS 像素窗口检查第 5、6 页中英文版本，图片加载正常，内容及图注没有溢出。已重启本地服务供验收，未提交、推送或部署。
+- 发布优化：保留生成的 PNG 原图，网页改用同尺寸、质量 90 的 `thesis-draft.jpg` 和 `thesis-revision.jpg`。仅转换网页编码，两图合计从 5.20 MB 降为 0.67 MB，减少单 HTML 内嵌资源的下载量。优化后 261 项测试通过。
 
 ## SCI 模块期刊封面
 
