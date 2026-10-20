@@ -4,10 +4,11 @@ import { ARTICLES_ZH } from './locale-articles-zh.mjs';
 import { DRUG_DESIGN_ZH } from './locale-drug-design-zh.mjs';
 import { CHECKOUT_ZH } from './locale-checkout-zh.mjs';
 import { PROFILE_ZH } from './locale-profile-zh.mjs';
+import { RESEARCH_ACCESS_ZH } from './locale-research-access-zh.mjs';
 
 export const LANGUAGE_KEY = 'arviva.language';
 const normalize = value => String(value).replace(/\s+/g, ' ').trim();
-const chinese = new Map(Object.entries({ ...SITE_ZH, ...ACCESS_ZH, ...ARTICLES_ZH, ...DRUG_DESIGN_ZH, ...CHECKOUT_ZH, ...PROFILE_ZH }).map(([key, value]) => [normalize(key), value]));
+const chinese = new Map(Object.entries({ ...SITE_ZH, ...ACCESS_ZH, ...ARTICLES_ZH, ...DRUG_DESIGN_ZH, ...CHECKOUT_ZH, ...PROFILE_ZH, ...RESEARCH_ACCESS_ZH }).map(([key, value]) => [normalize(key), value]));
 const supportedLocale = value => value === 'zh-CN' ? 'zh-CN' : 'en';
 
 export function readPreferredLocale(storage) {

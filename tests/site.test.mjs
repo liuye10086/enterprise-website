@@ -4,10 +4,19 @@ import { readFile, access } from 'node:fs/promises';
 import path from 'node:path';
 
 const root = path.resolve('dist');
-const routes = ['/home','/about','/intelligent','/drug-design','/investors','/news','/contact','/research-platform','/prediction-platform'];
+const routes = ['/home','/about','/intelligent','/drug-design','/investors','/news','/contact','/research-platform','/prediction-platform','/research-access','/research-workspace'];
 const articleIds = ['3099692','7224','7114','7062','7050'];
 const articleRoutes = ['recruitment-join-us-to-redefine-medicine','glp-1-the-key-behind-weight-loss','gut-microbiota-and-feeding-behavior','alzheimers-disease-pathogenesis','alzheimers-drug-development-pipeline-2025'].map(slug => '/news/'+slug);
 const pageFile = route => path.join(root, route.endsWith('.html') ? route : route + '/index.html');
+
+test('research popup entry is independently built without site navigation and ships its controller', async () => {
+  const html = await readFile(pageFile('/research-entry'), 'utf8');
+  assert.match(html, /data-research-access/);
+  assert.match(html, /id="login-dialog"/);
+  assert.match(html, /src="\/research-entry.js"/);
+  assert.doesNotMatch(html, /id="primary-navigation"|class="site-header/);
+  await access(path.join(root, 'research-entry.js'));
+});
 
 test('all site routes are independently generated with navigation', async () => {
   for (const route of ['/', '/404.html', ...routes, ...articleRoutes]) {
@@ -32,7 +41,7 @@ test('home is also available at root and legacy content pages are not generated'
   }
 });
 
-test('medicine product entries require access checks and drug design restores archived platform content', async () => {
+test('medicine product entries require access checks and drug design retains the selected archived platforms', async () => {
   const medicine = await readFile(pageFile('/intelligent'), 'utf8');
   assert.match(medicine, /<title>Super Intelligent Medicine \|/);
   assert.doesNotMatch(medicine, /功能开发中/);
@@ -57,7 +66,9 @@ test('medicine product entries require access checks and drug design restores ar
   assert.ok(visibleDesign.includes(archive.text.split('\n\n')[0]), 'preserves the archived R&D introduction');
   const platforms = archive.text.split('\n\n').find(block => block.startsWith('Compound Discovery')).split('\n');
   assert.equal(platforms.length, 12);
-  for (const platform of platforms) assert.ok(visibleDesign.includes(platform), `restores ${platform}`);
+  for (const platform of platforms.slice(0, 6)) assert.ok(!visibleDesign.includes(platform), `removes ${platform}`);
+  for (const platform of platforms.slice(6)) assert.ok(visibleDesign.includes(platform), `preserves ${platform}`);
+  assert.deepEqual([...design.matchAll(/class="design-platform-number" aria-hidden="true">(\d+)<\/span>/g)].map(match => match[1]), ['01', '02', '03', '04', '05', '06']);
   for (const heading of ['Headquarters Overview', 'Strategic Focus', 'Production Management']) assert.ok(visibleDesign.includes(heading));
   assert.doesNotMatch(design, /class="development-page"|<h2[^>]*>In development<\/h2>/);
   const all = await Promise.all(routes.map(route => readFile(pageFile(route), 'utf8')));
@@ -65,8 +76,21 @@ test('medicine product entries require access checks and drug design restores ar
   assert.doesNotMatch(all.join(''), /R &amp; D Innovation|Integration platform/);
 });
 
-test('the standalone local demo is copied unchanged into the build', async () => {
-  assert.equal(await readFile(path.join(root, 'research-demo.html'), 'utf8'), await readFile('src/research-demo.html', 'utf8'));
+test('the built product demo embeds every research image for single-file product hosting', async () => {
+  const source = await readFile('src/research-demo.html', 'utf8');
+  const built = await readFile(path.join(root, 'research-demo.html'), 'utf8');
+  const images = [...new Set(source.match(/\/assets\/research\/[a-z0-9-]+\.(?:png|jpg)/g))];
+  assert.equal(images.length, 7);
+  let restored = built;
+  for (const reference of images) {
+    const bytes = await readFile(`src${reference}`);
+    const mime = reference.endsWith('.png') ? 'image/png' : 'image/jpeg';
+    const data = `data:${mime};base64,${bytes.toString('base64')}`;
+    assert.ok(built.includes(data), `missing embedded media: ${reference}`);
+    restored = restored.replaceAll(data, reference);
+  }
+  assert.ok(restored === source, 'only media URLs change during the build');
+  assert.doesNotMatch(built, /src="\/assets\/research\//);
 });
 
 test('every rendered internal link and media reference resolves locally', async () => {

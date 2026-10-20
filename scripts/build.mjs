@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadArticles } from '../src/content.mjs';
 import { renderPages } from '../src/render.mjs';
 import {outputPath,completeOutputBuild} from './output-manifest.mjs';
+import { renderResearchDemo } from './research-demo.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export async function build() {
@@ -19,8 +20,8 @@ export async function build() {
     await writeFile(target,html,'utf8');
     owned.push(relative);
   }
-  for (const name of ['research-demo.html','styles.css','brand-theme.css','checkout.css','profile.css','profile.js','account-menu.css','account-menu.js','locale-profile-zh.mjs','main.js','access.js','access-state.js','access-live.js','account-trigger.js','module-highlight.js','checkout.js','runtime-config.js','i18n.js','locale-site-zh.mjs','locale-access-zh.mjs','locale-articles-zh.mjs','locale-drug-design-zh.mjs','locale-checkout-zh.mjs']) {
-    const text = await readFile(path.join(root,'src',name),'utf8');
+  for (const name of ['research-demo.html','research-entry.js','research-access.js','research-access.css','locale-research-access-zh.mjs','styles.css','brand-theme.css','checkout.css','profile.css','profile.js','account-menu.css','account-menu.js','locale-profile-zh.mjs','main.js','access.js','access-state.js','access-live.js','account-trigger.js','module-highlight.js','checkout.js','runtime-config.js','i18n.js','locale-site-zh.mjs','locale-access-zh.mjs','locale-articles-zh.mjs','locale-drug-design-zh.mjs','locale-checkout-zh.mjs']) {
+    const text = name === 'research-demo.html' ? await renderResearchDemo() : await readFile(path.join(root,'src',name),'utf8');
     texts.push(text);
     await writeFile(await outputPath(dist,name),text,'utf8');
     owned.push(name);

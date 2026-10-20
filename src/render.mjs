@@ -7,6 +7,7 @@ import { SITE_ZH } from './locale-site-zh.mjs';
 import { DRUG_DESIGN_COPY as designCopy } from './drug-design-copy.mjs';
 import { renderCheckoutPage } from './checkout-view.mjs';
 import { renderProfilePage, renderProfilePrompt } from './profile-view.mjs';
+import { renderResearchAccessPage, renderResearchWorkspacePage, renderResearchEntryPage } from './research-access-view.mjs';
 
 const navigation = SECTIONS.map(section => [section.key === 'news' ? copy.newsTitle : section.label, section.path]);
 const img = (name, alt, className = '', loading = 'lazy') => `<img src="/assets/images/${e(name)}" alt="${e(alt)}" class="${className}" loading="${loading}" decoding="async">`;
@@ -130,6 +131,10 @@ export async function renderPages({articles}) {
   }
   pages.set('/plans', shell('Plans & payment', ROUTES.intelligent, renderCheckoutPage(), 'Preview monthly plans and payment options for Arviva Therapeutics platforms.', '<link rel="stylesheet" href="/checkout.css"><meta name="robots" content="noindex">'));
   pages.set('/profile', shell('Personal profile', '', renderProfilePage(), 'View and update your personal profile.', '<meta name="robots" content="noindex">'));
+  const researchHead = '<link rel="stylesheet" href="/research-access.css"><meta name="robots" content="noindex">';
+  pages.set('/research-entry', renderResearchEntryPage());
+  pages.set('/research-access', shell('Start research', ROUTES.intelligent, renderResearchAccessPage(), 'Choose a free trial or explore Research Platform plans.', researchHead));
+  pages.set('/research-workspace', shell('Research workspace', ROUTES.intelligent, renderResearchWorkspacePage(), 'Preview the planned Research Platform workspace.', researchHead));
   for (const article of sorted) {
     pages.set(article.href,shell(article.title,ROUTES.news,`<article class="article-page"><a class="article-back" href="${ROUTES.news}">← ${e(copy.newsTitle)}</a><h2 class="article-title">${e(article.title)}</h2>${renderArticleBody(article)}<div class="article-end">${link('All news',ROUTES.news)}</div></article>`,article.excerpt));
   }

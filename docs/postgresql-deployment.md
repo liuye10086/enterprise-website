@@ -1,5 +1,13 @@
 # PostgreSQL 登录部署
 
+## Research 平台与研发列表发布（2026-10-20）
+
+本批本地验收已获用户确认，发布范围包括：R&D Platform 保留原 7–12 项并重新编号；科研平台六页介绍循环播放、悬停暂停及自适应排版；毕业论文主题配图；卡片右下的开始科研入口、登录后试用或升级选项。发布前本地 261 项测试通过、无跳过，代码审查无阻塞项。
+
+`research.arvivatherap.com` 保持公开静态介绍页；开始科研通过固定 iframe 嵌入 `https://new.arvivatherap.com/research-entry`。只有该入口允许被 Research 域嵌入，消息严格校验父域、窗口和固定目标路径，身份凭据不传给产品静态页。工作区和试用资格由官网服务端鉴权；试用按账号领取一次、当前会话有效 15 分钟，复用已有权益与 grant 表，不需要新迁移。套餐支付与科研工具仍为现有预览范围，本次没有接入真实收款或科研执行服务。
+
+发布时先备份数据库、私密配置、Nginx 配置与旧构建，拉取已推送的同一提交，构建并在独立测试库运行测试。产品站必须使用嵌入全部图片的 `dist/research-demo.html` 原子替换 `/var/www/arviva-products/index.html`。部署后验证 iframe 响应头、匿名工作区拒绝访问、生产邮件/短信状态及官网和两个产品域的内容。线上结果以实际部署回执为准；应用配置和数据库结构保持不变。
+
 ## 客户个人资料与头像菜单（2026-10-16）
 
 邮箱登录成功后，资料未完善的客户可以选择前往 `/profile` 或稍后填写，不影响登录与产品访问。个人主页使用当前已验证邮箱，收集姓名/称呼、联系电话、单位/学校、研究领域；首次填写日期由服务端生成。已登录头像展开气泡菜单，提供个人主页与退出登录。
@@ -12,7 +20,9 @@
 
 应用提交 `df5757e296fa2ce93a99a94862ae24629a75c1c0` 已推送至 `main` 并部署。`/intelligent` 两个模块仅检查有效登录。登录成功后关闭登录窗口、停留在当前页面并显示成功提示；再次点击模块才跳转。已登录用户点击 Research Platform 跳转至 `https://research.arvivatherap.com`，点击 Prediction Platform 跳转至 `https://thesis.arvivatherap.com`；本地 loopback 分别预览 `/research-demo.html` 和 `/research-demo.html?platform=prediction`。不再检查或消耗产品试用资格，无依赖或数据库迁移变化，原账号及历史数据保留。
 
-阿里云新增的 `research` 和 `thesis` 两条 A 记录均指向 `47.82.97.195`（默认线路、TTL 600 秒、启用），两个产品站已通过 HTTPS 上线。独立 Nginx 配置为 `/etc/nginx/sites-available/arviva-products`，由 `sites-enabled/arviva-products` 链接启用；公开目录只包含 `/var/www/arviva-products/index.html`，来自 `src/research-demo.html`，按 hostname 区分产品。产品 HTTPS 只开放 `/` 和 `/index.html`，其他路径返回 404；HTTP 保留 ACME 验证路径，其余请求跳转 HTTPS。原有 Nginx 文件和链接快照、私密配置校验和保持不变。
+阿里云新增的 `research` 和 `thesis` 两条 A 记录均指向 `47.82.97.195`（默认线路、TTL 600 秒、启用），两个产品站已通过 HTTPS 上线。独立 Nginx 配置为 `/etc/nginx/sites-available/arviva-products`，由 `sites-enabled/arviva-products` 链接启用；公开目录只包含 `/var/www/arviva-products/index.html`，当时来自 `src/research-demo.html`，按 hostname 区分产品。产品 HTTPS 只开放 `/` 和 `/index.html`，其他路径返回 404；HTTP 保留 ACME 验证路径，其余请求跳转 HTTPS。原有 Nginx 文件和链接快照、私密配置校验和保持不变。
+
+2026-10-20 已获用户本地验收的幻灯片改版：部署产品站应先构建，并使用 **`dist/research-demo.html`**，其中已嵌入图片；不要直接复制含素材路径的源 HTML。详见 [素材来源与构建说明](research-tour-media.md)。
 
 产品站当前为公开静态 demo，没有跨域单点登录，也不接收官网会话令牌；未来产品服务需另行接入身份校验。真实官网登录依赖 Node.js、PostgreSQL 与同源后端。`npm start` 默认监听本机 `127.0.0.1:4174`；`npm run dev` 的 `4173` 是本机静态演示，不用于正式登录。**官网不能仅上传 `dist/`，旧产品入口仍必须经过 Node 登录校验。** 下方历史发布记录中的试用资格和旧产品页说明反映当时版本，不作为当前访问规则。
 

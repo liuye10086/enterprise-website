@@ -5,12 +5,6 @@ export const DRUG_DESIGN_COPY = {
   introduction: 'Arviva Therapeutics has built a fully integrated R&D platform—spanning bioinformatics, peptide synthesis, in vitro screening, and experimental animal models—enabling innovative drug discovery from the earliest stages and accelerating the journey from concept to clinic.',
   platformsTitle: 'R&D Platform',
   platforms: [
-    {title: 'Compound Discovery and Optimization Platform', image: '33301596.png'},
-    {title: 'Large Molecule Discovery and Engineering R&D Platform', image: '33301597.png'},
-    {title: 'Drug Design and Modification R&D Platform', image: '33301598.png'},
-    {title: 'Formulation R&D Platform', image: '33301599.png'},
-    {title: 'Biosynthetic R&D Platform', image: '33301602.png'},
-    {title: 'CMC R&D Platform', image: '33301601.png'},
     {title: 'Crystallization R&D Platform', image: '33301600.png'},
     {title: 'Translational Medicine R&D Platform', image: '33301603.png'},
     {title: 'Experimental Animal Platform', image: '33301595.jpg'},

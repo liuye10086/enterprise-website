@@ -11,9 +11,21 @@ function tourController() {
   return source;
 }
 
-function fixture({ hostname = 'localhost', search = '', lang = 'en' } = {}) {
+function fixture({ hostname = 'localhost', search = '', lang = 'en', hovering = false, autoOpen = true, readyState = 'complete' } = {}) {
   const nodes = new Map();
-  const scheduled = [];
+  const timers = new Map();
+  let now = 0, timerId = 0;
+  function advance(ms) {
+    const end = now + ms;
+    for (;;) {
+      const pending = [...timers].sort((a, b) => a[1].at - b[1].at)[0];
+      if (!pending || pending[1].at > end) break;
+      now = pending[1].at;
+      timers.delete(pending[0]);
+      pending[1].fn();
+    }
+    now = end;
+  }
   let document;
   function element(id, initial = {}) {
     const listeners = new Map();
@@ -28,6 +40,8 @@ function fixture({ hostname = 'localhost', search = '', lang = 'en' } = {}) {
       addEventListener(name, listener) { listeners.set(name, [...(listeners.get(name) || []), listener]); },
       removeEventListener(name, listener) { listeners.set(name, (listeners.get(name) || []).filter(fn => fn !== listener)); },
       dispatch(name, properties = {}) {
+        if (name === 'pointerenter' && properties.pointerType !== 'touch') this.hovered = true;
+        if (name === 'pointerleave' && properties.pointerType !== 'touch') this.hovered = false;
         const event = { type: name, target: node, currentTarget: node, defaultPrevented: false,
           preventDefault() { this.defaultPrevented = true; }, ...properties };
         for (const listener of listeners.get(name) || []) listener(event);
@@ -41,16 +55,24 @@ function fixture({ hostname = 'localhost', search = '', lang = 'en' } = {}) {
       escape() { const event = this.dispatch('cancel', { key: 'Escape' }); if (!event.defaultPrevented) this.close(); },
       querySelectorAll(selector) { return select(selector); },
       querySelector(selector) { return select(selector)[0] || null; },
+      matches(selector) { return selector === ':focus-visible' ? this.focusVisible !== false : selector === ':hover' && !!this.hovered; },
+      getBoundingClientRect() { return { left: 20, top: 30, right: 880, bottom: 730 }; },
     };
     nodes.set(id, node);
     return node;
   }
   const initialFocus = element('initial-focus');
-  const dialog = element('project-tour');
+  const dialog = element('project-tour', { hovered: hovering });
+  const viewport = element('tour-slides');
   const previous = element('tour-prev', { textContent: 'Previous' });
   const next = element('tour-next', { textContent: 'Next' });
   const close = element('tour-close', { textContent: 'Close' });
   const reopen = element('tour-open', { textContent: 'Introduction', hidden: true });
+  const entryMarkup = html.match(/<div\b[^>]*\bid="research-entry"[^>]*>/)?.[0];
+  const startMarkup = html.match(/<button\b[^>]*\bid="research-start"[^>]*>/)?.[0];
+  assert.ok(entryMarkup && startMarkup, 'the real document includes the research entry and button');
+  const entry = element('research-entry', { hidden: /\bhidden(?:\s|>)/.test(entryMarkup) });
+  const start = element('research-start', { href: startMarkup.match(/\bhref="([^"]+)"/)?.[1] });
   const counter = element('tour-counter');
   const slides = Array.from({ length: 6 }, (_, index) => element(`slide-${index}`, { dataset: { tourSlide: String(index) }, hidden: index !== 0 }));
   const dots = Array.from({ length: 6 }, (_, index) => element(`dot-${index}`, { dataset: { tourGo: String(index) } }));
@@ -65,18 +87,20 @@ function fixture({ hostname = 'localhost', search = '', lang = 'en' } = {}) {
   document = element('document');
   document.documentElement = { lang, style: {} };
   document.body = { style: { overflow: 'scroll' } };
+  document.hidden = false;
+  document.readyState = readyState;
   document.activeElement = initialFocus;
   document.getElementById = id => nodes.get(id) || null;
   const location = { hostname, search, href: `https://${hostname}/research-demo.html${search}` };
   const browser = element('window');
-  Object.assign(browser, { document, location });
+  Object.assign(browser, { document, location, matchMedia: () => ({ matches: true }) });
   runInNewContext(tourController(), {
     document, location, window: browser, URLSearchParams, Event,
-    setTimeout: (...args) => scheduled.push(['timeout', ...args]),
-    setInterval: (...args) => scheduled.push(['interval', ...args]),
-    clearTimeout() {}, clearInterval() {},
+    setTimeout(fn, delay) { const id = ++timerId; timers.set(id, { fn, at: now + delay }); return id; },
+    clearTimeout(id) { timers.delete(id); },
   }, { filename: 'research-demo.html#research-tour-script', timeout: 1000 });
-  return { document, initialFocus, dialog, previous, next, close, reopen, counter, slides, dots, scheduled };
+  if (autoOpen) advance(1000);
+  return { document, browser, initialFocus, dialog, viewport, previous, next, close, reopen, entry, start, counter, slides, dots, timers, advance };
 }
 
 function assertSlide(ui, index) {
@@ -92,24 +116,40 @@ test('the standalone document includes six slides and six direct navigation butt
   assert.deepEqual([...html.matchAll(/\bdata-tour-go\s*=["']([^"']*)["']/g)].map(match => match[1]), ['0', '1', '2', '3', '4', '5']);
 });
 
-test('Research opens the actual tour at the first slide on entry without autoplay', () => {
+test('Research advances every three seconds and loops from slide six back to one', () => {
   for (const hostname of ['localhost', 'research.arvivatherap.com']) {
     const ui = fixture({ hostname });
     assert.equal(ui.dialog.open, true);
     assert.equal(ui.reopen.hidden, false);
     assertSlide(ui, 0);
     assert.equal(ui.document.body.style.overflow, 'hidden');
-    assert.deepEqual(ui.scheduled, [], 'the introduction must never schedule automatic advancement');
+    ui.advance(2999); assertSlide(ui, 0);
+    for (let index = 1; index < 6; index++) {
+      ui.advance(index === 1 ? 1 : 3000); assertSlide(ui, index);
+      assert.equal(ui.timers.size, 1);
+    }
+    ui.advance(2999); assert.equal(ui.dialog.open, true);
+    ui.advance(1);
+    assert.equal(ui.dialog.open, true);
+    assertSlide(ui, 0);
+    assert.equal(ui.entry.hidden, true);
+    assert.equal(ui.timers.size, 1);
+    ui.advance(36000);
+    assert.equal(ui.dialog.open, true);
+    assertSlide(ui, 0);
   }
 });
 
-test('six slides advance in order and the final Next completes the tour; reopening resets to slide one', () => {
+test('the final Next returns to slide one; only a user dismissal closes the tour', () => {
   const ui = fixture();
   for (let index = 0; index < 6; index++) {
     assert.equal(ui.dialog.open, true);
     assertSlide(ui, index);
     ui.next.click();
   }
+  assert.equal(ui.dialog.open, true);
+  assertSlide(ui, 0);
+  ui.close.click();
   assert.equal(ui.dialog.open, false);
   assert.equal(ui.document.body.style.overflow, 'scroll');
   assert.equal(ui.document.activeElement, ui.initialFocus);
@@ -148,15 +188,133 @@ test('Prediction never opens a tour or exposes its reopen entry by hostname or q
     assert.equal(ui.dialog.open, false);
     assert.equal(ui.dialog.showCount || 0, 0);
     assert.equal(ui.reopen.hidden, true);
+    assert.equal(ui.entry.hidden, true);
     assert.equal(ui.document.body.style.overflow, 'scroll');
     assert.equal(ui.document.activeElement, ui.initialFocus);
   }
 });
 
+test('dismissing Research introduction exposes the popup entry without consuming a trial', () => {
+  for (const hostname of ['localhost', '127.0.0.1', '[::1]', 'research.arvivatherap.com']) {
+    for (const finish of ['close', 'escape']) {
+      const ui = fixture({ hostname, search: '?next=https://example.com&paid=true' });
+      assert.equal(ui.entry.hidden, true);
+      if (finish === 'close') ui.close.click();
+      else ui.dialog.escape();
+      assert.equal(ui.entry.hidden, false);
+      assert.equal(ui.start.href, undefined);
+      assert.equal(ui.timers.size, 0);
+    }
+  }
+});
+
+test('the workspace is visible first, then the introduction opens one second after page load', () => {
+  const ui = fixture({ autoOpen: false, readyState: 'loading' });
+  assert.equal(ui.dialog.open, false);
+  assert.equal(ui.document.body.style.overflow, 'scroll');
+  ui.advance(5000);
+  assert.equal(ui.dialog.open, false);
+  ui.document.readyState = 'complete';
+  ui.browser.dispatch('load');
+  ui.advance(999);
+  assert.equal(ui.dialog.open, false);
+  ui.advance(1);
+  assert.equal(ui.dialog.open, true);
+  assertSlide(ui, 0);
+  ui.advance(2999); assertSlide(ui, 0);
+  ui.advance(1); assertSlide(ui, 1);
+});
+
+test('manual viewing cancels the pending introduction, so closing never reopens it', () => {
+  const ui = fixture({ autoOpen: false });
+  assert.equal(ui.dialog.open, false);
+  ui.advance(500);
+  ui.reopen.click();
+  assert.equal(ui.dialog.open, true);
+  ui.close.click();
+  ui.advance(5000);
+  assert.equal(ui.dialog.open, false);
+  assert.equal(ui.timers.size, 0);
+});
+
+test('the delayed introduction waits for a visible tab and never appears on Prediction', () => {
+  const ui = fixture({ autoOpen: false });
+  ui.advance(500);
+  ui.document.hidden = true; ui.document.dispatch('visibilitychange');
+  ui.advance(5000); assert.equal(ui.dialog.open, false);
+  ui.document.hidden = false; ui.document.dispatch('visibilitychange');
+  ui.advance(999); assert.equal(ui.dialog.open, false);
+  ui.advance(1); assert.equal(ui.dialog.open, true);
+  const prediction = fixture({ hostname: 'thesis.arvivatherap.com' });
+  prediction.advance(60000);
+  assert.equal(prediction.dialog.open, false);
+  assert.equal(prediction.timers.size, 0);
+});
+
+test('hover pauses autoplay; leaving resumes a full three seconds without duplicate timers', () => {
+  const ui = fixture();
+  ui.advance(2000);
+  ui.dialog.dispatch('pointerenter', { pointerType: 'mouse' });
+  ui.advance(30000); assertSlide(ui, 0);
+  ui.next.click(); assertSlide(ui, 1);
+  ui.advance(30000); assertSlide(ui, 1);
+  ui.document.documentElement.lang = 'zh-CN';
+  ui.document.dispatch('research-language-change');
+  assert.equal(ui.timers.size, 0);
+  ui.dialog.dispatch('pointerleave', { pointerType: 'mouse' });
+  ui.advance(2000);
+  ui.dots[3].click();
+  ui.advance(2999); assertSlide(ui, 3);
+  ui.document.dispatch('research-language-change');
+  assert.equal(ui.timers.size, 1);
+  ui.advance(1); assertSlide(ui, 4);
+});
+
+test('background tabs suspend playback; returning gives a full three seconds', () => {
+  const ui = fixture();
+  ui.advance(2500);
+  ui.document.hidden = true; ui.document.dispatch('visibilitychange');
+  ui.advance(60000); assertSlide(ui, 0);
+  assert.equal(ui.timers.size, 0);
+  ui.document.hidden = false; ui.document.dispatch('visibilitychange');
+  ui.advance(2999); assertSlide(ui, 0);
+  ui.advance(1); assertSlide(ui, 1);
+  ui.dialog.dispatch('pointerenter', { pointerType: 'mouse' });
+  ui.document.hidden = true; ui.document.dispatch('visibilitychange');
+  ui.document.hidden = false; ui.document.dispatch('visibilitychange');
+  ui.advance(6000); assertSlide(ui, 1);
+});
+
+test('closing clears playback, and reopening starts one fresh timer', () => {
+  const ui = fixture();
+  ui.advance(2500); ui.dialog.escape();
+  assert.equal(ui.timers.size, 0);
+  ui.advance(30000); assertSlide(ui, 0);
+  ui.reopen.click();
+  assert.equal(ui.timers.size, 1);
+  ui.advance(2999); assertSlide(ui, 0);
+  ui.advance(1); assertSlide(ui, 1);
+  ui.dialog.close();
+  assert.equal(ui.timers.size, 0);
+});
+
+test('source link focus pauses playback and leaving the content resumes it', () => {
+  const ui = fixture();
+  ui.advance(2500);
+  ui.slides[0].dispatch('focusin');
+  ui.advance(6000); assertSlide(ui, 0);
+  assert.equal(ui.timers.size, 0);
+  ui.document.hidden = true; ui.document.dispatch('visibilitychange');
+  ui.document.hidden = false; ui.document.dispatch('visibilitychange');
+  assert.equal(ui.timers.size, 0);
+  ui.slides[0].dispatch('focusout');
+  ui.advance(3000); assertSlide(ui, 1);
+});
+
 test('language changes preserve the current slide while updating pagination and accessible labels', () => {
   const chinese = fixture({ lang: 'zh-CN' });
   assertSlide(chinese, 0);
-  assert.match(chinese.previous.textContent, /[\u3400-\u9fff]/);
+  assert.match(chinese.previous.getAttribute('aria-label'), /[\u3400-\u9fff]/);
   assert.match(chinese.next.getAttribute('aria-label'), /[\u3400-\u9fff]/);
   const ui = fixture();
   const label = element => element.getAttribute('aria-label') || element.textContent;
@@ -174,4 +332,47 @@ test('language changes preserve the current slide while updating pagination and 
   ui.document.dispatch('research-language-change');
   assertSlide(ui, 3);
   assert.deepEqual([ui.previous, ui.next, ui.close, ui.reopen, ui.dots[3]].map(label), english);
+});
+
+test('opening under the pointer pauses immediately; touch events do not leave autoplay stuck', () => {
+  const ui = fixture({ hovering: true });
+  ui.advance(9000); assertSlide(ui, 0);
+  assert.equal(ui.timers.size, 0);
+  ui.dialog.dispatch('pointerleave', { pointerType: 'mouse' });
+  ui.advance(3000); assertSlide(ui, 1);
+  ui.dialog.dispatch('pointerenter', { pointerType: 'touch' });
+  ui.advance(3000); assertSlide(ui, 2);
+});
+
+test('hover and keyboard focus both have to end before resuming; closed dialogs cannot restart', () => {
+  const ui = fixture();
+  ui.dialog.dispatch('pointerenter', { pointerType: 'mouse' });
+  ui.slides[0].dispatch('focusin');
+  ui.dialog.dispatch('pointerleave', { pointerType: 'mouse' });
+  ui.advance(6000); assertSlide(ui, 0);
+  ui.slides[0].dispatch('focusout');
+  ui.advance(3000); assertSlide(ui, 1);
+  ui.dialog.close();
+  ui.dialog.dispatch('pointerleave', { pointerType: 'mouse' });
+  assert.equal(ui.timers.size, 0);
+});
+
+test('mouse focus on a source link does not keep playback paused after leaving', () => {
+  const ui = fixture();
+  ui.dialog.dispatch('pointerenter', { pointerType: 'mouse' });
+  ui.slides[0].focusVisible = false;
+  ui.slides[0].dispatch('focusin');
+  ui.dialog.dispatch('pointerleave', { pointerType: 'mouse' });
+  ui.advance(3000); assertSlide(ui, 1);
+});
+
+test('moving onto a native dialog backdrop resumes without relying on pointerleave', () => {
+  const ui = fixture({ hovering: true });
+  ui.document.dispatch('pointermove', { pointerType: 'mouse', clientX: 5, clientY: 5 });
+  ui.advance(3000); assertSlide(ui, 1);
+  ui.document.dispatch('pointermove', { pointerType: 'mouse', clientX: 100, clientY: 100 });
+  ui.advance(9000); assertSlide(ui, 1);
+  ui.document.dispatch('pointermove', { pointerType: 'mouse', clientX: 890, clientY: 100 });
+  ui.advance(2999); assertSlide(ui, 1);
+  ui.advance(1); assertSlide(ui, 2);
 });

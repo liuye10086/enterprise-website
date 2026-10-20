@@ -1,0 +1,46 @@
+.research-access-page{max-width:860px;margin:0 auto;padding:36px 0 64px}
+.research-back{display:inline-flex;align-items:center;gap:9px;color:var(--blue);font-size:14px;font-weight:600;margin-bottom:25px;text-decoration:none}
+.research-back:hover{text-decoration:underline}
+.research-access-panel{padding:42px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:var(--shadow)}
+.research-eyebrow{font-size:12px;line-height:1.6;letter-spacing:2px;font-weight:700;color:var(--blue);margin:0 0 25px}
+.research-lock{width:50px;height:50px;display:grid;place-items:center;border-radius:10px;background:var(--brand-soft);color:var(--blue);margin-bottom:20px}
+.research-lock svg{width:26px;height:26px}
+.research-access-panel h1,.research-workspace h1{font-size:32px;line-height:1.2;margin:0 0 15px;color:var(--ink)}
+.research-intro{font-size:16px;line-height:1.7;color:var(--muted);margin:0 0 30px}
+.research-access-page .access-plan{padding:26px 23px;min-height:295px}
+.research-access-page .access-plan h2{font-size:24px;line-height:1.3;margin:0 0 18px;color:var(--ink)}
+.research-upgrade{display:flex;align-items:center;justify-content:center;gap:15px;margin-top:auto;min-height:46px;border-radius:8px;font-size:13px;padding:12px 13px;text-decoration:none}
+.research-state{padding:26px 0;color:var(--muted)}
+.research-state h2{font-size:22px;color:var(--ink);margin-bottom:12px}
+.research-state p{line-height:1.7;margin-bottom:20px}
+.research-state .primary-button,.research-state .secondary-button{min-height:46px;border-radius:8px}
+.research-preview-note,.research-placeholder-note{font-size:13px;line-height:1.7;color:var(--muted);background:var(--soft);padding:12px 16px;border-radius:8px;margin-bottom:24px}
+.research-workspace{padding:36px 0 70px}
+.research-workspace-heading{max-width:720px;margin:10px 0 32px}
+.research-workspace-heading p:not(.research-eyebrow){color:var(--muted);font-size:17px;line-height:1.7}
+.research-workspace-heading .research-eyebrow{margin-bottom:14px}
+.research-access-banner{display:flex;align-items:center;gap:24px;flex-wrap:wrap;padding:20px 24px;border:1px solid #d4e2c1;background:var(--brand-soft);border-radius:12px;margin-bottom:20px}
+.research-access-badge{font-weight:700;color:var(--blue)}
+.research-access-banner p{margin:0;font-size:14px;color:var(--muted)}
+.research-access-banner strong{font-variant-numeric:tabular-nums;color:var(--blue);margin-left:8px}
+.research-access-banner a{margin-left:auto;color:var(--blue);font-size:14px;font-weight:600;text-decoration:none}
+.research-access-banner a:hover{text-decoration:underline}
+.research-tool-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.research-tool-card{display:flex;flex-direction:column;align-items:flex-start;padding:30px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.research-tool-number{font-size:16px;font-weight:700;color:var(--blue);background:var(--brand-soft);width:46px;height:46px;display:grid;place-items:center;border-radius:10px;margin-bottom:24px}
+.research-tool-card h2{font-size:22px;line-height:1.35;margin-bottom:14px}
+.research-tool-card p{font-size:15px;line-height:1.8;color:var(--muted);margin-bottom:28px;flex:1}
+.research-coming-soon{font-size:12px;font-weight:600;color:var(--muted);padding:7px 12px;background:var(--soft);border-radius:20px}
+.research-entry-page{margin:0;background:#fff}
+.research-entry-page .research-access-page{padding:0;margin:0 auto}
+.research-entry-page .research-access-panel{padding:20px 28px 30px;border:0;border-radius:0;box-shadow:none}
+.research-entry-page .research-eyebrow{margin-bottom:14px}
+.research-entry-page .research-lock{display:none}
+.research-entry-page .research-intro{margin-bottom:20px}
+.research-entry-page .access-announcement{margin:12px 28px 0}
+.research-entry-page .login-dialog{width:min(560px,100%);max-height:100dvh;margin:0 auto;padding:20px 32px 28px;border:0;border-radius:0;box-shadow:none}
+.research-entry-page .login-dialog::backdrop{background:#fff;backdrop-filter:none}
+.research-entry-page .login-dialog .login-close{display:none}
+@media(max-width:800px){.research-tool-grid{grid-template-columns:1fr}.research-access-panel{padding:28px 24px}.research-access-page{padding-top:24px}.research-access-panel h1,.research-workspace h1{font-size:28px}.research-access-banner{gap:15px}.research-access-banner a{margin-left:0}.research-tool-card{padding:25px}}
+@media(max-width:600px){.research-access-page .access-plan-grid{grid-template-columns:1fr}.research-access-page .access-plan{min-height:270px}.research-access-panel{padding:24px 18px}.research-eyebrow{font-size:11px;letter-spacing:1.5px}}
+@media(max-width:600px){.research-entry-page .research-access-panel{padding:16px 20px 24px}.research-entry-page .research-access-page .access-plan{min-height:240px}}

@@ -5,6 +5,8 @@ const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const CODE_LIFETIME = 10 * MINUTE;
 const SESSION_LIFETIME = 7 * 24 * HOUR;
+const RESEARCH_PRODUCT = 'module-01';
+const RESEARCH_TRIAL_LIFETIME = 15 * MINUTE;
 const PRODUCT_IDS = PRODUCTS.map(({ id }) => id);
 // SQL identifiers below come only from this internal, fixed channel map.
 const CHANNELS = {
@@ -351,5 +353,67 @@ export function createAuthService({ pool, secret, sendCode, sendSmsCode, smsDail
     return result.rowCount > 0;
   }
 
-  return { requestCode, verifyCode, requestPhoneCode, verifyPhoneCode, getSession, getProfile, saveProfile, logout, enterProduct, canViewProduct };
+  function researchAccessView(row, at) {
+    const serverNow = at.toISOString();
+    if (!row || new Date(row.expires_at).getTime() <= at.getTime()) {
+      return { authenticated: false, access: 'signed-out', trialExpiresAt: null, serverNow };
+    }
+    if (row.paid === true) return { authenticated: true, access: 'paid', trialExpiresAt: null, serverNow };
+    if (row.entitlement_product && row.grant_expires_at && new Date(row.grant_expires_at).getTime() > at.getTime()) {
+      return { authenticated: true, access: 'trial', trialExpiresAt: new Date(row.grant_expires_at).toISOString(), serverNow };
+    }
+    return { authenticated: true, access: row.entitlement_product && row.trial_used_at === null ? 'trial-available' : 'trial-used', trialExpiresAt: null, serverNow };
+  }
+
+  async function getResearchAccess(token) {
+    const digest = sessionDigest(token);
+    if (!digest) return researchAccessView(null, timestamp());
+    const row = (await pool.query(`
+      SELECT s.expires_at, e.product_id AS entitlement_product, e.trial_used_at, e.paid,
+        g.expires_at AS grant_expires_at
+      FROM arviva_sessions s
+      LEFT JOIN arviva_product_entitlements e ON e.user_id = s.user_id AND e.product_id = $2
+      LEFT JOIN arviva_product_grants g ON g.token_digest = s.token_digest AND g.product_id = $2
+      WHERE s.token_digest = $1 AND s.revoked_at IS NULL
+    `, [digest, RESEARCH_PRODUCT])).rows[0];
+    return researchAccessView(row, timestamp());
+  }
+
+  async function startResearchTrial(token) {
+    const digest = sessionDigest(token);
+    if (!digest) throw authError(401, 'AUTH_REQUIRED', 'Sign in to access this product.');
+    return transaction(async client => {
+      // Lock the session first, as logout and the existing entry flow do. The
+      // shared entitlement lock makes claims from different sessions atomic.
+      const session = (await client.query(`
+        SELECT user_id, expires_at FROM arviva_sessions
+        WHERE token_digest = $1 AND revoked_at IS NULL FOR UPDATE
+      `, [digest])).rows[0];
+      if (!session) return authError(401, 'AUTH_REQUIRED', 'Sign in to access this product.');
+      const entitlement = (await client.query(`
+        SELECT product_id AS entitlement_product, trial_used_at, paid
+        FROM arviva_product_entitlements WHERE user_id = $1 AND product_id = $2 FOR UPDATE
+      `, [session.user_id, RESEARCH_PRODUCT])).rows[0];
+      const grant = (await client.query(`
+        SELECT expires_at AS grant_expires_at FROM arviva_product_grants
+        WHERE token_digest = $1 AND product_id = $2
+      `, [digest, RESEARCH_PRODUCT])).rows[0];
+      const at = timestamp();
+      const access = researchAccessView({ ...session, ...entitlement, ...grant }, at);
+      // Expiry must be checked after any wait for the entitlement lock.
+      if (!access.authenticated) return authError(401, 'AUTH_REQUIRED', 'Sign in to access this product.');
+      if (!entitlement) return authError(403, 'ACCESS_DENIED', 'This product is not available for this account.');
+      if (access.access === 'paid' || access.access === 'trial') return { ...access, url: '/research-workspace' };
+      if (access.access === 'trial-used') return authError(403, 'TRIAL_USED', 'Your free trial for this product has already been used.');
+      const expiresAt = new Date(at.getTime() + RESEARCH_TRIAL_LIFETIME);
+      await client.query('UPDATE arviva_product_entitlements SET trial_used_at = $3 WHERE user_id = $1 AND product_id = $2', [session.user_id, RESEARCH_PRODUCT, at]);
+      await client.query(`
+        INSERT INTO arviva_product_grants (token_digest, product_id, created_at, expires_at) VALUES ($1, $2, $3, $4)
+        ON CONFLICT (token_digest, product_id) DO UPDATE SET created_at = EXCLUDED.created_at, expires_at = EXCLUDED.expires_at
+      `, [digest, RESEARCH_PRODUCT, at, expiresAt]);
+      return { authenticated: true, access: 'trial', trialExpiresAt: expiresAt.toISOString(), serverNow: at.toISOString(), url: '/research-workspace' };
+    });
+  }
+
+  return { requestCode, verifyCode, requestPhoneCode, verifyPhoneCode, getSession, getProfile, saveProfile, logout, enterProduct, canViewProduct, getResearchAccess, startResearchTrial };
 }

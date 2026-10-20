@@ -50,8 +50,24 @@ export function createApp({config,auth,mailer,sms={ready:false,development:false
     } catch {return json(res,503,{error:'service_unavailable',message:'Product access is temporarily unavailable.'});}
     res.writeHead(302,{Location:getProductProductionUrl(product.id)});res.end();return true;
   };
+  const protectResearchWorkspace=async(req,res)=>{
+    res.setHeader('Cache-Control','no-store');
+    if(!['GET','HEAD'].includes(req.method))return json(res,405,{error:'method_not_allowed',message:'Method not allowed.'},{Allow:'GET, HEAD'});
+    try {
+      const state=await auth.getResearchAccess(tokenFrom(req));
+      if(state.authenticated===true&&['paid','trial'].includes(state.access))return false;
+      res.writeHead(302,{Location:'/research-access'});res.end();return true;
+    } catch {return json(res,503,{error:'service_unavailable',message:'Product access is temporarily unavailable.'});}
+  };
   const server=createStaticServer({root,beforeFile:async(req,res,{realRoot,realFile})=>{
     const resolved='/'+path.relative(realRoot,realFile).split(path.sep).join('/').toLowerCase();
+    // Only the fixed entry URL and its actual document may be embedded; aliases remain denied.
+    const requestPath=(req.url||'').split('?')[0];
+    if(resolved==='/research-entry/index.html'&&['/research-entry','/research-entry/','/research-entry/index.html'].includes(requestPath)){
+      res.removeHeader('X-Frame-Options');
+      res.setHeader('Content-Security-Policy',"frame-ancestors 'self' https://research.arvivatherap.com");
+    }
+    if(resolved.startsWith('/research-workspace/'))return protectResearchWorkspace(req,res);
     const product=PRODUCTS.find(item=>resolved.startsWith(item.url+'/'));
     return product?protectProduct(req,res,product):false;
   },beforeRequest:async(req,res)=>{
@@ -65,6 +81,7 @@ export function createApp({config,auth,mailer,sms={ready:false,development:false
       res.end(req.method==='HEAD'?undefined:"export const mode = 'live';\n");return true;
     }
     const canonical=path.posix.normalize(pathname).toLowerCase().replace(/\/$/,'').replace(/\/index\.html$/,'');
+    if((canonical==='/research-workspace'||canonical.startsWith('/research-workspace/'))&&await protectResearchWorkspace(req,res))return true;
     const product=PRODUCTS.find(item=>item.url===canonical);
     if(product&&await protectProduct(req,res,product))return true;
     if(!pathname.startsWith('/api/'))return false;
@@ -73,17 +90,22 @@ export function createApp({config,auth,mailer,sms={ready:false,development:false
         if(req.method!=='GET')return json(res,405,{error:'method_not_allowed',message:'Method not allowed.'},{Allow:'GET'});
         return json(res,200,sessionView(await auth.getSession(tokenFrom(req))));
       }
+      if(pathname==='/api/research/access'){
+        if(req.method!=='GET')return json(res,405,{error:'method_not_allowed',message:'Method not allowed.'},{Allow:'GET'});
+        return json(res,200,await auth.getResearchAccess(tokenFrom(req)));
+      }
       if(pathname==='/api/profile'){
         if(req.method==='GET')return json(res,200,await auth.getProfile(tokenFrom(req)));
         if(req.method!=='POST')return json(res,405,{error:'method_not_allowed',message:'Method not allowed.'},{Allow:'GET, POST'});
       }
       const enter=/^\/api\/products\/(module-0[12])\/enter$/.exec(pathname);
-      if(!enter&&!['/api/profile','/api/auth/request-code','/api/auth/verify','/api/auth/sms/request-code','/api/auth/sms/verify','/api/auth/logout'].includes(pathname))return json(res,404,{error:'not_found',message:'Not found.'});
+      if(!enter&&!['/api/research/trial','/api/profile','/api/auth/request-code','/api/auth/verify','/api/auth/sms/request-code','/api/auth/sms/verify','/api/auth/logout'].includes(pathname))return json(res,404,{error:'not_found',message:'Not found.'});
       if(req.method!=='POST')return json(res,405,{error:'method_not_allowed',message:'Method not allowed.'},{Allow:'POST'});
       if(req.headers.origin!==config.origin||req.headers['sec-fetch-site']==='cross-site')throw fail(403,'invalid_origin','This request must come from this website.');
       if(req.headers['content-type']?.split(';')[0].trim().toLowerCase()!=='application/json')throw fail(415,'invalid_content_type','Use application/json.');
       const body=await bodyFrom(req);
       const token=tokenFrom(req),ip=clientIp(req,config);
+      if(pathname==='/api/research/trial')return json(res,200,await auth.startResearchTrial(token));
       if(pathname==='/api/profile')return json(res,200,await auth.saveProfile(token,body));
       if(pathname==='/api/auth/request-code'){
         if(!mailer.ready)throw fail(503,'mail_unavailable','Email sign-in is not configured yet.');
