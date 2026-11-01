@@ -16,3 +16,25 @@ test('the generated checkout preview is independently reachable with both plans 
     await assert.doesNotReject(access(path.extname(ref) ? path.join('dist', ref) : path.join('dist', ref, 'index.html')));
   }
 });
+
+test('checkout has product navigation and account controls without the corporate navigation or footer', async () => {
+  const html = await readFile('dist/plans/index.html', 'utf8');
+  assert.match(html, /data-checkout-return/);
+  assert.match(html, /data-language-toggle/);
+  assert.match(html, /data-account-trigger/);
+  assert.match(html, /data-login-dialog/);
+  assert.doesNotMatch(html, /id="primary-navigation"|class="site-footer|class="company-name"/);
+  const home = await readFile('dist/home/index.html', 'utf8');
+  assert.match(home, /id="primary-navigation"/);
+  assert.match(home, /class="site-footer/);
+});
+
+test('plan selection includes the selected price and next action alongside the plans', async () => {
+  const html = await readFile('dist/plans/index.html', 'utf8');
+  const planStep = html.split('data-checkout-step="plans"')[1]?.split('data-checkout-step="payment"')[0];
+  assert.ok(planStep);
+  assert.match(planStep, /data-selected-plan/);
+  assert.match(planStep, /data-selected-price/);
+  assert.match(planStep, /type="submit"/);
+  assert.match(html, /This preview does not create an order or activate access/);
+});

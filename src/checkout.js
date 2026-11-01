@@ -1,4 +1,4 @@
-import { PRODUCTS } from './access-state.js';
+import { PRODUCTS, getProductDestination } from './access-state.js';
 
 const plans = Object.freeze({
   standard: Object.freeze({ name: 'Standard', en: '$20', 'zh-CN': '¥140' }),
@@ -13,6 +13,11 @@ export function getCheckoutUrl(productId) {
 export function getCheckoutProduct(search = '') {
   const id = new URLSearchParams(search).get('product') ?? PRODUCTS[0].id;
   return PRODUCTS.find(product => product.id === id) ?? null;
+}
+
+export function getCheckoutReturnUrl(search, baseUrl) {
+  const product = getCheckoutProduct(search);
+  return product ? getProductDestination(product.id, baseUrl) : '/intelligent';
 }
 
 export function getPlanPrice(planId, locale = 'en') {
@@ -51,10 +56,20 @@ export function initializeCheckout(root = document, browser = root.defaultView) 
   const render = () => {
     page.querySelector('[data-checkout-error]').hidden = Boolean(state);
     page.querySelectorAll('[data-checkout-step]').forEach(section => { section.hidden = section.dataset.checkoutStep !== state?.step; });
+    root.querySelectorAll('[data-checkout-return]').forEach(link => {
+      link.href = getCheckoutReturnUrl(browser.location.search, browser.location.href);
+    });
+    page.querySelector('.checkout-steps').hidden = !state;
+    setText('[data-checkout-return-label]', !state ? 'Back to platforms' : state.productId === 'module-01' ? 'Back to Research' : 'Back to Prediction');
+    root.querySelectorAll('[data-checkout-product]').forEach(element => {
+      const name = state ? PRODUCTS.find(item => item.id === state.productId).name : 'Plans & payment';
+      if (element.textContent !== name) element.textContent = name;
+    });
     if (!state) return;
-    const product = PRODUCTS.find(item => item.id === state.productId);
-    setText('[data-checkout-product]', product.name);
-    for (const id of Object.keys(plans)) setText(`[data-plan-price="${id}"]`, getPlanPrice(id, locale));
+    for (const id of Object.keys(plans)) {
+      setText(`[data-plan-price="${id}"]`, getPlanPrice(id, locale));
+      setText(`[data-plan-choice="${id}"]`, id === state.plan ? 'Selected' : 'Select plan');
+    }
     setText('[data-selected-plan]', plans[state.plan].name);
     setText('[data-selected-price]', getPlanPrice(state.plan, locale));
     setText('[data-payment-method-name]', methods[state.method]);
@@ -73,7 +88,7 @@ export function initializeCheckout(root = document, browser = root.defaultView) 
     if (state.step !== previous.step) {
       const heading = page.querySelector(`[data-checkout-heading="${state.step}"]`);
       heading?.focus({ preventScroll: true });
-      heading?.scrollIntoView({ block: 'start', behavior: 'instant' });
+      heading?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
     }
   };
   page.querySelectorAll('input[name="plan"]').forEach(input => listen(input, 'change', () => {

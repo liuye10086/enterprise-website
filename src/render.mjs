@@ -19,12 +19,24 @@ function languageToggle() {
   return `<button class="language-toggle" type="button" role="switch" aria-checked="false" aria-label="Use Simplified Chinese" data-language-toggle><span class="language-toggle-labels" translate="no" aria-hidden="true"><span>EN</span><span>中</span></span></button>`;
 }
 
+function accountMenu() {
+  return `<div class="account-menu-root" data-account-menu-root><button class="login-trigger" type="button" data-login-open data-account-trigger aria-label="Log in" title="Log in" aria-haspopup="dialog" aria-controls="login-dialog" aria-expanded="false"><svg data-account-icon viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/></svg><span data-account-initial translate="no" aria-hidden="true" hidden></span><span class="sr-only" data-login-label>Log in</span></button><div class="account-menu" id="account-menu" role="menu" aria-label="Account menu" data-account-menu hidden><a class="account-menu-action" href="/profile" role="menuitem" data-account-profile>Personal profile</a><button class="account-menu-action" type="button" role="menuitem" data-account-logout>Log out</button><p class="account-menu-status" data-account-status role="status" aria-live="polite" hidden></p></div></div>`;
+}
+
+function checkoutHeader() {
+  return `<a class="skip-link" href="#main-content">Skip to content</a><header class="checkout-header"><div class="checkout-header-inner">
+    <a class="checkout-brand" href="https://research.arvivatherap.com/" data-checkout-return><img src="/assets/images/33300796.jpg" alt="" width="34" height="48"><span><strong translate="no">Arviva</strong><span data-checkout-product>Research Platform</span></span></a>
+    <div class="checkout-header-actions"><span class="checkout-header-context">Plans &amp; payment</span>${languageToggle()}${accountMenu()}</div>
+    ${renderAccessAnnouncement()}
+  </div></header>`;
+}
+
 function header(active) {
   const primaryPages = new Set([ROUTES.home, ROUTES.intelligent]);
   const row = `<div class="navigation-row">
       <a class="brand" href="${ROUTES.home}" aria-label="Arviva Therapeutics home">${img('33300796.jpg','Arviva Therapeutics','logo','eager')}</a>
       <nav id="primary-navigation" aria-label="Main navigation">${navigation.map(([label,href])=>`<a href="${href}"${primaryPages.has(href) ? ' data-mobile-primary' : ''}${active === href ? ' aria-current="page"' : ''}>${e(label)}</a>`).join('')}</nav>
-      <div class="header-actions"><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="Show more pages" data-current-section="${Boolean(active && !primaryPages.has(active))}"><span>More</span><svg class="more-chevron" viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m3 4.5 3 3 3-3"/></svg></button>${languageToggle()}<div class="account-menu-root" data-account-menu-root><button class="login-trigger" type="button" data-login-open data-account-trigger aria-label="Log in" title="Log in" aria-haspopup="dialog" aria-controls="login-dialog" aria-expanded="false"><svg data-account-icon viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/></svg><span data-account-initial translate="no" aria-hidden="true" hidden></span><span class="sr-only" data-login-label>Log in</span></button><div class="account-menu" id="account-menu" role="menu" aria-label="Account menu" data-account-menu hidden><a class="account-menu-action" href="/profile" role="menuitem" data-account-profile>Personal profile</a><button class="account-menu-action" type="button" role="menuitem" data-account-logout>Log out</button><p class="account-menu-status" data-account-status role="status" aria-live="polite" hidden></p></div></div></div>
+      <div class="header-actions"><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="Show more pages" data-current-section="${Boolean(active && !primaryPages.has(active))}"><span>More</span><svg class="more-chevron" viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m3 4.5 3 3 3-3"/></svg></button>${languageToggle()}${accountMenu()}</div>
       <nav class="mobile-primary-links" aria-label="Primary pages">${navigation.filter(([,href])=>primaryPages.has(href)).map(([label,href])=>`<a href="${href}"${active === href ? ' aria-current="page"' : ''}>${e(label)}</a>`).join('')}</nav>
     </div>`;
   const title = '<h1 class="company-name">Arviva Therapeutics Inc.</h1>';
@@ -37,10 +49,11 @@ function footer() {
   return `<footer class="site-footer wrap"><p>Copyright© Arviva Therapeutics Inc.</p><a href="mailto:BD@arvivatherap.com">BD@arvivatherap.com</a><a class="back-top" href="#top">Back to top ↑</a></footer>`;
 }
 
-function shell(title, active, body, description=copy.description, extraHead='') {
+function shell(title, active, body, description=copy.description, extraHead='', layout='site') {
+  const isCheckout = layout === 'checkout';
   const isHome = active === ROUTES.home;
   const theme = '<link rel="stylesheet" href="/brand-theme.css"><link rel="stylesheet" href="/profile.css"><link rel="stylesheet" href="/account-menu.css">' + extraHead + (isHome ? '<link rel="preload" as="image" href="/assets/images/ai-biomed-hero-v1.png">' : '');
-  return `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${e(title)} | Arviva Therapeutics</title><meta name="description" content="${e(description)}"><link rel="icon" href="/assets/images/33300796.jpg"><link rel="stylesheet" href="/styles.css">${theme}<script type="module" src="/main.js"></script></head><body id="top" class="brand-theme${isHome ? ' home-page' : ''}">${header(active)}<main id="main-content" class="wrap">${body}</main>${footer()}${renderAccessDialogs()}${renderProfilePrompt()}</body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${e(title)} | Arviva Therapeutics</title><meta name="description" content="${e(description)}"><link rel="icon" href="/assets/images/33300796.jpg"><link rel="stylesheet" href="/styles.css">${theme}<script type="module" src="/main.js"></script></head><body id="top" class="brand-theme${isHome ? ' home-page' : ''}${isCheckout ? ' checkout-shell' : ''}">${isCheckout ? checkoutHeader() : header(active)}<main id="main-content" class="${isCheckout ? 'checkout-main' : 'wrap'}">${body}</main>${isCheckout ? '<footer class="checkout-footer"><span>Arviva Therapeutics</span><span>Checkout preview</span></footer>' : footer()}${renderAccessDialogs()}${renderProfilePrompt()}</body></html>`;
 }
 
 function carousel() {
@@ -129,7 +142,7 @@ export async function renderPages({articles}) {
   for (const product of PRODUCTS) {
     pages.set(product.url,shell(product.name,ROUTES.intelligent,platformPlaceholder(product)));
   }
-  pages.set('/plans', shell('Plans & payment', ROUTES.intelligent, renderCheckoutPage(), 'Preview monthly plans and payment options for Arviva Therapeutics platforms.', '<link rel="stylesheet" href="/checkout.css"><meta name="robots" content="noindex">'));
+  pages.set('/plans', shell('Plans & payment', ROUTES.intelligent, renderCheckoutPage(), 'Preview monthly plans and payment options for Arviva Therapeutics platforms.', '<link rel="stylesheet" href="/checkout.css"><meta name="robots" content="noindex">', 'checkout'));
   pages.set('/profile', shell('Personal profile', '', renderProfilePage(), 'View and update your personal profile.', '<meta name="robots" content="noindex">'));
   const researchHead = '<link rel="stylesheet" href="/research-access.css"><meta name="robots" content="noindex">';
   pages.set('/research-entry', renderResearchEntryPage());

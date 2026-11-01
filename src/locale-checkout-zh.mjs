@@ -1,5 +1,12 @@
 // Exact source strings for the local checkout preview; plan names stay unchanged.
 export const CHECKOUT_ZH = {
+  'Back to Research': '返回科研平台',
+  'Back to Prediction': '返回预测平台',
+  'Select a monthly plan, then review your payment options.': '选择月度套餐，再查看支付方式。',
+  'About these plans': '套餐说明',
+  'Your selection': '已选套餐',
+  'Selected': '已选择',
+  'Product navigation': '产品导航',
   'Plans & payment': '套餐与支付',
   'Preview monthly plans and payment options for Arviva Therapeutics platforms.': '预览 Arviva Therapeutics 平台的月度套餐与支付方式。',
   'Back to platforms': '返回平台列表',

@@ -2,10 +2,10 @@ const arrow = '<span aria-hidden="true">→</span>';
 
 function planCard(plan, name, price, selected = false) {
   return `<label class="checkout-plan-card checkout-plan-card--${plan}">
-    <span class="checkout-plan-topline"><span class="checkout-plan-name" id="checkout-plan-${plan}" role="heading" aria-level="3" translate="no">${name}</span><span class="checkout-plan-period">Monthly plan</span></span>
+    <span class="checkout-plan-topline"><span class="checkout-plan-name" id="checkout-plan-${plan}" role="heading" aria-level="2" translate="no">${name}</span><span class="checkout-plan-period">Monthly</span></span>
     <span class="checkout-price"><strong data-plan-price="${plan}" translate="no">${price}</strong><span>/ month</span></span>
     <span class="checkout-plan-divider" aria-hidden="true"></span>
-    <span class="checkout-plan-choice"><input class="checkout-plan-radio" type="radio" name="plan" value="${plan}" aria-labelledby="checkout-plan-${plan}"${selected ? ' checked' : ''}><span>Select plan</span><span class="checkout-plan-choice-arrow" aria-hidden="true">↗</span></span>
+    <span class="checkout-plan-choice"><input class="checkout-plan-radio" type="radio" name="plan" value="${plan}" aria-labelledby="checkout-plan-${plan}"${selected ? ' checked' : ''}><span data-plan-choice="${plan}">${selected ? 'Selected' : 'Select plan'}</span></span>
   </label>`;
 }
 
@@ -27,38 +27,43 @@ function demoQr() {
 
 export function renderCheckoutPage() {
   return `<div class="checkout-page" data-checkout>
-    <div class="checkout-topbar"><a class="checkout-platform-link" href="/intelligent"><span aria-hidden="true">←</span><span>Back to platforms</span></a><span class="checkout-preview-badge"><span aria-hidden="true"></span><span>Checkout preview</span></span></div>
-
+    <div class="checkout-topbar"><a class="checkout-platform-link" href="https://research.arvivatherap.com/" data-checkout-return><span aria-hidden="true">←</span><span data-checkout-return-label>Back to Research</span></a>
     <ol class="checkout-steps" aria-label="Checkout steps">
       <li data-checkout-step-label="plans" aria-current="step"><span class="checkout-step-number" aria-hidden="true">1</span><span>Choose a plan</span></li>
       <li data-checkout-step-label="payment"><span class="checkout-step-number" aria-hidden="true">2</span><span>Payment method</span></li>
-    </ol>
+    </ol></div>
 
     <section class="checkout-error" data-checkout-error hidden role="alert">
-      <h2>Platform unavailable</h2><p>The selected platform could not be found. Return to the platforms page to choose a product.</p><a class="checkout-primary-button" href="/intelligent">Back to platforms ${arrow}</a>
+      <h1>Platform unavailable</h1><p>The selected platform could not be found. Return to the platforms page to choose a product.</p><a class="checkout-primary-button" href="/intelligent">Back to platforms ${arrow}</a>
     </section>
 
     <section class="checkout-plans" data-checkout-step="plans" aria-labelledby="checkout-plans-heading">
-      <div class="checkout-heading-block"><p class="checkout-product" data-checkout-product>Research Platform</p><h2 class="checkout-heading" id="checkout-plans-heading" data-checkout-heading="plans" tabindex="-1">Choose your plan</h2><p class="checkout-introduction">Monthly plans for your selected platform.</p></div>
+      <div class="checkout-heading-block"><h1 class="checkout-heading" id="checkout-plans-heading" data-checkout-heading="plans" tabindex="-1">Choose your plan</h1><p class="checkout-introduction">Select a monthly plan, then review your payment options.</p></div>
       <form class="checkout-plan-form" data-plan-form>
-        <fieldset class="checkout-plan-fieldset"><legend class="checkout-sr-only">Choose a monthly plan</legend><div class="checkout-plan-grid">${planCard('standard', 'Standard', '$20', true)}${planCard('pro', 'Pro', '$100')}</div></fieldset>
-        <div class="checkout-plan-footer"><p class="checkout-plan-note">Plan details will be confirmed before payment is enabled.</p><button class="checkout-primary-button" type="submit"><span>Choose payment method</span>${arrow}</button></div>
+        <div class="checkout-plan-options"><fieldset class="checkout-plan-fieldset"><legend class="checkout-sr-only">Choose a monthly plan</legend><div class="checkout-plan-grid">${planCard('standard', 'Standard', '$20', true)}${planCard('pro', 'Pro', '$100')}</div></fieldset>
+        </div>
+        <aside class="checkout-order" aria-labelledby="checkout-selection-heading"><div class="checkout-order-heading"><h2 id="checkout-selection-heading">Your selection</h2><span class="checkout-summary-tag">Monthly</span></div>
+          <dl class="checkout-order-details"><div><dt>Platform</dt><dd data-checkout-product>Research Platform</dd></div><div><dt>Plan</dt><dd data-selected-plan translate="no">Standard</dd></div><div><dt>Billing period</dt><dd>Monthly</dd></div></dl>
+          <div class="checkout-order-total"><span>Display total</span><p><strong data-selected-price translate="no">$20</strong><span>/ month</span></p></div>
+          <button class="checkout-primary-button" type="submit"><span>Choose payment method</span>${arrow}</button>
+          <p class="checkout-order-note">Preview only. No payment will be taken.</p>
+        </aside>
+        <div class="checkout-plan-info"><span class="checkout-info-icon" aria-hidden="true">i</span><div><h2>About these plans</h2><p>Plan details will be confirmed before payment is enabled.</p></div></div>
       </form>
-      <p class="checkout-preview-note">Preview only. No payment will be taken.</p>
     </section>
 
     <section class="checkout-payment" data-checkout-step="payment" hidden aria-labelledby="checkout-payment-heading">
-      <div class="checkout-heading-block"><p class="checkout-product" data-checkout-product>Research Platform</p><h2 class="checkout-heading" id="checkout-payment-heading" data-checkout-heading="payment" tabindex="-1">Choose a payment method</h2><p class="checkout-introduction">Review your selection and preview the payment layout.</p></div>
+      <div class="checkout-heading-block"><h1 class="checkout-heading" id="checkout-payment-heading" data-checkout-heading="payment" tabindex="-1">Choose a payment method</h1><p class="checkout-introduction">Review your selection and preview the payment layout.</p></div>
       <div class="checkout-payment-grid">
         <div class="checkout-payment-panel">
           <fieldset class="checkout-method-fieldset"><legend>Payment method</legend><div class="checkout-method-grid">
             <label class="checkout-method"><input type="radio" name="payment-method" value="alipay" checked><span class="checkout-method-icon checkout-method-icon--alipay" aria-hidden="true">支</span><span>Alipay</span></label>
             <label class="checkout-method"><input type="radio" name="payment-method" value="wechat"><span class="checkout-method-icon checkout-method-icon--wechat" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><path d="M14.5 10.5c0 3-2.8 5.5-6.3 5.5-.8 0-1.5-.1-2.2-.3L3.5 17l.7-2.2C2.8 13.8 2 12.2 2 10.5 2 7.5 4.8 5 8.2 5s6.3 2.5 6.3 5.5Z" fill="currentColor"/><path d="M22 15c0 2.5-2.4 4.5-5.3 4.5-.7 0-1.3-.1-1.9-.3l-2.1 1 .6-1.8a4.3 4.3 0 0 1-1.9-3.4c0-2.5 2.4-4.5 5.3-4.5S22 12.5 22 15Z" fill="currentColor" stroke="white" stroke-width="1"/></svg></span><span>WeChat Pay</span></label>
           </div></fieldset>
-          <div class="checkout-qr-area"><p class="checkout-qr-method" data-payment-method-name>Alipay</p>${demoQr()}<p class="checkout-qr-caption">Payment QR preview</p><p class="checkout-qr-note">This placeholder cannot be scanned. No payment will be taken.</p></div>
+          <div class="checkout-qr-area">${demoQr()}<p class="checkout-qr-caption">Payment QR preview</p><p class="checkout-qr-note">This placeholder cannot be scanned. No payment will be taken.</p></div>
         </div>
 
-        <aside class="checkout-order" aria-labelledby="checkout-order-heading"><div class="checkout-order-heading"><h3 id="checkout-order-heading">Order summary</h3><span class="checkout-order-dot" aria-hidden="true"></span></div>
+        <aside class="checkout-order" aria-labelledby="checkout-order-heading"><div class="checkout-order-heading"><h2 id="checkout-order-heading">Your selection</h2><span class="checkout-summary-tag">Monthly</span></div>
           <dl class="checkout-order-details">
             <div><dt>Platform</dt><dd data-checkout-product>Research Platform</dd></div>
             <div><dt>Plan</dt><dd data-selected-plan translate="no">Standard</dd></div>

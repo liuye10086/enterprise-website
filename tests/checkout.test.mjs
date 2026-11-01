@@ -1,6 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getCheckoutUrl, getCheckoutProduct, getPlanPrice, createCheckoutState, transitionCheckout } from '../src/checkout.js';
+import * as checkout from '../src/checkout.js';
+
+test('checkout returns to the selected product and keeps local previews on localhost', () => {
+  assert.equal(typeof checkout.getCheckoutReturnUrl, 'function');
+  const base = 'https://arvivatherap.com/plans?product=module-01';
+  assert.equal(checkout.getCheckoutReturnUrl('?product=module-01', base), 'https://research.arvivatherap.com/');
+  assert.equal(checkout.getCheckoutReturnUrl('?product=module-02', base), 'https://thesis.arvivatherap.com/');
+  assert.equal(checkout.getCheckoutReturnUrl('?product=module-01', 'http://127.0.0.1:4173/plans'), 'http://127.0.0.1:4173/research-demo.html');
+  assert.equal(checkout.getCheckoutReturnUrl('?product=module-02', 'http://localhost:4173/plans'), 'http://localhost:4173/research-demo.html?platform=prediction');
+  assert.equal(checkout.getCheckoutReturnUrl('?product=https://untrusted.example', base), '/intelligent');
+});
 
 test('upgrade URLs preserve an allowlisted product, never a caller-supplied destination', () => {
   assert.equal(getCheckoutUrl('module-01'), '/plans?product=module-01');
