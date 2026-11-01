@@ -51,7 +51,7 @@ test('opening stays on the page and loads only the fixed origin with a supported
     assert.equal(ui.dialog.open, true);
     assert.deepEqual(ui.navigations, []);
     assert.equal(ui.document.body.style.overflow, 'hidden');
-    assert.equal(ui.frame.src, `${origin.startsWith('http:') ? origin : 'https://new.arvivatherap.com'}/research-entry?lang=zh-CN`);
+    assert.equal(ui.frame.src, `${origin.startsWith('http:') ? origin : 'https://arvivatherap.com'}/research-entry?lang=zh-CN`);
     assert.equal(ui.frame.hidden, true);
     ui.message({ type: 'arviva-research', action: 'ready' });
     assert.equal(ui.frame.hidden, false);
@@ -70,9 +70,9 @@ test('messages require matching source and origin; navigation is restricted to t
   ui.message({ ...upgrade, path: '/plans?product=module-02' });
   assert.deepEqual(ui.navigations, []);
   ui.message(upgrade);
-  assert.deepEqual(ui.navigations, ['https://new.arvivatherap.com/plans?product=module-01']);
+  assert.deepEqual(ui.navigations, ['https://arvivatherap.com/plans?product=module-01']);
   ui.message({ ...upgrade, path: '/research-workspace' });
-  assert.equal(ui.navigations[1], 'https://new.arvivatherap.com/research-workspace');
+  assert.equal(ui.navigations[1], 'https://arvivatherap.com/research-workspace');
 });
 
 test('close restores scrolling/focus and ignores late messages; reopening reloads access', () => {

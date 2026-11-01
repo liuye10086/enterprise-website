@@ -1,8 +1,10 @@
 # Arviva Therapeutics 官网
 
-根据原官网布局重建的独立网站，页面、图片、视频均从本项目加载。官网使用 Node.js 与 PostgreSQL，支持邮箱验证码与阿里云中国大陆手机号验证码登录。2026-10-16 已将提交 `df5757e` 发布到 <https://new.arvivatherap.com/home>，两个产品入口改为仅检查登录，Research 与 Prediction 子域名的 HTTPS 演示页已上线。本机和服务器各 152 项测试通过，服务器无失败或跳过，公网 19 项检查通过。产品功能仍在研发中，支付尚未接入。本次未发送真实邮箱或短信验证码；此前的收信验收记录保留在下文。
+根据原官网布局重建的独立网站，页面、图片、视频均从本项目加载。官网使用 Node.js 与 PostgreSQL，支持邮箱验证码与阿里云中国大陆手机号验证码登录。2026-11-01 已迁至正式主域名 [arvivatherap.com/home](https://arvivatherap.com/home)，`www` 跳转到主域名，`new.arvivatherap.com` 的解析、站点和证书续期配置已移除。Research 与 Prediction 产品域名保持不变；产品功能仍在研发中，支付尚未接入。
 
-新版地址：[new.arvivatherap.com/home](https://new.arvivatherap.com/home)。旧版 [arvivatherap.com/sy](https://arvivatherap.com/sy) 继续由原建站平台提供，两站独立运行。新版首页及站内首页链接使用 `/home`，不会修改原官网。
+旧栏目和新闻链接在主域名跳转到对应新地址，例如 `/sy` → `/home`，并保留查询参数。旧建站平台内容、历史素材和迁移前备份保留，主域名已由阿里云服务器提供新版官网。此次本机和服务器各 34 项针对性测试、公网 54 项检查通过；用户确认主域名真实登录与 Research“开始科研”弹窗正常。完整变更、退役复核、备份与恢复边界见 [域名迁移记录](docs/domain-migration-20261101.md)。
+
+此次线上基于 `1c719096822fef281e6817d086ff531c6b8583ea` 加两文件域名补丁；源码、测试及迁移文档维护在 `feat/domain-migration-20261101` 分支。服务器仍保留现场补丁，后续更新前须先核对目标提交已包含该补丁，再整合服务器工作树。下方带日期的早期部署记录反映当时状态。
 
 ## Git 仓库
 

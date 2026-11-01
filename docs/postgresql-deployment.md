@@ -1,10 +1,20 @@
 # PostgreSQL 登录部署
 
+## 当前部署与主域名迁移（2026-11-01）
+
+正式地址为 <https://arvivatherap.com/home>，`www.arvivatherap.com` 通过 308 跳转到主域名。主域名与 `www` 的 A 记录均指向 `47.82.97.195`，TTL 600 秒。`new` 解析、对应 Nginx 站点及 Certbot 证书已退出使用；旧平台内容和备份保留。邮箱 MX、客户端记录及两个产品域名保持不变。
+
+应用仍在 `/srv/arviva`，生产 `APP_ORIGIN=https://arvivatherap.com`；Node/PostgreSQL 继续只监听 loopback。Research 产品页的返回官网链接和 iframe 来源均已改为主域名。新增 Nginx 配置为 `/etc/nginx/sites-available/arviva-main`，产品站继续使用 `arviva-products`。
+
+主域名证书包含 apex 与 `www`，位于 `/etc/letsencrypt/live/arvivatherap.com`，本次签发到期日为 2027-01-30。续期已改用 `/var/www/arviva-acme` 的 HTTP-01 webroot，`certbot reconfigure` 模拟续期和 Nginx 部署钩子均成功，`certbot.timer` 为 active。
+
+本机和服务器各 34 项针对性测试、公网 54 项检查通过；用户实测主域名登录和 Research 弹窗成功。服务器基线 `1c719096822fef281e6817d086ff531c6b8583ea` 加两文件现场补丁；源码、测试和迁移文档维护在 `feat/domain-migration-20261101` 分支。后续部署前须确认目标提交包含补丁并整合服务器工作树，不能将原 main 版本直接覆盖上线。备份、最终复核与回退方法见 [域名迁移记录](domain-migration-20261101.md)。以下带日期的早期发布快照仅作历史记录；新环境模板已使用正式主域名。
+
 ## Research 平台与研发列表发布（2026-10-20）
 
 本批本地验收已获用户确认，发布范围包括：R&D Platform 保留原 7–12 项并重新编号；科研平台六页介绍循环播放、悬停暂停及自适应排版；毕业论文主题配图；卡片右下的开始科研入口、登录后试用或升级选项。发布前本地 261 项测试通过、无跳过，代码审查无阻塞项。
 
-`research.arvivatherap.com` 保持公开静态介绍页；开始科研通过固定 iframe 嵌入 `https://new.arvivatherap.com/research-entry`。只有该入口允许被 Research 域嵌入，消息严格校验父域、窗口和固定目标路径，身份凭据不传给产品静态页。工作区和试用资格由官网服务端鉴权；试用按账号领取一次、当前会话有效 15 分钟，复用已有权益与 grant 表，不需要新迁移。套餐支付与科研工具仍为现有预览范围，本次没有接入真实收款或科研执行服务。
+`research.arvivatherap.com` 保持公开静态介绍页；开始科研通过固定 iframe 嵌入官网的 `/research-entry`（2026-11-01 已从 `new` 切换至 `https://arvivatherap.com/research-entry`）。只有该入口允许被 Research 域嵌入，消息严格校验父域、窗口和固定目标路径，身份凭据不传给产品静态页。工作区和试用资格由官网服务端鉴权；试用按账号领取一次、当前会话有效 15 分钟，复用已有权益与 grant 表，不需要新迁移。套餐支付与科研工具仍为现有预览范围，本次没有接入真实收款或科研执行服务。
 
 发布时先备份数据库、私密配置、Nginx 配置与旧构建，拉取已推送的同一提交，构建并在独立测试库运行测试。产品站必须使用嵌入全部图片的 `dist/research-demo.html` 原子替换 `/var/www/arviva-products/index.html`。部署后验证 iframe 响应头、匿名工作区拒绝访问、生产邮件/短信状态及官网和两个产品域的内容。线上结果以实际部署回执为准；应用配置和数据库结构保持不变。
 
@@ -26,7 +36,7 @@
 
 产品站当前为公开静态 demo，没有跨域单点登录，也不接收官网会话令牌；未来产品服务需另行接入身份校验。真实官网登录依赖 Node.js、PostgreSQL 与同源后端。`npm start` 默认监听本机 `127.0.0.1:4174`；`npm run dev` 的 `4173` 是本机静态演示，不用于正式登录。**官网不能仅上传 `dist/`，旧产品入口仍必须经过 Node 登录校验。** 下方历史发布记录中的试用资格和旧产品页说明反映当时版本，不作为当前访问规则。
 
-## 当前部署（2026-10-16）
+## 历史部署快照（2026-10-16）
 
 - 新版地址：<https://new.arvivatherap.com/home>；产品演示站为 <https://research.arvivatherap.com> 和 <https://thesis.arvivatherap.com>。旧版 <https://arvivatherap.com/sy> 继续运行于原平台，原根域 CNAME、MX 及邮箱客户端记录未修改。
 - 阿里云香港 Ubuntu 24.04，Node.js 24.21.0、PostgreSQL 16、Nginx 1.24。应用目录 `/srv/arviva`，以 `arviva` 系统用户和 `arviva.service` 运行并开机启动。
@@ -91,7 +101,7 @@ sudo install -d -o arviva -g arviva /srv/arviva
 NODE_ENV=production
 HOST=127.0.0.1
 PORT=4174
-APP_ORIGIN=https://new.arvivatherap.com
+APP_ORIGIN=https://arvivatherap.com
 MAIL_MODE=smtp
 SMTP_HOST=smtp.qiye.aliyun.com
 SMTP_PORT=465
@@ -151,7 +161,7 @@ npm start
 
 ```ini
 [Unit]
-Description=Arviva website (new.arvivatherap.com)
+Description=Arviva website (arvivatherap.com)
 After=network-online.target postgresql.service
 Wants=network-online.target
 
@@ -176,25 +186,28 @@ WantedBy=multi-user.target
 
 ## 5. HTTPS 与 Nginx 全路径反向代理
 
-先仅为新子域名添加 A 记录并准备有效证书；不要修改旧官网根域记录。当前配置位于 `/etc/nginx/sites-available/arviva`。以下配置将页面、资源、`/runtime-config.js` 与所有 `/api/` 请求统一转交 Node；转发指令可参见 [Nginx 官方代理文档](https://nginx.org/en/docs/http/ngx_http_proxy_module.html)。
+正式主域名和 `www` 已指向服务器；新环境应先准备涵盖两个域名的有效证书并完成严格 TLS 预检查，再切换解析。当前配置位于 `/etc/nginx/sites-available/arviva-main`，通过同名 `sites-enabled` 链接启用。以下配置将页面、资源、`/runtime-config.js` 与所有 `/api/` 请求统一转交 Node；转发指令可参见 [Nginx 官方代理文档](https://nginx.org/en/docs/http/ngx_http_proxy_module.html)。
 
 ```nginx
 server {
     listen 80;
-    server_name new.arvivatherap.com;
-    location /.well-known/acme-challenge/ {
+    listen [::]:80;
+    server_name arvivatherap.com www.arvivatherap.com;
+    location ^~ /.well-known/acme-challenge/ {
         root /var/www/arviva-acme;
+        try_files $uri =404;
     }
     location / {
-        return 301 https://new.arvivatherap.com$request_uri;
+        return 308 https://arvivatherap.com$request_uri;
     }
 }
 
 server {
     listen 443 ssl;
-    server_name new.arvivatherap.com;
-    ssl_certificate /etc/letsencrypt/live/new.arvivatherap.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/new.arvivatherap.com/privkey.pem;
+    listen [::]:443 ssl;
+    server_name arvivatherap.com;
+    ssl_certificate /etc/letsencrypt/live/arvivatherap.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/arvivatherap.com/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_session_cache shared:ARVIVA_TLS:10m;
 
@@ -207,9 +220,19 @@ server {
         proxy_cache off;
     }
 }
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name www.arvivatherap.com;
+    ssl_certificate /etc/letsencrypt/live/arvivatherap.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/arvivatherap.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    return 308 https://arvivatherap.com$request_uri;
+}
 ```
 
-执行 `sudo nginx -t`，通过后执行 `sudo systemctl reload nginx`，随后等待各域名严格 TLS 与内容检查通过；reload 返回不代表新 worker 已就绪。`new.arvivatherap.com` 不应增加指向 `dist/` 的 `root`、`alias` 或 `try_files`，旧 `/research-platform`、`/prediction-platform` 及其尾斜线、`index.html` 形式仍交给 Node 鉴权。两个产品子域名使用前述独立静态目录，不暴露仓库或 `dist/`。公网只需开放 HTTPS/HTTP 和受控的管理入口，4174 与 5432 留在本机。
+执行 `sudo nginx -t`，通过后执行 `sudo systemctl reload nginx`，随后等待各域名严格 TLS 与内容检查通过；reload 返回不代表新 worker 已就绪。`arvivatherap.com` 不应增加指向 `dist/` 的 `root`、`alias` 或 `try_files`，旧 `/research-platform`、`/prediction-platform` 及其尾斜线、`index.html` 形式仍交给 Node 鉴权。两个产品子域名使用前述独立静态目录，不暴露仓库或 `dist/`。公网只需开放 HTTPS/HTTP 和受控的管理入口，4174 与 5432 留在本机。
 
 ## 6. 上线验证与限制
 
@@ -262,14 +285,14 @@ sudo -u arviva bash -c 'cd /srv/arviva && npm run build && node --env-file=.env 
 - 核对阿里云短信套餐、账号授权及公网访问。路径改名本身不需要更改 DNS、安全组或证书；只有检查发现实际需要时才修改。付费、授权、密钥等敏感操作按用户要求停在操作页面，由用户完成。
 - 发布后检查新官网邮箱和短信登录、产品资格和旧路径跳转；另检查原站 `arvivatherap.com/sy` 与企业邮箱 DNS 记录不受影响。
 
-提交并推送代码不会自动更新服务器。在服务器执行以下命令，保留已有环境配置与数据库：
+提交并推送代码不会自动更新服务器。以下是常规更新示例；2026-11-01 的域名迁移维护在 `feat/domain-migration-20261101`，尚未合并至 main。须先确认目标 main 包含域名补丁，并整合服务器的两文件现场修改，再执行下列拉取。保留已有环境配置与数据库：
 
 ```bash
 sudo systemctl start arviva-backup.service
 sudo -u arviva bash -c 'cd /srv/arviva && git pull --ff-only origin main && npm ci --ignore-scripts && npm run db:migrate && npm run build'
 sudo systemctl restart arviva
 sudo systemctl is-active arviva nginx postgresql
-curl --fail https://new.arvivatherap.com/api/session
+curl --fail https://arvivatherap.com/api/session
 ```
 
 每日北京时间 `03:15`，`arviva-backup.timer` 调用 `/usr/local/sbin/arviva-backup`，在 `/var/backups/arviva` 保存 PostgreSQL 自定义格式备份，并清理超过 7 天的备份。目录权限 `700`，文件权限 `600`；该目录同时保存最新私密应用配置。查看任务可使用 `systemctl list-timers arviva-backup.timer certbot.timer`。
